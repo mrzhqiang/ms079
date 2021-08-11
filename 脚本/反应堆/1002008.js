@@ -1,0 +1,5 @@
+
+
+function act() {
+    rm.dropItems();
+}
