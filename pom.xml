@@ -45,25 +45,6 @@
                 <version>3.2.0</version>
             </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>wz</directory>
-                <targetPath>/BOOT-INF/wz/</targetPath>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>脚本</directory>
-                <targetPath>/BOOT-INF/脚本/</targetPath>
-                <includes>
-                    <include>**/*.js</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>${project.basedir}/src/main/resources</directory>
-            </resource>
-        </resources>
         <finalName>ms079</finalName>
     </build>
 </project>
