@@ -1,0 +1,16 @@
+
+------------------------ 2016-06-05 21:25:43 ------------------------
+java.util.ConcurrentModificationException
+	at java.util.LinkedList$ListItr.checkForComodification(Unknown Source)
+	at java.util.LinkedList$ListItr.next(Unknown Source)
+	at server.life.MapleMonster.damage(MapleMonster.java:286)
+	at server.life.MapleMonster.damage(MapleMonster.java:194)
+	at server.life.MapleMonster$PoisonTask.run(MapleMonster.java:1049)
+	at server.Timer$LoggingSaveRunnable.run(Timer.java:202)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(Unknown Source)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
