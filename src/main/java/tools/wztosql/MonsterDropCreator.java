@@ -35,8 +35,8 @@ public class MonsterDropCreator {
     protected static List<Pair<Integer, String>> itemNameCache = new ArrayList();
     protected static List<Pair<Integer, MobInfo>> mobCache = new ArrayList();
     protected static Map<Integer, Boolean> bossCache = new HashMap();
-    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/String.wz"));
-    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Mob.wz"));
+    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
+    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Mob.wz"));
 
     public static void main(String[] args) throws FileNotFoundException, IOException, NotBoundException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException {
       //  MapleData data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("String.wz").toString())).getData("MonsterBook.img");

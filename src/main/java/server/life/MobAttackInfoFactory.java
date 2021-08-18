@@ -33,7 +33,7 @@ import tools.StringUtil;
 public class MobAttackInfoFactory {
 
     private static final MobAttackInfoFactory instance = new MobAttackInfoFactory();
-    private static final MapleDataProvider dataSource = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Mob.wz"));
+    private static final MapleDataProvider dataSource = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Mob.wz"));
     private static Map<Pair<Integer, Integer>, MobAttackInfo> mobAttacks = new HashMap<Pair<Integer, Integer>, MobAttackInfo>();
 
     public static MobAttackInfoFactory getInstance() {

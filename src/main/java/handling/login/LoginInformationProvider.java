@@ -41,7 +41,7 @@ public class LoginInformationProvider {
     }
 
     protected LoginInformationProvider() {
-        final String WZpath = System.getProperty("wzpath");
+        final String WZpath = MapleDataProviderFactory.wzPath;
         final MapleData nameData = MapleDataProviderFactory.getDataProvider(new File(WZpath + "/Etc.wz")).getData("ForbiddenName.img");
         for (final MapleData data : nameData.getChildren()) {
             ForbiddenName.add(MapleDataTool.getString(data));
