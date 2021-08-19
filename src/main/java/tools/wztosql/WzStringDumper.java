@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -14,7 +16,7 @@ public class WzStringDumper {
 
     public static void main(String[] args)
             throws FileNotFoundException, IOException {
-        File stringFile = MapleDataProviderFactory.fileInWZPath("string.wz");
+        File stringFile = WzFiles.STRING_DIR;
         MapleDataProvider stringProvider = MapleDataProviderFactory.getDataProvider(stringFile);
 
         MapleData cash = stringProvider.getData("Cash.img");

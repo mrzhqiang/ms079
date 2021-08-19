@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -35,7 +37,7 @@ import tools.Pair;
 public class MobSkillFactory {
 
     private static Map<Pair<Integer, Integer>, MobSkill> mobSkills = new HashMap<Pair<Integer, Integer>, MobSkill>();
-    private static MapleDataProvider dataSource = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
+    private static MapleDataProvider dataSource = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
     private static final MapleData skillRoot = dataSource.getData("MobSkill.img");
 
     public static MobSkill getMobSkill(int skillId, int level) {

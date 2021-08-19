@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -17,7 +19,7 @@ public class CashItemFactoryA {
     private static Map<Integer, Integer> snLookup = new HashMap();
     private static Map<Integer, Integer> idLookup = new HashMap();
     private static Map<Integer, CashItemInfoA> itemStats = new HashMap();
-    private static MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
+    private static MapleDataProvider data = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
     private static MapleData commodities = data.getData(StringUtil.getLeftPaddedStr("Commodity.img", '0', 11));
     private static Map<Integer, List<CashItemInfoA>> cashPackages = new HashMap();
 
@@ -69,7 +71,7 @@ public class CashItemFactoryA {
             return cashPackages.get(itemId);
         }
         List<CashItemInfoA> packageItems = new ArrayList<CashItemInfoA>();
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/" + "Etc.wz"));
+        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
         MapleData a = dataProvider.getData("CashPackage.img");
         for (MapleData b : a.getChildren()) {
             if (itemId == Integer.parseInt(b.getName())) {

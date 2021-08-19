@@ -1,5 +1,6 @@
 package tools.wztosql;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.io.File;
 import java.sql.Connection;
@@ -25,7 +26,7 @@ public class DumpQuests {
 
     public DumpQuests(boolean update) throws Exception {
         this.update = update;
-        this.quest = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Quest.wz"));
+        this.quest = MapleDataProviderFactory.getDataProvider(WzFiles.QUEST_DIR);
         if (quest == null) {
             hadError = true;
         }

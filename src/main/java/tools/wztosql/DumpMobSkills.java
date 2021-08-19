@@ -21,6 +21,7 @@
  */
 package tools.wztosql;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.awt.Point;
 import java.io.File;
@@ -44,10 +45,7 @@ public class DumpMobSkills {
 
     public DumpMobSkills(boolean update) throws Exception {
         this.update = update;
-        this.skill = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
-        if (skill == null) {
-            hadError = true;
-        }
+        this.skill = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
     }
 
     public boolean isHadError() {

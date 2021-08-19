@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProviderFactory;
 import provider.MapleDataTool;
@@ -27,7 +28,7 @@ public class ItemMakerFactory {
         // 0 = Item upgrade crystals
         // 1 / 2/ 4/ 8 = Item creation
 
-        final MapleData info = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz")).getData("ItemMake.img");
+        final MapleData info = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR).getData("ItemMake.img");
 
         byte totalupgrades, reqMakerLevel;
         int reqLevel, cost, quantity, stimulator;

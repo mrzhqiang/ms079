@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import client.inventory.Equip;
 import client.inventory.IItem;
 import client.inventory.ItemFlag;
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -38,10 +39,10 @@ public class MapleItemInformationProvider {
 
     private final static MapleItemInformationProvider instance = new MapleItemInformationProvider();
     protected Map<Integer, Boolean> onEquipUntradableCache = new HashMap<>();
-    protected final MapleDataProvider etcData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
-    protected final MapleDataProvider itemData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Item.wz"));
-    protected final MapleDataProvider equipData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Character.wz"));
-    protected final MapleDataProvider stringData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
+    protected final MapleDataProvider etcData = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
+    protected final MapleDataProvider itemData = MapleDataProviderFactory.getDataProvider(WzFiles.ITEM_DIR);
+    protected final MapleDataProvider equipData = MapleDataProviderFactory.getDataProvider(WzFiles.CHARACTER_DIR);
+    protected final MapleDataProvider stringData = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
     protected final MapleData cashStringData = stringData.getData("Cash.img");
     protected final MapleData consumeStringData = stringData.getData("Consume.img");
     protected final MapleData eqpStringData = stringData.getData("Eqp.img");

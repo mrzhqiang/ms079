@@ -3,6 +3,8 @@ package server;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import handling.cashshop.CashShopServer;
 import java.io.File;
@@ -24,9 +26,9 @@ public class CashItemFactory {
     private final Map<Integer, CashItemInfo> itemStats = new HashMap<Integer, CashItemInfo>();
     private final Map<Integer, List<CashItemInfo>> itemPackage = new HashMap<Integer, List<CashItemInfo>>();
     private final Map<Integer, CashModInfo> itemMods = new HashMap<Integer, CashModInfo>();
-    private final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
+    private final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
     //是这个目录把，嗯
-    private final MapleDataProvider itemStringInfo = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
+    private final MapleDataProvider itemStringInfo = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
     private Map<Integer, Integer> idLookup = new HashMap();
         private static Map<Integer, List<CashItemInfo>> cashPackages = new HashMap();
     public static final CashItemFactory getInstance() {
@@ -131,7 +133,7 @@ public class CashItemFactory {
             return cashPackages.get(itemId);
         }
         List<CashItemInfo> packageItems = new ArrayList<CashItemInfo>();
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/" + "Etc.wz"));
+        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
         MapleData a = dataProvider.getData("CashPackage.img");
         for (MapleData b : a.getChildren()) {
             if (itemId == Integer.parseInt(b.getName())) {

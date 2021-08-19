@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataFileEntry;
@@ -42,15 +43,15 @@ public class SkillFactory {
     private static final Map<Integer, ISkill> skills = new HashMap<Integer, ISkill>();
     private static final Map<Integer, List<Integer>> skillsByJob = new HashMap<Integer, List<Integer>>();
     private static final Map<Integer, SummonSkillEntry> SummonSkillInformation = new HashMap<Integer, SummonSkillEntry>();
-     private final static MapleData stringData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz")).getData("Skill.img");
-   private static MapleDataProvider datasource = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
+     private final static MapleData stringData = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR).getData("Skill.img");
+   private static MapleDataProvider datasource = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
 
     public static final ISkill getSkill(final int id) {
         if (skills.size() != 0) {
             return skills.get(Integer.valueOf(id));
         }
         //System.out.println("加载 技能完成 :::");
-        final MapleDataProvider datasource = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
+        final MapleDataProvider datasource = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
         final MapleDataDirectoryEntry root = datasource.getRoot();
 
         int skillid;

@@ -4,6 +4,7 @@
  */
 package tools.wztosql;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.io.File;
 import java.sql.Connection;
@@ -34,8 +35,8 @@ public class DumpNpcNames {
     }
 
     public void dumpNpcNameData() throws SQLException {
-        MapleDataProvider npcData = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/Npc.wz"));
-        MapleDataProvider stringDataWZ = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/String.wz"));
+        MapleDataProvider npcData = MapleDataProviderFactory.getDataProvider(WzFiles.NPC_DIR);
+        MapleDataProvider stringDataWZ = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
         MapleData npcStringData = stringDataWZ.getData("Npc.img");
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_npcnamedata`")) {
             ps.execute();

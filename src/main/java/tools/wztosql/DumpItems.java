@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataDirectoryEntry;
 import provider.MapleDataFileEntry;
@@ -23,7 +24,9 @@ import database.DatabaseConnection;
 
 public class DumpItems {
 
-    private final MapleDataProvider item,character,string = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/String.wz"));
+    private final MapleDataProvider item = MapleDataProviderFactory.getDataProvider(WzFiles.ITEM_DIR);
+    private final MapleDataProvider character = MapleDataProviderFactory.getDataProvider(WzFiles.CHARACTER_DIR);
+    private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
     protected final MapleData cashStringData = string.getData("Cash.img");
     protected final MapleData consumeStringData = string.getData("Consume.img");
     protected final MapleData eqpStringData = string.getData("Eqp.img");
@@ -38,11 +41,6 @@ public class DumpItems {
 
     public DumpItems(boolean update) throws Exception {
         this.update = update;
-        this.item = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/Item.wz"));
-        this.character = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/Character.wz"));
-        if (item == null || string == null || character == null) {
-            hadError = true;
-        }
     }
 
     public boolean isHadError() {

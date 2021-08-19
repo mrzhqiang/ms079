@@ -3,6 +3,8 @@ package server;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -16,7 +18,7 @@ public class PredictCardFactory {
     protected Map<Integer, PredictCardComment> predictCardComment;
 
     public PredictCardFactory() {
-        this.etcData = MapleDataProviderFactory.getDataProvider(new File("wz/Etc.wz"));
+        this.etcData = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
         this.predictCard = new HashMap();
         this.predictCardComment = new HashMap();
     }

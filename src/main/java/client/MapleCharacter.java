@@ -33,6 +33,7 @@ import client.inventory.MapleMount;
 import client.inventory.MaplePet;
 import client.inventory.MapleRing;
 import client.inventory.ModifyInventory;
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import constants.GameConstants;
 import constants.ServerConstants;
 import database.DatabaseConnection;
@@ -4503,7 +4504,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void maxAllSkills() {
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wz") + "/" + "String.wz"));
+        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
         MapleData skilldData = dataProvider.getData("Skill.img");
         for (MapleData skill_ : skilldData.getChildren()) {
             try {

@@ -26,31 +26,40 @@ public enum WzFiles {
     public static final String DEFAULT_WZ_PATH = "/wz";
     public static final File WZ_DIR = new File(System.getProperty(WZ_KEY, Environments.USER_DIR + DEFAULT_WZ_PATH));
 
+    /* 未使用的 wz 目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。 */
+    @SuppressWarnings("unused")
     public static final File BASE_DIR = new File(WZ_DIR, "Base.wz");
     public static final File CHARACTER_DIR = new File(WZ_DIR, "Character.wz");
+    @SuppressWarnings("unused")
     public static final File EFFECT_DIR = new File(WZ_DIR, "Effect.wz");
     public static final File ETC_DIR = new File(WZ_DIR, "Etc.wz");
     public static final File ITEM_DIR = new File(WZ_DIR, "Item.wz");
     public static final File MAP_DIR = new File(WZ_DIR, "Map.wz");
     public static final File MOB_DIR = new File(WZ_DIR, "Mob.wz");
+    @SuppressWarnings("unused")
     public static final File MORPH_DIR = new File(WZ_DIR, "Morph.wz");
     public static final File NPC_DIR = new File(WZ_DIR, "Npc.wz");
     public static final File QUEST_DIR = new File(WZ_DIR, "Quest.wz");
     public static final File REACTOR_DIR = new File(WZ_DIR, "Reactor.wz");
     public static final File SKILL_DIR = new File(WZ_DIR, "Skill.wz");
+    @SuppressWarnings("unused")
     public static final File SOUND_DIR = new File(WZ_DIR, "Sound.wz");
     public static final File STRING_DIR = new File(WZ_DIR, "String.wz");
+    @SuppressWarnings("unused")
     public static final File TAMING_MOB_DIR = new File(WZ_DIR, "TamingMob.wz");
+    @SuppressWarnings("unused")
     public static final File UI_DIR = new File(WZ_DIR, "UI.wz");
 
+    /**
+     * 此方法作为解析 wz 目录和 xml 文件的例子，需要了解细节的话，可以参考一下。
+     */
     public static void main(String[] args) {
         // 必须是 debug 模式下才可以输出到 out 目录
         if (!Environments.debug()) {
             return;
         }
 
-        File[] foundFiles = new File(WzFiles.WZ_DIR, "String.wz")
-                .listFiles((dir, name) -> name.endsWith(".xml"));
+        File[] foundFiles = STRING_DIR.listFiles((dir, name) -> name.endsWith(".xml"));
         if (foundFiles == null) {
             return;
         }
@@ -64,6 +73,11 @@ public enum WzFiles {
         }
 
         for (File foundFile : foundFiles) {
+            // 不解析目录
+            if (Files.isDirectory(foundFile.toPath())) {
+                continue;
+            }
+
             try {
                 // Jsoup 在解析时自动用 html + body 包装 xml 内容，所以这里要拿到 body 的子元素
                 Elements imgDir = Jsoup.parse(foundFile, "UTF-8").body().children();

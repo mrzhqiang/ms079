@@ -4,6 +4,7 @@
  */
 package tools.wztosql;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.io.File;
 import java.nio.charset.Charset;
@@ -49,7 +50,7 @@ public class DumpOxQuizData {
 
     public void dumpOxData() throws SQLException {
         MapleDataProvider stringProvider;
-        stringProvider = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/Etc.wz"));
+        stringProvider = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
         MapleData ox = stringProvider.getData("OXQuiz.img");
         PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_oxdata`");
         ps.execute();

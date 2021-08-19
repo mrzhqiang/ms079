@@ -4,6 +4,8 @@ import client.MapleDisease;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import server.life.MobSkillFactory;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -16,7 +18,7 @@ public class MapleCarnivalFactory {
     private final static MapleCarnivalFactory instance = new MapleCarnivalFactory();
     private final Map<Integer, MCSkill> skills = new HashMap<Integer, MCSkill>();
     private final Map<Integer, MCSkill> guardians = new HashMap<Integer, MCSkill>();
-    private final MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
+    private final MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
 
     public MapleCarnivalFactory() {
         //whoosh

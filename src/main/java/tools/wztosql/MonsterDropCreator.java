@@ -16,6 +16,8 @@ import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -35,8 +37,8 @@ public class MonsterDropCreator {
     protected static List<Pair<Integer, String>> itemNameCache = new ArrayList();
     protected static List<Pair<Integer, MobInfo>> mobCache = new ArrayList();
     protected static Map<Integer, Boolean> bossCache = new HashMap();
-    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
-    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Mob.wz"));
+    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
+    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(WzFiles.MOB_DIR);
 
     public static void main(String[] args) throws FileNotFoundException, IOException, NotBoundException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException {
       //  MapleData data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("String.wz").toString())).getData("MonsterBook.img");

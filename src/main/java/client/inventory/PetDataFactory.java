@@ -23,6 +23,8 @@ package client.inventory;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -31,7 +33,7 @@ import tools.Pair;
 
 public class PetDataFactory {
 
-    private static MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Item.wz"));
+    private static MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(WzFiles.ITEM_DIR);
     private static Map<Pair<Integer, Integer>, PetCommand> petCommands = new HashMap<Pair<Integer, Integer>, PetCommand>();
     private static Map<Integer, Integer> petHunger = new HashMap<Integer, Integer>();
 

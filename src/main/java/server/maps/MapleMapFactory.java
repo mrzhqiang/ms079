@@ -20,6 +20,7 @@
  */
 package server.maps;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -51,8 +52,8 @@ import tools.StringUtil;
 
 public class MapleMapFactory {
 
-    private static final MapleDataProvider source = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Map.wz"));
-    private static final MapleData nameData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz")).getData("Map.img");
+    private static final MapleDataProvider source = MapleDataProviderFactory.getDataProvider(WzFiles.MAP_DIR);
+    private static final MapleData nameData = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR).getData("Map.img");
     private final Map<Integer, MapleMap> maps = new HashMap<Integer, MapleMap>();
     private final Map<Integer, Integer> DeStorymaps = new HashMap<Integer, Integer>() {
 

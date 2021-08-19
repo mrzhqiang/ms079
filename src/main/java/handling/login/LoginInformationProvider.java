@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import provider.MapleData;
 import provider.MapleDataDirectoryEntry;
 import provider.MapleDataFileEntry;
@@ -41,8 +42,7 @@ public class LoginInformationProvider {
     }
 
     protected LoginInformationProvider() {
-        final String WZpath = MapleDataProviderFactory.wzPath;
-        final MapleData nameData = MapleDataProviderFactory.getDataProvider(new File(WZpath + "/Etc.wz")).getData("ForbiddenName.img");
+        final MapleData nameData = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR).getData("ForbiddenName.img");
         for (final MapleData data : nameData.getChildren()) {
             ForbiddenName.add(MapleDataTool.getString(data));
         }

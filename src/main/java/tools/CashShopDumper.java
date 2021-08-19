@@ -6,6 +6,7 @@
 package tools;
 
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.wz.WzFiles;
 import database.DatabaseConnection;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,7 +38,7 @@ import server.MapleItemInformationProvider;
  */
 public class CashShopDumper {
 
-    private static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
+    private static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR);
 
     public static final CashModInfo getModInfo(int sn) {
         CashModInfo ret = null;

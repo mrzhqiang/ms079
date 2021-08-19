@@ -27,7 +27,7 @@ public class MapleDataProviderFactory {
 
     public final static String wzPath = System.getProperty("wzpath", "wz");
 
-    private static MapleDataProvider getWZ(Object in, boolean provideImages) {
+    private static MapleDataProvider getWZ(Object in) {
         if (in instanceof File) {
             File fileIn = (File) in;
 
@@ -37,14 +37,7 @@ public class MapleDataProviderFactory {
     }
 
     public static MapleDataProvider getDataProvider(Object in) {
-        return getWZ(in, false);
+        return getWZ(in);
     }
 
-    public static MapleDataProvider getImageProvidingDataProvider(Object in) {
-        return getWZ(in, true);
-    }
-
-    public static File fileInWZPath(String filename) {
-        return new File(wzPath, filename);
-    }
 }
