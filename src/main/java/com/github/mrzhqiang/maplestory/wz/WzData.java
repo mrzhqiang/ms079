@@ -1,12 +1,15 @@
 package com.github.mrzhqiang.maplestory.wz;
 
+import com.github.mrzhqiang.maplestory.wz.element.ImgDirElement;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,88 +17,107 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public enum WzData {
-    BASE(WzFiles.BASE_DIR),
     CHARACTER(WzFiles.CHARACTER_DIR),
-    EFFECT(WzFiles.EFFECT_DIR),
     ETC(WzFiles.ETC_DIR),
     ITEM(WzFiles.ITEM_DIR),
     MAP(WzFiles.MAP_DIR),
     MOB(WzFiles.MOB_DIR),
-    MORPH(WzFiles.MORPH_DIR),
     NPC(WzFiles.NPC_DIR),
     QUEST(WzFiles.QUEST_DIR),
     REACTOR(WzFiles.REACTOR_DIR),
     SKILL(WzFiles.SKILL_DIR),
-    SOUND(WzFiles.SOUND_DIR),
     STRING(WzFiles.STRING_DIR),
-    TAMING_MOB(WzFiles.TAMING_MOB_DIR),
-    UI(WzFiles.UI_DIR),
+//    BASE(WzFiles.BASE_DIR),
+//    EFFECT(WzFiles.EFFECT_DIR),
+//    MORPH(WzFiles.MORPH_DIR),
+//    SOUND(WzFiles.SOUND_DIR),
+//    TAMING_MOB(WzFiles.TAMING_MOB_DIR),
+//    UI(WzFiles.UI_DIR),
     ;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(WzData.class);
 
     private final WzDirectory root;
 
-    WzData(File file) {
-        Preconditions.checkNotNull(file, "file == null");
-        this.root = new WzDirectory();
-        this.root.parse(file.toPath());
+    /**
+     * wz/Character.wz
+     * wz/String.wz
+     */
+    WzData(File wzFile) {
+        Preconditions.checkNotNull(wzFile, "wz file == null");
+        Preconditions.checkArgument(wzFile.exists(), "wz file %s is not exists", wzFile);
+        this.root = new WzDirectory(wzFile.toPath());
     }
 
-    public static class WzDirectory {
+    public WzDirectory root() {
+        return root;
+    }
+
+    public static final class WzDirectory {
+
         private final Map<Path, WzDirectory> dirs = Maps.newHashMap();
         private final Map<Path, WzFile> files = Maps.newHashMap();
 
-        public void parse(Path path) {
-            if (!Files.isDirectory(path) || Files.notExists(path)) {
+        private final Path root;
+
+        WzDirectory(Path path) {
+            Preconditions.checkNotNull(path, "path == null");
+            this.root = path;
+            this.parse(root);
+        }
+
+        @Nullable
+        public WzDirectory dir(String name) {
+            if (Strings.isNullOrEmpty(name) || dirs.isEmpty()) {
+                return null;
+            }
+            return dirs.get(root.resolve(name));
+        }
+
+        @Nullable
+        public WzFile file(String name) {
+            if (Strings.isNullOrEmpty(name) || files.isEmpty()) {
+                return null;
+            }
+            return files.get(root.resolve(name));
+        }
+
+        private void parse(Path path) {
+            if (!Files.isDirectory(path)) {
                 return;
             }
 
             try {
                 Files.list(path).forEach(this::attemptParse);
             } catch (IOException e) {
-                LOGGER.error("列出 {} 目录时，出现错误：{}", path, e);
+                LOGGER.error("无法列出 {} 目录：{}", path, e);
             }
         }
 
         private void attemptParse(Path path) {
             try {
                 if (Files.isDirectory(path)) {
-                    parseDirectory(path);
+                    WzDirectory directory = new WzDirectory(path);
+                    dirs.put(path, directory);
                 } else {
-                    parseFile(path);
+                    Elements imgDir = Jsoup.parse(path.toFile(), "UTF-8").body().children();
+                    files.put(path, new WzFile(imgDir));
                 }
             } catch (IOException e) {
                 LOGGER.error("解析 {} 出现问题：{}", path, e);
             }
         }
-
-        private void parseDirectory(Path path) throws IOException {
-            WzDirectory directory = new WzDirectory();
-            directory.parse(path);
-            dirs.put(path, directory);
-        }
-
-        private void parseFile(Path path) throws IOException {
-            Elements imgDir = Jsoup.parse(path.toFile(), "UTF-8").body().children();
-            files.put(path, new WzFile(imgDir));
-        }
     }
 
     public static class WzFile {
 
-        private final Elements imgDir;
+        private final ImgDirElement imgDir;
 
-        public WzFile(Elements imgDir) {
+        WzFile(Elements imgDir) {
             Preconditions.checkNotNull(imgDir, "imgdir == null");
-            this.imgDir = imgDir;
+            this.imgDir = ImgDirElement.of(imgDir.first());
         }
 
-        public String name() {
-            return imgDir.attr("name");
-        }
-
-        public Elements content() {
+        public ImgDirElement getImgDir() {
             return imgDir;
         }
     }

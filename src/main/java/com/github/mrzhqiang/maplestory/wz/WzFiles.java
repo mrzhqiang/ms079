@@ -18,15 +18,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
-public enum WzFiles {
-    ;
+public final class WzFiles {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(WzFiles.class);
 
-    public static final String WZ_KEY = "wz.path";
-    public static final String DEFAULT_WZ_PATH = "/wz";
-    public static final File WZ_DIR = new File(System.getProperty(WZ_KEY, Environments.USER_DIR + DEFAULT_WZ_PATH));
-
-    /* 未使用的 wz 目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。 */
+    private static final String WZ_KEY = "wz.path";
+    private static final String DEFAULT_WZ_PATH = "wz";
+    public static final File WZ_DIR = new File(System.getProperty(WZ_KEY, DEFAULT_WZ_PATH));
+    /* 未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。 */
     @SuppressWarnings("unused")
     public static final File BASE_DIR = new File(WZ_DIR, "Base.wz");
     public static final File CHARACTER_DIR = new File(WZ_DIR, "Character.wz");
@@ -50,17 +49,16 @@ public enum WzFiles {
     @SuppressWarnings("unused")
     public static final File UI_DIR = new File(WZ_DIR, "UI.wz");
 
+    private WzFiles() {
+        // no instance
+    }
+
     /**
-     * 此方法作为解析 wz 目录和 xml 文件的例子，需要了解细节的话，可以参考一下。
+     * 此方法作为解析 wz 目录和 xml 文件的例子。
      */
     public static void main(String[] args) {
-        // 必须是 debug 模式下才可以输出到 out 目录
-        if (!Environments.debug()) {
-            return;
-        }
-
-        File[] foundFiles = STRING_DIR.listFiles((dir, name) -> name.endsWith(".xml"));
-        if (foundFiles == null) {
+        File[] stringFiles = STRING_DIR.listFiles((dir, name) -> name.endsWith(".xml"));
+        if (stringFiles == null || stringFiles.length == 0) {
             return;
         }
 
@@ -69,33 +67,31 @@ public enum WzFiles {
             Files.deleteIfExists(out);
             Files.createDirectories(out);
         } catch (IOException e) {
-            LOGGER.error("无法操作目录：" + out, e);
+            LOGGER.error("无法重置 {} 目录：{}", out, e);
         }
 
-        for (File foundFile : foundFiles) {
-            // 不解析目录
-            if (Files.isDirectory(foundFile.toPath())) {
+        for (File stringFile : stringFiles) {
+            if (Files.isDirectory(stringFile.toPath())) {
                 continue;
             }
 
+            String filename = stringFile.getName();
+            Path target = Optional.of(filename)
+                    .map(it -> it.split("\\."))
+                    .filter(it -> it.length > 0)
+                    // xxx.img.xml >>> xxx
+                    .map(it -> it[0])
+                    // resolve 方法：/path/to + args >>> /path/to/args
+                    .map(out::resolve)
+                    .orElse(out.resolve(filename));
             try {
-                // Jsoup 在解析时自动用 html + body 包装 xml 内容，所以这里要拿到 body 的子元素
-                Elements imgDir = Jsoup.parse(foundFile, "UTF-8").body().children();
-                // select 方法执行 css 选择器语法
-                // 比如 tag[key=value] 是匹配 <tag key="value"></tag> 元素
+                // Jsoup 自动用 body 包装 xml 内容，所以这里要拿 body 的子元素
+                Elements imgDir = Jsoup.parse(stringFile, "UTF-8").body().children();
+                // select 方法：tag[key=value] 匹配 <tag key="value"></tag>
                 Elements strings = imgDir.select("string[name=name]");
-                String filename = foundFile.getName();
-                Path target = Optional.of(filename)
-                        .map(it -> it.split("\\."))
-                        .filter(it -> it.length > 0)
-                        .map(it -> it[0])
-                        // resolve 方法将指定参数拼接到路径之后，比如 /path/to + args =>>> /path/to/args
-                        // 这里的作用是按照 String.wz 目录结构输出
-                        .map(out::resolve)
-                        .orElse(out.resolve(filename));
                 strings.forEach(element -> writeElement(target, element));
             } catch (IOException e) {
-                LOGGER.error("解析 [" + foundFile + "] 文件出现错误！", e);
+                LOGGER.error("无法解析 {} 文件：{}", stringFile, e);
             }
         }
     }
@@ -107,10 +103,9 @@ public enum WzFiles {
         String desc = Optional.ofNullable(element.nextElementSibling()).map(Element::val).orElse("(无描述)");
         String format = String.format("%s - %s - %s%n", parentName, name, desc);
         try {
-            // 以 UTF-8 字节流写入内容到指定路径，CREATE 参数是文件不存在自动创建，APPEND 参数是每次追加到末尾
             Files.write(target, format.getBytes(UTF_8), CREATE, APPEND);
         } catch (IOException e) {
-            LOGGER.error("写入到 [" + target + "] 文件出现错误！", e);
+            LOGGER.error("无法写入 {} 文件：{}", target, e);
         }
     }
 }
