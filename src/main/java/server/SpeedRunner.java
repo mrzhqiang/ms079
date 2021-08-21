@@ -52,7 +52,7 @@ public class SpeedRunner {
         Map<Integer, String> rett = new LinkedHashMap<Integer, String>();
         ResultSet rs = ps.executeQuery();
         int rank = 1;
-        boolean cont = rs.first();
+        boolean cont = rs.isFirst() && rs.first();
         boolean changed = cont;
         while (cont) {
             addSpeedRunData(ret, rett, rs.getString("members"), rs.getString("leader"), rank, rs.getString("timestring"));
