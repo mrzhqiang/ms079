@@ -34,8 +34,8 @@ public class DumpNpcNames {
     }
 
     public void dumpNpcNameData() throws SQLException {
-        MapleDataProvider npcData = MapleDataProviderFactory.getDataProvider(new File((System.getProperty("wzpath") != null ? System.getProperty("wzpath") : "") + "wz/Npc.wz"));
-        MapleDataProvider stringDataWZ = MapleDataProviderFactory.getDataProvider(new File((System.getProperty("wzpath") != null ? System.getProperty("wzpath") : "") + "wz/String.wz"));
+        MapleDataProvider npcData = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/Npc.wz"));
+        MapleDataProvider stringDataWZ = MapleDataProviderFactory.getDataProvider(new File((MapleDataProviderFactory.wzPath != null ? MapleDataProviderFactory.wzPath : "") + "wz/String.wz"));
         MapleData npcStringData = stringDataWZ.getData("Npc.img");
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_npcnamedata`")) {
             ps.execute();

@@ -51,8 +51,8 @@ import tools.StringUtil;
 
 public class MapleMapFactory {
 
-    private static final MapleDataProvider source = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Map.wz"));
-    private static final MapleData nameData = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/String.wz")).getData("Map.img");
+    private static final MapleDataProvider source = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Map.wz"));
+    private static final MapleData nameData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz")).getData("Map.img");
     private final Map<Integer, MapleMap> maps = new HashMap<Integer, MapleMap>();
     private final Map<Integer, Integer> DeStorymaps = new HashMap<Integer, Integer>() {
 

@@ -4503,7 +4503,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void maxAllSkills() {
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wz") + "/" + "String.wz"));
+        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/" + "String.wz"));
         MapleData skilldData = dataProvider.getData("Skill.img");
         for (MapleData skill_ : skilldData.getChildren()) {
             try {

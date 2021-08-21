@@ -16,7 +16,7 @@ public class MapleCarnivalFactory {
     private final static MapleCarnivalFactory instance = new MapleCarnivalFactory();
     private final Map<Integer, MCSkill> skills = new HashMap<Integer, MCSkill>();
     private final Map<Integer, MCSkill> guardians = new HashMap<Integer, MCSkill>();
-    private final MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Skill.wz"));
+    private final MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Skill.wz"));
 
     public MapleCarnivalFactory() {
         //whoosh

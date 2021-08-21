@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import provider.MapleDataProviderFactory;
 import server.MapleItemInformationProvider;
 
 /**
@@ -68,7 +70,7 @@ public class FixShopItemsPrice {
     }
 
     public static void main(String[] args) {
-        System.setProperty("wzpath", System.getProperty("wzpath"));
+        System.setProperty("wzpath", MapleDataProviderFactory.wzPath);
         FixShopItemsPrice i = new FixShopItemsPrice();
         System.out.println("正在加载道具数据......");
        // MapleItemInformationProvider.getInstance().load();

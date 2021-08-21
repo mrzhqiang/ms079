@@ -31,7 +31,7 @@ import tools.Pair;
 
 public class PetDataFactory {
 
-    private static MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Item.wz"));
+    private static MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Item.wz"));
     private static Map<Pair<Integer, Integer>, PetCommand> petCommands = new HashMap<Pair<Integer, Integer>, PetCommand>();
     private static Map<Integer, Integer> petHunger = new HashMap<Integer, Integer>();
 

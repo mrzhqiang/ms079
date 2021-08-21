@@ -49,7 +49,7 @@ public class ZlhssMS extends javax.swing.JFrame {
     }
 
     public ZlhssMS() {
-        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("gui/Icon.png"));
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("Icon.png"));
         setIconImage(icon.getImage());
         setTitle("ZlhssMS_服务端控制台");
         initComponents();

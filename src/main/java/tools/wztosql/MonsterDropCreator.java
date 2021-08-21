@@ -35,11 +35,11 @@ public class MonsterDropCreator {
     protected static List<Pair<Integer, String>> itemNameCache = new ArrayList();
     protected static List<Pair<Integer, MobInfo>> mobCache = new ArrayList();
     protected static Map<Integer, Boolean> bossCache = new HashMap();
-    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/String.wz"));
-    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Mob.wz"));
+    protected static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
+    protected static final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Mob.wz"));
 
     public static void main(String[] args) throws FileNotFoundException, IOException, NotBoundException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException {
-      //  MapleData data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("String.wz").toString())).getData("MonsterBook.img");
+      //  MapleData data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(MapleDataProviderFactory.wzPath).append("String.wz").toString())).getData("MonsterBook.img");
         System.out.println("準備提取數據!");
         System.out.println("按任意鍵繼續...");
         System.console().readLine();
@@ -790,7 +790,7 @@ public class MonsterDropCreator {
     }
 
     private static void getAllItems() {
-       // MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("/String.wz").toString()));
+       // MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(MapleDataProviderFactory.wzPath).append("/String.wz").toString()));
 
         List itemPairs = new ArrayList();
 
@@ -842,8 +842,8 @@ public class MonsterDropCreator {
 
     public static void getAllMobs() {
         List itemPairs = new ArrayList();
-       // MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("/String.wz").toString()));
-     //   MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("/Mob.wz").toString()));
+       // MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(MapleDataProviderFactory.wzPath).append("/String.wz").toString()));
+     //   MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(MapleDataProviderFactory.wzPath).append("/Mob.wz").toString()));
         MapleData mob = data.getData("Mob.img");
 
         for (MapleData itemFolder : mob.getChildren()) {
