@@ -72,7 +72,7 @@ public class MapleGuild implements java.io.Serializable {
 
         try {
             Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds WHERE guildid = ?");
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds WHERE guildid = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ps.setInt(1, guildid);
             ResultSet rs = ps.executeQuery();
 
@@ -102,7 +102,7 @@ public class MapleGuild implements java.io.Serializable {
             rs.close();
             ps.close();
 
-            ps = con.prepareStatement("SELECT id, name, level, job, guildrank, alliancerank FROM characters WHERE guildid = ? ORDER BY guildrank ASC, name ASC");
+            ps = con.prepareStatement("SELECT id, name, level, job, guildrank, alliancerank FROM characters WHERE guildid = ? ORDER BY guildrank ASC, name ASC", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ps.setInt(1, guildid);
             rs = ps.executeQuery();
 
@@ -495,7 +495,7 @@ public class MapleGuild implements java.io.Serializable {
         }
         try {
             Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT guildid FROM guilds WHERE name = ?");
+            PreparedStatement ps = con.prepareStatement("SELECT guildid FROM guilds WHERE name = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ps.setString(1, name);
             ResultSet rs = ps.executeQuery();
 

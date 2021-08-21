@@ -18,7 +18,7 @@ public class AutoRegister {
         boolean accountExists = false;
         Connection con = DatabaseConnection.getConnection();
         try {
-            PreparedStatement ps = con.prepareStatement("SELECT name FROM accounts WHERE name = ?");
+            PreparedStatement ps = con.prepareStatement("SELECT name FROM accounts WHERE name = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ps.setString(1, login);
             ResultSet rs = ps.executeQuery();
             if (rs.first()) {
@@ -45,7 +45,7 @@ public class AutoRegister {
 
         try {
             ResultSet rs;
-            PreparedStatement ipc = con.prepareStatement("SELECT macs FROM accounts WHERE macs = ?");
+            PreparedStatement ipc = con.prepareStatement("SELECT macs FROM accounts WHERE macs = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ipc.setString(1, macs);
             rs = ipc.executeQuery();
             if (rs.first() == false || rs.last() == true && rs.getRow() < ACCOUNTS_PER_MAC) {
