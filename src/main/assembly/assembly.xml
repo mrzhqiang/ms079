@@ -15,6 +15,7 @@
                 <include>LICENSE*</include>
                 <include>NOTICE*</include>
                 <include>*.bat</include>
+                <include>*.sh</include>
                 <include>*.ini</include>
             </includes>
         </fileSet>
@@ -54,7 +55,7 @@
             </directory>
             <outputDirectory>db</outputDirectory>
             <includes>
-                <include>**/*</include>
+                <include>*.sql</include>
             </includes>
         </fileSet>
     </fileSets>
