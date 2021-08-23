@@ -5,21 +5,16 @@ import org.jsoup.nodes.Element;
 
 public abstract class WzElement {
 
-    private final Element source;
+    private static final String NAME_KEY = "name";
+
     private final String name;
 
     protected WzElement(Element source) {
         Preconditions.checkNotNull(source, "source == null");
-        this.source = source;
-        this.name = source.attr("name");
-    }
-
-    public Element getSource() {
-        return source;
+        this.name = source.attr(NAME_KEY);
     }
 
     public String getName() {
         return name;
     }
-
 }

@@ -13,11 +13,14 @@ public final class ShortElement extends WzElement {
     private static final String SHORT_TAG = "short";
 
     public static Map<String, ShortElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(SHORT_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(ShortElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(SHORT_TAG))
+                .map(ShortElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final short value;

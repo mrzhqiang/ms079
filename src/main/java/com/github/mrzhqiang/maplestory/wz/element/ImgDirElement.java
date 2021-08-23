@@ -29,11 +29,14 @@ public final class ImgDirElement extends WzElement {
     }
 
     public static Map<String, ImgDirElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(IMGDIR_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(ImgDirElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(IMGDIR_TAG))
+                .map(ImgDirElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final Map<String, ImgDirElement> imgDirMap;

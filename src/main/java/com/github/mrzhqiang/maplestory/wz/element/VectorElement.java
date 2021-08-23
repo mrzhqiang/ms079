@@ -13,11 +13,14 @@ public final class VectorElement extends WzElement {
     private static final String VECTOR_TAG = "vector";
 
     public static Map<String, VectorElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(VECTOR_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(VectorElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(VECTOR_TAG))
+                .map(VectorElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final int x;

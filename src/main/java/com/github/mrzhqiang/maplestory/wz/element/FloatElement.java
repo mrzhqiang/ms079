@@ -13,11 +13,14 @@ public final class FloatElement extends WzElement {
     private static final String FLOAT_TAG = "float";
 
     public static Map<String, FloatElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(FLOAT_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(FloatElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(FLOAT_TAG))
+                .map(FloatElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final float value;

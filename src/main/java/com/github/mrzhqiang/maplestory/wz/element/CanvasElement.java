@@ -14,11 +14,14 @@ public final class CanvasElement extends WzElement {
     private static final String CANVAS_TAG = "canvas";
 
     public static Map<String, CanvasElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(CANVAS_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(CanvasElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(CANVAS_TAG))
+                .map(CanvasElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final int width;

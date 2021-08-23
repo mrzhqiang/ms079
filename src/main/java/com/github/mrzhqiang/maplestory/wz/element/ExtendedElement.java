@@ -13,11 +13,14 @@ public final class ExtendedElement extends WzElement {
     private static final String EXTENDED_TAG = "extended";
 
     public static Map<String, ExtendedElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(EXTENDED_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(ExtendedElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(EXTENDED_TAG))
+                .map(ExtendedElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final Map<String, VectorElement> vectorMap;

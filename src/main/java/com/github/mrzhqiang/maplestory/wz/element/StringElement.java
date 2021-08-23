@@ -12,11 +12,14 @@ public final class StringElement extends WzElement {
     private static final String STRING_TAG = "string";
 
     public static Map<String, StringElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(STRING_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(StringElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(STRING_TAG))
+                .map(StringElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final String value;

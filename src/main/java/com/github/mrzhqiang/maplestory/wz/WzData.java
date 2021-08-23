@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,13 @@ public enum WzData {
     ;
     private static final Logger LOGGER = LoggerFactory.getLogger(WzData.class);
 
+    public static void load() {
+        for (WzData value : WzData.values()) {
+            value.root.clean();
+            value.root.parse();
+        }
+    }
+
     private final WzDirectory root;
 
     /**
@@ -52,17 +60,17 @@ public enum WzData {
         return root;
     }
 
+
     public static final class WzDirectory {
 
         private final Map<Path, WzDirectory> dirs = Maps.newHashMap();
         private final Map<Path, WzFile> files = Maps.newHashMap();
 
-        private final Path root;
+        private final Path path;
 
         WzDirectory(Path path) {
             Preconditions.checkNotNull(path, "path == null");
-            this.root = path;
-            this.parse(root);
+            this.path = path;
         }
 
         @Nullable
@@ -70,7 +78,7 @@ public enum WzData {
             if (Strings.isNullOrEmpty(name) || dirs.isEmpty()) {
                 return null;
             }
-            return dirs.get(root.resolve(name));
+            return dirs.get(path.resolve(name));
         }
 
         @Nullable
@@ -78,10 +86,13 @@ public enum WzData {
             if (Strings.isNullOrEmpty(name) || files.isEmpty()) {
                 return null;
             }
-            return files.get(root.resolve(name));
+            if (!name.endsWith(".xml")) {
+                name = name + ".xml";
+            }
+            return files.get(path.resolve(name));
         }
 
-        private void parse(Path path) {
+        private void parse() {
             if (!Files.isDirectory(path)) {
                 return;
             }
@@ -106,7 +117,13 @@ public enum WzData {
                 LOGGER.error("解析 {} 出现问题：{}", path, e);
             }
         }
+
+        public void clean() {
+            dirs.clear();
+            files.clear();
+        }
     }
+
 
     public static class WzFile {
 
@@ -117,9 +134,9 @@ public enum WzData {
             this.imgDir = ImgDirElement.of(imgDir.first());
         }
 
-        public ImgDirElement getImgDir() {
+        @Nonnull
+        public ImgDirElement imgDir() {
             return imgDir;
         }
     }
-
 }

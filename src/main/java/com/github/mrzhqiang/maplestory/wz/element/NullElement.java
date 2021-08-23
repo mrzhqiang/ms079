@@ -12,11 +12,14 @@ public final class NullElement extends WzElement {
     private static final String NULL_TAG = "null";
 
     public static Map<String, NullElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(NULL_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(NullElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(NULL_TAG))
+                .map(NullElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     NullElement(Element source) {

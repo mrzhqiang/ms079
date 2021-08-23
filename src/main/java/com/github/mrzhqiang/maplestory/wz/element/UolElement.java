@@ -12,11 +12,14 @@ public final class UolElement extends WzElement {
     private static final String UOL_TAG = "uol";
 
     public static Map<String, UolElement> mapChildren(Element parent) {
-        Elements elements = parent.children().select(UOL_TAG);
+        Elements elements = parent.children();
         if (elements.isEmpty()) {
             return Collections.emptyMap();
         }
-        return elements.stream().map(UolElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
+        return elements.stream()
+                .filter(element -> element.is(UOL_TAG))
+                .map(UolElement::new)
+                .collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final String value;
