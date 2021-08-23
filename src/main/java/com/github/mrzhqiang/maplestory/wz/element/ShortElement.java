@@ -2,7 +2,9 @@ package com.github.mrzhqiang.maplestory.wz.element;
 
 import com.github.mrzhqiang.helper.math.Numbers;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,10 +13,11 @@ public final class ShortElement extends WzElement {
     private static final String SHORT_TAG = "short";
 
     public static Map<String, ShortElement> mapChildren(Element parent) {
-        return parent.children().select(SHORT_TAG)
-                .stream()
-                .map(ShortElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+        Elements elements = parent.children().select(SHORT_TAG);
+        if (elements.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return elements.stream().map(ShortElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final short value;

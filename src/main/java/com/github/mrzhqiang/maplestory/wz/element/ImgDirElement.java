@@ -1,8 +1,11 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class ImgDirElement extends WzElement {
@@ -26,10 +29,11 @@ public final class ImgDirElement extends WzElement {
     }
 
     public static Map<String, ImgDirElement> mapChildren(Element parent) {
-        return parent.children().select(IMGDIR_TAG)
-                .stream()
-                .map(ImgDirElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+        Elements elements = parent.children().select(IMGDIR_TAG);
+        if (elements.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return elements.stream().map(ImgDirElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final Map<String, ImgDirElement> imgDirMap;
@@ -40,6 +44,8 @@ public final class ImgDirElement extends WzElement {
     private final Map<String, VectorElement> vectorMap;
     private final Map<String, UolElement> uolMap;
     private final Map<String, ShortElement> shortMap;
+    private final Map<String, FloatElement> floatMap;
+    private final Map<String, ExtendedElement> extendedMap;
 
     ImgDirElement(Element source) {
         super(source);
@@ -51,37 +57,47 @@ public final class ImgDirElement extends WzElement {
         this.vectorMap = VectorElement.mapChildren(source);
         this.uolMap = UolElement.mapChildren(source);
         this.shortMap = ShortElement.mapChildren(source);
+        this.floatMap = FloatElement.mapChildren(source);
+        this.extendedMap = ExtendedElement.mapChildren(source);
     }
 
-    public ImgDirElement findImgDir(String name) {
-        return imgDirMap.get(name);
+    public Optional<ImgDirElement> findImgDir(String name) {
+        return Optional.ofNullable(imgDirMap.get(name));
     }
 
-    public NullElement findNull(String name) {
-        return nullMap.get(name);
+    public Optional<NullElement> findNull(String name) {
+        return Optional.ofNullable(nullMap.get(name));
     }
 
-    public IntElement findInt(String name) {
-        return intMap.get(name);
+    public Optional<IntElement> findInt(String name) {
+        return Optional.ofNullable(intMap.get(name));
     }
 
-    public StringElement findString(String name) {
-        return stringMap.get(name);
+    public Optional<StringElement> findString(String name) {
+        return Optional.ofNullable(stringMap.get(name));
     }
 
-    public CanvasElement findCanvas(String name) {
-        return canvasMap.get(name);
+    public Optional<CanvasElement> findCanvas(String name) {
+        return Optional.ofNullable(canvasMap.get(name));
     }
 
-    public VectorElement findVector(String name) {
-        return vectorMap.get(name);
+    public Optional<VectorElement> findVector(String name) {
+        return Optional.ofNullable(vectorMap.get(name));
     }
 
-    public UolElement findUol(String name) {
-        return uolMap.get(name);
+    public Optional<UolElement> findUol(String name) {
+        return Optional.ofNullable(uolMap.get(name));
     }
 
-    public ShortElement findShort(String name) {
-        return shortMap.get(name);
+    public Optional<ShortElement> findShort(String name) {
+        return Optional.ofNullable(shortMap.get(name));
+    }
+
+    public Optional<FloatElement> findFloat(String name) {
+        return Optional.ofNullable(floatMap.get(name));
+    }
+
+    public Optional<ExtendedElement> findExtended(String name) {
+        return Optional.ofNullable(extendedMap.get(name));
     }
 }

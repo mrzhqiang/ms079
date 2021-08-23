@@ -2,8 +2,11 @@ package com.github.mrzhqiang.maplestory.wz.element;
 
 import com.github.mrzhqiang.helper.math.Numbers;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class CanvasElement extends WzElement {
@@ -11,10 +14,11 @@ public final class CanvasElement extends WzElement {
     private static final String CANVAS_TAG = "canvas";
 
     public static Map<String, CanvasElement> mapChildren(Element parent) {
-        return parent.children().select(CANVAS_TAG)
-                .stream()
-                .map(CanvasElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+        Elements elements = parent.children().select(CANVAS_TAG);
+        if (elements.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return elements.stream().map(CanvasElement::new).collect(Collectors.toMap(WzElement::getName, it -> it));
     }
 
     private final int width;
@@ -23,6 +27,7 @@ public final class CanvasElement extends WzElement {
     private final Map<String, StringElement> stringMap;
     private final Map<String, VectorElement> vectorMap;
     private final Map<String, IntElement> intMap;
+    private final Map<String, ExtendedElement> extendedMap;
 
     CanvasElement(Element source) {
         super(source);
@@ -32,6 +37,7 @@ public final class CanvasElement extends WzElement {
         this.imgDirMap = ImgDirElement.mapChildren(source);
         this.stringMap = StringElement.mapChildren(source);
         this.intMap = IntElement.mapChildren(source);
+        this.extendedMap = ExtendedElement.mapChildren(source);
     }
 
     public int getWidth() {
@@ -42,19 +48,23 @@ public final class CanvasElement extends WzElement {
         return height;
     }
 
-    public ImgDirElement findImgDir(String name) {
-        return imgDirMap.get(name);
+    public Optional<ImgDirElement> findImgDir(String name) {
+        return Optional.ofNullable(imgDirMap.get(name));
     }
 
-    public StringElement findString(String name) {
-        return stringMap.get(name);
+    public Optional<StringElement> findString(String name) {
+        return Optional.ofNullable(stringMap.get(name));
     }
 
-    public VectorElement findVector(String name) {
-        return vectorMap.get(name);
+    public Optional<VectorElement> findVector(String name) {
+        return Optional.ofNullable(vectorMap.get(name));
     }
 
-    public IntElement findInt(String name) {
-        return intMap.get(name);
+    public Optional<IntElement> findInt(String name) {
+        return Optional.ofNullable(intMap.get(name));
+    }
+
+    public Optional<ExtendedElement> findExtended(String name) {
+        return Optional.ofNullable(extendedMap.get(name));
     }
 }
