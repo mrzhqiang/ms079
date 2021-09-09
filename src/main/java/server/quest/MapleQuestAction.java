@@ -1,32 +1,22 @@
 package server.quest;
 
-import client.ISkill;
-import client.MapleCharacter;
-import client.MapleQuestStatus;
-import client.MapleStat;
-import client.Skill;
-import client.SkillFactory;
+import client.*;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import provider.MapleDataTool;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
-import server.RandomRewards;
 import server.Randomizer;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.Triple;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 public class MapleQuestAction
         implements Serializable {
@@ -191,8 +181,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -243,7 +233,7 @@ public class MapleQuestAction
                     int masterLevel = ((Integer) skills.right).intValue();
                     ISkill skillObject = SkillFactory.getSkill(skillid);
                     boolean found = false;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int applicableJob = ((Integer) i$.next()).intValue();
                         if (c.getJob() == applicableJob) {
                             found = true;
@@ -286,7 +276,7 @@ public class MapleQuestAction
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int job_val = ((Integer) i$.next()).intValue();
                         if ((c.getJob() >= job_val) && (job_val > finalJob)) {
                             finalJob = job_val;
@@ -346,8 +336,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -447,8 +437,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -516,7 +506,7 @@ public class MapleQuestAction
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int job_val = ((Integer) i$.next()).intValue();
                         if ((c.getJob() >= job_val) && (job_val > finalJob)) {
                             finalJob = job_val;

@@ -1,51 +1,28 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.wztosql;
 
-import com.github.mrzhqiang.maplestory.wz.WzFiles;
+import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.Elements;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import database.DatabaseConnection;
-import java.awt.Point;
-import java.io.File;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
 
 public class DumpMobSkills {
 
-    private MapleDataProvider skill;
     protected boolean hadError = false;
-    protected boolean update = false;
+    protected boolean update;
     protected int id = 0;
     private Connection con = DatabaseConnection.getConnection();
 
-    public DumpMobSkills(boolean update) throws Exception {
+    public DumpMobSkills(boolean update) {
         this.update = update;
-        this.skill = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
     }
 
     public boolean isHadError() {
@@ -89,64 +66,70 @@ public class DumpMobSkills {
             delete("DELETE FROM wz_mobskilldata");
             System.out.println("Deleted wz_mobskilldata successfully.");
         }
-        final MapleData skillz = skill.getData("MobSkill.img");
         System.out.println("Adding into wz_mobskilldata.....");
+        WzData.SKILL.directory().findFile("MobSkill.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(element -> {
+                    this.id = Numbers.ofInt(element.name());
+                    element.findByName("level").map(WzElement::childrenStream)
+                            .ifPresent(wzElementStream -> wzElementStream.forEach(lvlz -> {
+                                int lvl = Numbers.ofInt(lvlz.name());
+                                try {
+                                    if (update && doesExist("SELECT * FROM wz_mobskilldata WHERE skillid = " + id + " AND level = " + lvl)) {
+                                        return;
+                                    }
+                                    ps.setInt(1, id);
+                                    ps.setInt(2, lvl);
+                                    ps.setInt(3, Elements.findInt(lvlz, "hp", 100));
+                                    ps.setInt(4, Elements.findInt(lvlz, "mpCon", 0));
+                                    ps.setInt(5, Elements.findInt(lvlz, "x", 1));
+                                    ps.setInt(6, Elements.findInt(lvlz, "y", 1));
+                                    ps.setInt(7, Elements.findInt(lvlz, "time", 0)); // * 1000
+                                    ps.setInt(8, Elements.findInt(lvlz, "prop", 100)); // / 100.0
+                                    ps.setInt(9, Elements.findInt(lvlz, "limit", 0));
+                                    ps.setInt(10, Elements.findInt(lvlz, "summonEffect", 0));
+                                    ps.setInt(11, Elements.findInt(lvlz, "interval", 0)); // * 1000
 
-        for (MapleData ids : skillz.getChildren()) {
-            for (MapleData lvlz : ids.getChildByPath("level").getChildren()) {
-                this.id = Integer.parseInt(ids.getName());
-                int lvl = Integer.parseInt(lvlz.getName());
-                if (update && doesExist("SELECT * FROM wz_mobskilldata WHERE skillid = " + id + " AND level = " + lvl)) {
-                    continue;
-                }
-                ps.setInt(1, id);
-                ps.setInt(2, lvl);
-                ps.setInt(3, MapleDataTool.getInt("hp", lvlz, 100));
-                ps.setInt(4, MapleDataTool.getInt("mpCon", lvlz, 0));
-                ps.setInt(5, MapleDataTool.getInt("x", lvlz, 1));
-                ps.setInt(6, MapleDataTool.getInt("y", lvlz, 1));
-                ps.setInt(7, MapleDataTool.getInt("time", lvlz, 0)); // * 1000
-                ps.setInt(8, MapleDataTool.getInt("prop", lvlz, 100)); // / 100.0
-                ps.setInt(9, MapleDataTool.getInt("limit", lvlz, 0));
-                ps.setInt(10, MapleDataTool.getInt("summonEffect", lvlz, 0));
-                ps.setInt(11, MapleDataTool.getInt("interval", lvlz, 0)); // * 1000
-
-                StringBuilder summ = new StringBuilder();
-                List<Integer> toSummon = new ArrayList<Integer>();
-                for (int i = 0; i > -1; i++) {
-                    if (lvlz.getChildByPath(String.valueOf(i)) == null) {
-                        break;
-                    }
-                    toSummon.add(Integer.valueOf(MapleDataTool.getInt(lvlz.getChildByPath(String.valueOf(i)), 0)));
-                }
-                for (Integer summon : toSummon) {
-                    if (summ.length() > 0) {
-                        summ.append(", ");
-                    }
-                    summ.append(String.valueOf(summon));
-                }
-                ps.setString(12, summ.toString());
-                if (lvlz.getChildByPath("lt") != null) {
-                    Point lt = (Point) lvlz.getChildByPath("lt").getData();
-                    ps.setInt(13, lt.x);
-                    ps.setInt(14, lt.y);
-                } else {
-                    ps.setInt(13, 0);
-                    ps.setInt(14, 0);
-                }
-                if (lvlz.getChildByPath("rb") != null) {
-                    Point rb = (Point) lvlz.getChildByPath("rb").getData();
-                    ps.setInt(15, rb.x);
-                    ps.setInt(16, rb.y);
-                } else {
-                    ps.setInt(15, 0);
-                    ps.setInt(16, 0);
-                }
-                ps.setByte(17, (byte) (MapleDataTool.getInt("summonOnce", lvlz, 0) > 0 ? 1 : 0));
-                System.out.println("Added skill: " + id + " level " + lvl);
-                ps.addBatch();
-            }
-        }
+                                    StringBuilder summ = new StringBuilder();
+                                    List<Integer> toSummon = new ArrayList<>();
+                                    for (int i = 0; i < lvlz.childrenStream().count(); i++) {
+                                        WzElement<?> wzElement = lvlz.find(String.valueOf(i));
+                                        if (wzElement == null) {
+                                            break;
+                                        }
+                                        toSummon.add(Elements.ofInt(wzElement));
+                                    }
+                                    for (Integer summon : toSummon) {
+                                        if (summ.length() > 0) {
+                                            summ.append(", ");
+                                        }
+                                        summ.append(summon);
+                                    }
+                                    ps.setString(12, summ.toString());
+                                    if (lvlz.find("lt") != null) {
+                                        Vector lt = Elements.findVector(lvlz, "lt");
+                                        ps.setInt(13, lt.x);
+                                        ps.setInt(14, lt.y);
+                                    } else {
+                                        ps.setInt(13, 0);
+                                        ps.setInt(14, 0);
+                                    }
+                                    if (lvlz.find("rb") != null) {
+                                        Vector rb = Elements.findVector(lvlz, "rb");
+                                        ps.setInt(15, rb.x);
+                                        ps.setInt(16, rb.y);
+                                    } else {
+                                        ps.setInt(15, 0);
+                                        ps.setInt(16, 0);
+                                    }
+                                    ps.setByte(17, (byte) (Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0));
+                                    System.out.println("Added skill: " + id + " level " + lvl);
+                                    ps.addBatch();
+                                } catch (Exception ignore) {
+                                }
+                            }));
+                }));
         System.out.println("Done wz_mobskilldata...");
     }
 

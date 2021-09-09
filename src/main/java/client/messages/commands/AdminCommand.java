@@ -4,6 +4,7 @@ import client.ISkill;
 import client.LoginCrypto;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.ServerConstants.PlayerGMRank;
 import client.MapleClient;
 import client.MapleDisease;
@@ -1145,12 +1146,12 @@ public class AdminCommand {
                 } else if (i < 200) {
                     int val = start + i - (int) ('A');
                     client.inventory.Item item = new client.inventory.Item(val, (byte) 0, (short) 1);
-                    c.getPlayer().getMap().spawnItemDrop(c.getPlayer(), c.getPlayer(), item, new Point(dStart, c.getPlayer().getPosition().y), false, false);
+                    c.getPlayer().getMap().spawnItemDrop(c.getPlayer(), c.getPlayer(), item, Vector.of(dStart, c.getPlayer().getPosition().y), false, false);
                     dStart += w;
                 } else if (i >= 200 && i <= 300) {
                     int val = nstart + i - (int) ('0') - 200;
                     client.inventory.Item item = new client.inventory.Item(val, (byte) 0, (short) 1);
-                    c.getPlayer().getMap().spawnItemDrop(c.getPlayer(), c.getPlayer(), item, new Point(dStart, c.getPlayer().getPosition().y), false, false);
+                    c.getPlayer().getMap().spawnItemDrop(c.getPlayer(), c.getPlayer(), item, Vector.of(dStart, c.getPlayer().getPosition().y), false, false);
                     dStart += w;
                 }
             }
@@ -2833,7 +2834,7 @@ public class AdminCommand {
     public static class MyPos extends CommandExecute {
 
         public int execute(MapleClient c, String splitted[]) {
-            Point pos = c.getPlayer().getPosition();
+            Vector pos = c.getPlayer().getPosition();
             c.getPlayer().dropMessage(6, "X: " + pos.x + " | Y: " + pos.y + " | RX0: " + (pos.x + 50) + " | RX1: " + (pos.x - 50) + " | FH: " + c.getPlayer().getFH() + "| CY:" + pos.y);
             return 1;
         }

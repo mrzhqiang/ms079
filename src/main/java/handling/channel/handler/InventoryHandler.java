@@ -43,6 +43,7 @@ import client.inventory.MapleInventoryType;
 import client.inventory.MapleInventory;
 import client.MapleStat;
 import client.PlayerStats;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.SkillFactory;
 import client.anticheat.CheatingOffense;
@@ -2420,7 +2421,7 @@ public class InventoryHandler {
             case 5281001: //idk, but probably
             case 5280001: // Gas Skill
             case 5281000: { // Passed gas
-                Rectangle bounds = new Rectangle((int) c.getPlayer().getPosition().getX(), (int) c.getPlayer().getPosition().getY(), 1, 1);
+                Rectangle bounds = new Rectangle((int) c.getPlayer().getPosition().x, (int) c.getPlayer().getPosition().y, 1, 1);
                 MapleMist mist = new MapleMist(bounds, c.getPlayer());
                 c.getPlayer().getMap().spawnMist(mist, 10000, true);
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getChatText(c.getPlayer().getId(), "Oh no, I farted!", false, 1));
@@ -2661,7 +2662,7 @@ public class InventoryHandler {
         }
         chr.updateTick(slea.readInt());
         slea.skip(1); // [4] Seems to be tickcount, [1] always 0
-        final Point Client_Reportedpos = slea.readPos();
+        final Vector Client_Reportedpos = slea.readPos();
         if (chr == null) {
             return;
         }
@@ -2740,7 +2741,7 @@ public class InventoryHandler {
         final MaplePet pet = chr.getPet(petz);
         slea.skip(1); // [4] Zero, [4] Seems to be tickcount, [1] Always zero
         chr.updateTick(slea.readInt());
-        final Point Client_Reportedpos = slea.readPos();
+        final Vector Client_Reportedpos = slea.readPos();
         final MapleMapObject ob = chr.getMap().getMapObject(slea.readInt(), MapleMapObjectType.ITEM);
 
         if (ob == null || pet == null) {

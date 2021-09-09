@@ -1,35 +1,26 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-public final class StringElement extends WzElement {
+/**
+ * 字符串标签元素。
+ */
+public final class StringElement extends BaseWzElement<String> {
 
-    private static final String STRING_TAG = "string";
+    /**
+     * 用于从 xml 元素匹配当前元素的标签。
+     */
+    static final String TAG = "string";
 
-    public static Map<String, StringElement> mapChildren(Element parent) {
-        Elements elements = parent.children();
-        if (elements.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return elements.stream()
-                .filter(element -> element.is(STRING_TAG))
-                .map(StringElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+    StringElement(@Nullable WzElement<?> parent, Element source) {
+        super(parent, source);
     }
 
-    private final String value;
-
-    StringElement(Element source) {
-        super(source);
-        this.value = source.val();
-    }
-
-    public String getValue() {
-        return value;
+    @Override
+    protected String convertValue(Element source) {
+        return source.val();
     }
 }

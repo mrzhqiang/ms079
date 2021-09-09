@@ -21,19 +21,13 @@
 package client;
 
 import client.anticheat.CheatTracker;
-import client.inventory.Equip;
-import client.inventory.IItem;
-import client.inventory.Item;
-import client.inventory.ItemFlag;
-import client.inventory.ItemLoader;
-import client.inventory.MapleInventory;
-import client.inventory.MapleInventoryIdentifier;
-import client.inventory.MapleInventoryType;
-import client.inventory.MapleMount;
-import client.inventory.MaplePet;
-import client.inventory.MapleRing;
-import client.inventory.ModifyInventory;
-import com.github.mrzhqiang.maplestory.wz.WzFiles;
+import client.inventory.*;
+import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.ImgdirElement;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import constants.ServerConstants;
 import database.DatabaseConnection;
@@ -41,56 +35,16 @@ import database.DatabaseException;
 import handling.MaplePacket;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
-import handling.world.CharacterTransfer;
-import handling.world.MapleMessenger;
-import handling.world.MapleMessengerCharacter;
-import handling.world.MapleParty;
-import handling.world.MaplePartyCharacter;
-import handling.world.PartyOperation;
-import handling.world.PlayerBuffStorage;
-import handling.world.PlayerBuffValueHolder;
-import handling.world.World;
+import handling.world.*;
 import handling.world.family.MapleFamily;
 import handling.world.family.MapleFamilyBuff;
 import handling.world.family.MapleFamilyBuff.MapleFamilyBuffEntry;
 import handling.world.family.MapleFamilyCharacter;
 import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildCharacter;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.io.File;
-import java.io.Serializable;
-import java.lang.ref.WeakReference;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.print.attribute.standard.Chromaticity;
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
 import scripting.EventInstanceManager;
 import scripting.NPCScriptManager;
+import server.Timer;
 import server.*;
 import server.Timer.BuffTimer;
 import server.Timer.EtcTimer;
@@ -101,29 +55,22 @@ import server.life.MapleMonster;
 import server.life.MobSkill;
 import server.life.PlayerNPC;
 import server.maps.*;
-import server.maps.AbstractAnimatedMapleMapObject;
-import server.maps.FieldLimitType;
-import server.maps.MapleDoor;
-import server.maps.MapleMap;
-import server.maps.MapleMapFactory;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
-import server.maps.MapleSummon;
-import server.maps.SavedLocationType;
 import server.movement.LifeMovementFragment;
 import server.quest.MapleQuest;
 import server.shops.IMaplePlayerShop;
-import tools.ConcurrentEnumMap;
-import tools.FileoutputUtil;
-import tools.MaplePacketCreator;
-import tools.MockIOSession;
-import tools.Pair;
-import tools.packet.MTSCSPacket;
-import tools.packet.MobPacket;
-import tools.packet.MonsterCarnivalPacket;
-import tools.packet.PetPacket;
-import tools.packet.PlayerShopPacket;
-import tools.packet.UIPacket;
+import tools.*;
+import tools.packet.*;
+
+import java.awt.*;
+import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.sql.*;
+import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Serializable {
 
@@ -138,7 +85,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             currentrep, totalrep, coconutteam = 0, followid = 0, battleshipHP = 0,
             expression, constellation, blood, month, day, beans, beansNum, beansRange, prefix;
     private boolean canSetBeansNum;
-    private Point old = new Point(0, 0);
+    private Vector old = Vector.empty();
     private boolean smega, hidden, hasSummon = false;
     private int[] wishlist, rocks, savedLocations, regrocks, remainingSp = new int[10];
     private transient AtomicInteger inst;
@@ -220,7 +167,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     private MapleCharacter(final boolean ChannelServer) {
         setStance(0);
-        setPosition(new Point(0, 0));
+        setPosition(Vector.empty());
 
         inventory = new MapleInventory[MapleInventoryType.values().length];
         for (MapleInventoryType type : MapleInventoryType.values()) {
@@ -1673,6 +1620,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }, time, time);
     }
+
     public int fishTasking = 0;
     public int fishingMap = 741000201; //地图
 
@@ -1875,7 +1823,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     /**
      * @param effect
      * @param overwrite when overwrite is set no data is sent and all the
-     * Buffstats in the StatEffect are deregistered
+     *                  Buffstats in the StatEffect are deregistered
      * @param startTime
      */
     public void cancelEffect(final MapleStatEffect effect, final boolean overwrite, final long startTime) {
@@ -2149,8 +2097,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     Integer energyLevel = getBuffedValue(MapleBuffStat.ENERGY_CHARGE);
                     //TODO: bar going down
                     if (energyLevel <= 15000 /*
-                             * && nengls <= 20
-                             */) {
+                     * && nengls <= 20
+                     */) {
                         energyLevel += (echeff.getX() * targets);
 
                         client.getSession().write(MaplePacketCreator.showOwnBuffEffect(skillid, 2));
@@ -2507,11 +2455,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.fallcounter = fallcounter;
     }
 
-    public Point getOldPosition() {
+    public Vector getOldPosition() {
         return old;
     }
 
-    public void setOldPosition(Point x) {
+    public void setOldPosition(Vector x) {
         this.old = x;
     }
 
@@ -2572,7 +2520,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         changeMap(warpMap, warpMap.getPortal(portal));
     }
 
-    public void changeMap(final MapleMap to, final Point pos) {
+    public void changeMap(final MapleMap to, final Vector pos) {
         changeMapInternal(to, pos, MaplePacketCreator.getWarpToMap(to, 128, this), null);
     }
 
@@ -2584,7 +2532,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         changeMapInternal(to, pto.getPosition(), MaplePacketCreator.getWarpToMap(to, pto.getId(), this), pto);
     }
 
-    private void changeMapInternal(final MapleMap to, final Point pos, MaplePacket warpPacket, final MaplePortal pto) {
+    private void changeMapInternal(final MapleMap to, final Vector pos, MaplePacket warpPacket, final MaplePortal pto) {
         if (to == null) {
             return;
         }
@@ -3020,8 +2968,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
      * Convenience function which adds the supplied parameter to the current hp
      * then directly does a updateSingleStat.
      *
-     * @see MapleCharacter#setHp(int)
      * @param delta
+     * @see MapleCharacter#setHp(int)
      */
     public void addHP(int delta) {
         if (stats.setHp(stats.getHp() + delta)) {
@@ -3033,8 +2981,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
      * Convenience function which adds the supplied parameter to the current mp
      * then directly does a updateSingleStat.
      *
-     * @see MapleCharacter#setMp(int)
      * @param delta
+     * @see MapleCharacter#setMp(int)
      */
     public void addMP(int delta) {
         if (stats.setMp(stats.getMp() + delta)) {
@@ -3055,6 +3003,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             client.getSession().write(MaplePacketCreator.updatePlayerStats(statups, getJob()));
         }
     }
+
     private long lastHPTime, lastMPTime, lastCheckPeriodTime, lastMoveItemTime, lastQuestTime;
     public long lastRecoveryTime = 0;
 
@@ -3725,7 +3674,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
          * changeJob(job == 2001 ? 2200 : (job == 2200 ? 2210 : (job + 1)));
          * //automatic } break; } }
          */
- /*
+        /*
          * if (getSubcategory() == 1) { //db level 2 switch (level) { case 2:
          * client.getSession().write(MaplePacketCreator.startMapEffect("Click
          * the lightbulb above you and accept the [Required] quest. Remake the
@@ -4504,20 +4453,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void maxAllSkills() {
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(WzFiles.STRING_DIR);
-        MapleData skilldData = dataProvider.getData("Skill.img");
-        for (MapleData skill_ : skilldData.getChildren()) {
-            try {
-                Skill skill = (Skill) SkillFactory.getSkill1(Integer.parseInt(skill_.getName()));
-                if (level >= 0) {
-                    changeSkillLevel(skill, skill.getMaxLevel(), (byte) skill.getMaxLevel());
-                }
-            } catch (NumberFormatException nfe) {
-                break;
-            } catch (NullPointerException npe) {
-                continue;
-            }
-        }
+        WzData.STRING.directory().findFile("Skill.img")
+                .map(WzFile::content)
+                .map(ImgdirElement::childrenStream)
+                .ifPresent(stream -> stream.map(WzElement::name)
+                        .map(Numbers::ofInt)
+                        .map(SkillFactory::getSkill1)
+                        .filter(skill -> level > 0)
+                        .forEach(skill -> changeSkillLevel(skill, skill.getMaxLevel(), skill.getMaxLevel())));
     }
 
     public void setAPQScore(int score) {
@@ -5270,7 +5213,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         /*
          * if (type == -1) {
          * client.getSession().write(UIPacket.getTopMsg(message)); } else
-         */ if (type == -2) {
+         */
+        if (type == -2) {
             client.getSession().write(PlayerShopPacket.shopChat(message, 0)); //0 or what
         } else {
             client.getSession().write(MaplePacketCreator.serverNotice(type, message));
@@ -5631,7 +5575,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         } else if (lead || getSkillLevel(SkillFactory.getSkill(leadid)) <= 0) { // Follow the Lead
                             // shiftPetsRight();
                         }
-                        final Point pos = getPosition();
+                        final Vector pos = getPosition();
                         pet.setPos(pos);
                         try {
                             pet.setFh(getMap().getFootholds().findBelow(pos).getId());
@@ -5747,7 +5691,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.guildrank = guildrank;
         ret.allianceRank = allianceRank;
         ret.hidden = hidden;
-        ret.setPosition(new Point(getPosition()));
+        ret.setPosition(Vector.of(getPosition()));
         for (IItem equip : getInventory(MapleInventoryType.EQUIPPED)) {
             ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
         }
@@ -6420,8 +6364,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setcharmessage(String s) {
         //System.err.println("CharMessage(set)");
         charmessage /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getexpression() {
@@ -6430,8 +6374,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setexpression(int s) {
         expression /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getconstellation() {
@@ -6440,8 +6384,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setconstellation(int s) {
         constellation /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getblood() {
@@ -6450,8 +6394,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setblood(int s) {
         blood /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getmonth() {
@@ -6460,8 +6404,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setmonth(int s) {
         month /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getday() {
@@ -6470,8 +6414,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setday(int s) {
         day /*
-                 * +
-                 */ = s;
+         * +
+         */ = s;
     }
 
     public int getTeam() {
@@ -7090,6 +7034,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         return false;
     }
+
     private int MobVac = 0, MobVac2 = 0;
 
     public void addMobVac(int type) {
@@ -7109,6 +7054,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return 0;
         }
     }
+
     private int mount_id = 0;
 
     public int getMountId() {

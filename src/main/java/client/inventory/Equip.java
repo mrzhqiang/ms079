@@ -503,34 +503,49 @@ public class Equip extends Item implements IEquip, Serializable {
     public void gainItemLevel(MapleClient c, boolean timeless) {
         List<Pair<String, Integer>> stats = MapleItemInformationProvider.getInstance().getItemLevelupStats(getItemId(), itemLevel, timeless);
         for (Pair<String, Integer> stat : stats) {
-            if (stat.getLeft().equals("incDEX")) {
-                dex += stat.getRight();
-            } else if (stat.getLeft().equals("incSTR")) {
-                str += stat.getRight();
-            } else if (stat.getLeft().equals("incINT")) {
-                _int += stat.getRight();
-            } else if (stat.getLeft().equals("incLUK")) {
-                luk += stat.getRight();
-            } else if (stat.getLeft().equals("incMHP")) {
-                hp += stat.getRight();
-            } else if (stat.getLeft().equals("incMMP")) {
-                mp += stat.getRight();
-            } else if (stat.getLeft().equals("incPAD")) {
-                watk += stat.getRight();
-            } else if (stat.getLeft().equals("incMAD")) {
-                matk += stat.getRight();
-            } else if (stat.getLeft().equals("incPDD")) {
-                wdef += stat.getRight();
-            } else if (stat.getLeft().equals("incMDD")) {
-                mdef += stat.getRight();
-            } else if (stat.getLeft().equals("incEVA")) {
-                avoid += stat.getRight();
-            } else if (stat.getLeft().equals("incACC")) {
-                acc += stat.getRight();
-            } else if (stat.getLeft().equals("incSpeed")) {
-                speed += stat.getRight();
-            } else if (stat.getLeft().equals("incJump")) {
-                jump += stat.getRight();
+            switch (stat.getLeft()) {
+                case "incDEX":
+                    dex += stat.getRight();
+                    break;
+                case "incSTR":
+                    str += stat.getRight();
+                    break;
+                case "incINT":
+                    _int += stat.getRight();
+                    break;
+                case "incLUK":
+                    luk += stat.getRight();
+                    break;
+                case "incMHP":
+                    hp += stat.getRight();
+                    break;
+                case "incMMP":
+                    mp += stat.getRight();
+                    break;
+                case "incPAD":
+                    watk += stat.getRight();
+                    break;
+                case "incMAD":
+                    matk += stat.getRight();
+                    break;
+                case "incPDD":
+                    wdef += stat.getRight();
+                    break;
+                case "incMDD":
+                    mdef += stat.getRight();
+                    break;
+                case "incEVA":
+                    avoid += stat.getRight();
+                    break;
+                case "incACC":
+                    acc += stat.getRight();
+                    break;
+                case "incSpeed":
+                    speed += stat.getRight();
+                    break;
+                case "incJump":
+                    jump += stat.getRight();
+                    break;
             }
         }
         this.itemLevel++;

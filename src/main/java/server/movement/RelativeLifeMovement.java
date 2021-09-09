@@ -22,11 +22,12 @@ package server.movement;
 
 import java.awt.Point;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 
 public class RelativeLifeMovement extends AbstractLifeMovement {
 
-    public RelativeLifeMovement(int type, Point position, int duration, int newstate) {
+    public RelativeLifeMovement(int type, Vector position, int duration, int newstate) {
         super(type, position, duration, newstate);
     }
 

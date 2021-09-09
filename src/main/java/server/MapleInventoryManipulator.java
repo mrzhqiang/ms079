@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import client.inventory.MapleInventoryIdentifier;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.inventory.Equip;
 import client.inventory.IItem;
@@ -1035,7 +1036,7 @@ public class MapleInventoryManipulator {
             return false;
         }*/
         c.getPlayer().setLasttime(System.currentTimeMillis());
-        final Point dropPos = new Point(c.getPlayer().getPosition());
+        final Vector dropPos = Vector.of(c.getPlayer().getPosition());
         c.getPlayer().getCheatTracker().checkDrop();
         if (quantity < source.getQuantity() && !GameConstants.isRechargable(source.getItemId())) {
             final IItem target = source.copy();

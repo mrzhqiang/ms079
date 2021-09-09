@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
@@ -60,7 +61,7 @@ public class CheatTracker {
     private int numSequentialSummonAttack = 0;
     private long summonSummonTime = 0;
     private int numSameDamage = 0;
-    private Point lastMonsterMove;
+    private Vector lastMonsterMove;
     private int monsterMoveCount;
     private int attacksWithoutHit = 0;
     private byte dropsPerSecond = 0;
@@ -146,7 +147,7 @@ public class CheatTracker {
         }
     }
 
-    public final void checkMoveMonster(final Point pos, MapleCharacter chr) {
+    public final void checkMoveMonster(final Vector pos, MapleCharacter chr) {
 
         //double dis = Math.abs(pos.distance(lastMonsterMove));
         if (pos.equals(this.lastMonsterMove)) {

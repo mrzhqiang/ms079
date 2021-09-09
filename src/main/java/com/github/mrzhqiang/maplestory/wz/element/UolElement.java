@@ -1,35 +1,26 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-public final class UolElement extends WzElement {
+/**
+ * UOL 标签元素。
+ */
+public final class UolElement extends BaseWzElement<String> {
 
-    private static final String UOL_TAG = "uol";
+    /**
+     * 用于从 xml 元素匹配当前元素的标签。
+     */
+    static final String TAG = "uol";
 
-    public static Map<String, UolElement> mapChildren(Element parent) {
-        Elements elements = parent.children();
-        if (elements.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return elements.stream()
-                .filter(element -> element.is(UOL_TAG))
-                .map(UolElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+    UolElement(@Nullable WzElement<?> parent, Element source) {
+        super(parent, source);
     }
 
-    private final String value;
-
-    UolElement(Element source) {
-        super(source);
-        this.value = source.val();
-    }
-
-    public String getValue() {
-        return value;
+    @Override
+    protected String convertValue(Element source) {
+        return source.val();
     }
 }

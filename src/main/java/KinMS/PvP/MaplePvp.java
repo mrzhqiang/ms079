@@ -7,6 +7,7 @@ import client.MapleClient;
 import client.PlayerStats;
 import client.Skill;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.channel.handler.AttackInfo;
 import java.awt.Point;
@@ -57,24 +58,25 @@ public class MaplePvp {
         return ret;
     }
 
-    private static Rectangle calculateBoundingBox(Point posFrom, boolean facingLeft, int range) {
-        Point lt = new Point(-70, -30);
-        Point rb = new Point(-10, 0);
-        Point myrb;
-        Point mylt;
+    private static Rectangle calculateBoundingBox(Vector posFrom, boolean facingLeft, int range) {
+        Vector lt = Vector.of(-70, -30);
+        Vector rb = Vector.of(-10, 0);
+        Vector myrb;
+        Vector mylt;
         if (facingLeft) {
-            mylt = new Point(lt.x + posFrom.x - range, lt.y + posFrom.y);
-            myrb = new Point(rb.x + posFrom.x, rb.y + posFrom.y);
+            mylt = lt.plus(posFrom).minusX(range);
+            myrb = rb.plus(posFrom);
         } else {
-            myrb = new Point(lt.x * -1 + posFrom.x + range, rb.y + posFrom.y);
-            mylt = new Point(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(lt.x * -1 + posFrom.x + range, rb.y + posFrom.y);
+            mylt = Vector.of(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
         }
         return new Rectangle(mylt.x, mylt.y, myrb.x - mylt.x, myrb.y - mylt.y);
     }
 
     public static boolean inArea(MapleCharacter chr) {
         for (Rectangle rect : chr.getMap().getAreas()) {
-            if (rect.contains(chr.getTruePosition())) {
+            Vector position = chr.getTruePosition();
+            if (rect.contains(position.x, position.y)) {
                 return true;
             }
         }

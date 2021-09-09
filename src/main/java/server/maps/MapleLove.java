@@ -2,20 +2,20 @@ package server.maps;
 
 import client.MapleCharacter;
 import client.MapleClient;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.MaplePacket;
-import java.awt.Point;
 import tools.MaplePacketCreator;
 
 
 public class MapleLove extends AbstractMapleMapObject {
 
-    private Point pos;
+    private Vector pos;
     private MapleCharacter owner;
     private String text;
     private int ft;
     private int itemid;
 
-    public MapleLove(MapleCharacter owner, Point pos, int ft, String text, int itemid) {
+    public MapleLove(MapleCharacter owner, Vector pos, int ft, String text, int itemid) {
         this.owner = owner;
         this.pos = pos;
         this.text = text;
@@ -27,15 +27,15 @@ public class MapleLove extends AbstractMapleMapObject {
         return MapleMapObjectType.LOVE;
     }
 
-    public Point getPosition() {
-        return this.pos.getLocation();
+    public Vector getPosition() {
+        return Vector.of(pos);
     }
 
     public MapleCharacter getOwner() {
         return this.owner;
     }
 
-    public void setPosition(Point position) {
+    public void setPosition(Vector position) {
         throw new UnsupportedOperationException();
     }
 

@@ -26,6 +26,7 @@ import client.MapleClient;
 import client.inventory.MapleInventoryType;
 import client.MapleStat;
 import client.anticheat.CheatingOffense;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import scripting.NPCScriptManager;
 import scripting.ReactorScriptManager;
@@ -41,6 +42,8 @@ import server.maps.MapleReactor;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.awt.*;
 
 public class PlayersHandler {
 
@@ -195,7 +198,8 @@ public class PlayersHandler {
             if (reactor.getReactorType() == 100) {
                 int itemid = GameConstants.getCustomReactItem(reactor.getReactorId(), ((Integer) reactor.getReactItem().getLeft()).intValue());
                 if (c.getPlayer().haveItem(itemid, ((Integer) reactor.getReactItem().getRight()).intValue())) {
-                    if (reactor.getArea().contains(c.getPlayer().getTruePosition())) {
+                    Vector truePosition = c.getPlayer().getTruePosition();
+                    if (reactor.getArea().contains(new Point(truePosition.x, truePosition.y))) {
                         MapleInventoryManipulator.removeById(c, GameConstants.getInventoryType(itemid), itemid, ((Integer) reactor.getReactItem().getRight()).intValue(), true, false);
                         reactor.hitReactor(c);
                     } else {

@@ -23,6 +23,7 @@ package server.maps;
 import java.awt.Point;
 
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.world.World;
 import server.MapleItemInformationProvider;
 import server.Randomizer;
@@ -92,10 +93,10 @@ public class AramiaFireWorks {
     }
 
     private final void spawnMonster(final MapleMap map) {
-        Point pos;
+        Vector pos;
 
         for (int i = 0; i < arrayMob.length; i++) {
-            pos = new Point(arrayX[i], arrayY[i]);
+            pos = Vector.of(arrayX[i], arrayY[i]);
             map.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(arrayMob[i]), pos);
         }
     }
@@ -161,10 +162,10 @@ public class AramiaFireWorks {
     }
 
     private final void spawnItem(final MapleMap map) {
-        Point pos;
+        Vector pos;
 
         for (int i = 0; i < Randomizer.nextInt(5) + 10; i++) {
-            pos = new Point(array_X[i], array_Y[i]);
+            pos = Vector.of(array_X[i], array_Y[i]);
             map.spawnAutoDrop(Randomizer.nextInt(3) == 1 ? 3010025 : 4001246, pos);
         }
     }
@@ -229,10 +230,10 @@ public class AramiaFireWorks {
     }
 
     private final void spawnDec(final MapleMap map) {
-        Point pos;
+        Vector pos;
 
         for (int i = 0; i < Randomizer.nextInt(10) + 40; i++) {
-            pos = new Point(Randomizer.nextInt(800) - 400, flake_Y);
+            pos = Vector.of(Randomizer.nextInt(800) - 400, flake_Y);
             map.spawnAutoDrop(Randomizer.nextInt(15) == 1 ? 2060006 : 2060006, pos);
         }
     }

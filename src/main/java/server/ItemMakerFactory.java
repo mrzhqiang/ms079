@@ -1,22 +1,23 @@
 package server;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.github.mrzhqiang.maplestory.wz.WzFiles;
-import provider.MapleData;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
+import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
+
+import java.util.*;
 
 public class ItemMakerFactory {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemMakerFactory.class);
+
     private final static ItemMakerFactory instance = new ItemMakerFactory();
-    protected Map<Integer, ItemMakerCreateEntry> createCache = new HashMap<Integer, ItemMakerCreateEntry>();
-    protected Map<Integer, GemCreateEntry> gemCache = new HashMap<Integer, GemCreateEntry>();
+    protected Map<Integer, ItemMakerCreateEntry> createCache = new HashMap<>();
+    protected Map<Integer, GemCreateEntry> gemCache = new HashMap<>();
 
     public static ItemMakerFactory getInstance() {
         // DO ItemMakerFactory.getInstance() on ChannelServer startup.
@@ -24,72 +25,87 @@ public class ItemMakerFactory {
     }
 
     protected ItemMakerFactory() {
-        System.out.println("Loading ItemMakerFactory :::");
+        LOGGER.info("Loading ItemMakerFactory :::");
         // 0 = Item upgrade crystals
         // 1 / 2/ 4/ 8 = Item creation
-
-        final MapleData info = MapleDataProviderFactory.getDataProvider(WzFiles.ETC_DIR).getData("ItemMake.img");
 
         byte totalupgrades, reqMakerLevel;
         int reqLevel, cost, quantity, stimulator;
         GemCreateEntry ret;
         ItemMakerCreateEntry imt;
 
-        for (MapleData dataType : info.getChildren()) {
-            int type = Integer.parseInt(dataType.getName());
-            switch (type) {
-                case 0: { // Caching of gem
-                    for (MapleData itemFolder : dataType.getChildren()) {
-                        reqLevel = MapleDataTool.getInt("reqLevel", itemFolder, 0);
-                        reqMakerLevel = (byte) MapleDataTool.getInt("reqSkillLevel", itemFolder, 0);
-                        cost = MapleDataTool.getInt("meso", itemFolder, 0);
-                        quantity = MapleDataTool.getInt("itemNum", itemFolder, 0);
-//			totalupgrades = MapleDataTool.getInt("tuc", itemFolder, 0); // Gem is always 0
+        WzData.ETC.directory().findFile("ItemMake.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(this::handleItemMake));
+    }
 
-                        ret = new GemCreateEntry(cost, reqLevel, reqMakerLevel, quantity);
-
-                        for (MapleData rewardNRecipe : itemFolder.getChildren()) {
-                            for (MapleData ind : rewardNRecipe.getChildren()) {
-                                if (rewardNRecipe.getName().equals("randomReward")) {
-                                    ret.addRandomReward(MapleDataTool.getInt("item", ind, 0), MapleDataTool.getInt("prob", ind, 0));
-// MapleDataTool.getInt("itemNum", ind, 0)
-                                } else if (rewardNRecipe.getName().equals("recipe")) {
-                                    ret.addReqRecipe(MapleDataTool.getInt("item", ind, 0), MapleDataTool.getInt("count", ind, 0));
-                                }
-                            }
-                        }
-                        gemCache.put(Integer.parseInt(itemFolder.getName()), ret);
-                    }
-                    break;
-                }
-                case 1: // Warrior
-                case 2: // Magician
-                case 4: // Bowman
-                case 8: // Thief
-                case 16: { // Pirate
-                    for (MapleData itemFolder : dataType.getChildren()) {
-                        reqLevel = MapleDataTool.getInt("reqLevel", itemFolder, 0);
-                        reqMakerLevel = (byte) MapleDataTool.getInt("reqSkillLevel", itemFolder, 0);
-                        cost = MapleDataTool.getInt("meso", itemFolder, 0);
-                        quantity = MapleDataTool.getInt("itemNum", itemFolder, 0);
-                        totalupgrades = (byte) MapleDataTool.getInt("tuc", itemFolder, 0);
-                        stimulator = MapleDataTool.getInt("catalyst", itemFolder, 0);
-
-                        imt = new ItemMakerCreateEntry(cost, reqLevel, reqMakerLevel, quantity, totalupgrades, stimulator);
-
-                        for (MapleData Recipe : itemFolder.getChildren()) {
-                            for (MapleData ind : Recipe.getChildren()) {
-                                if (Recipe.getName().equals("recipe")) {
-                                    imt.addReqItem(MapleDataTool.getInt("item", ind, 0), MapleDataTool.getInt("count", ind, 0));
-                                }
-                            }
-                        }
-                        createCache.put(Integer.parseInt(itemFolder.getName()), imt);
-                    }
-                    break;
-                }
+    private void handleItemMake(WzElement<?> element) {
+        int type = Numbers.ofInt(element.name());
+        switch (type) {
+            case 0: { // Caching of gem
+                element.childrenStream().forEach(it -> {
+                    GemCreateEntry entry = getGemCreateEntry(it);
+                    gemCache.put(Numbers.ofInt(it.name()), entry);
+                });
+                break;
+            }
+            case 1: // Warrior
+            case 2: // Magician
+            case 4: // Bowman
+            case 8: // Thief
+            case 16: { // Pirate
+                element.childrenStream().forEach(it -> {
+                    ItemMakerCreateEntry entry = getItemMakerCreateEntry(it);
+                    createCache.put(Numbers.ofInt(it.name()), entry);
+                });
+                break;
             }
         }
+    }
+
+    private ItemMakerCreateEntry getItemMakerCreateEntry(WzElement<?> element) {
+        int reqLevelInt = Elements.findInt(element, "reqLevel");
+        byte reqMakerLevel = (byte) Elements.findInt(element, "reqSkillLevel");
+        int cost = Elements.findInt(element, "meso");
+        int quantity = Elements.findInt(element, "itemNum");
+        byte totalupgrades = (byte) Elements.findInt(element, "tuc");
+        int stimulator = Elements.findInt(element, "catalyst");
+        ItemMakerCreateEntry entry = new ItemMakerCreateEntry(
+                cost, reqLevelInt, reqMakerLevel, quantity, totalupgrades, stimulator);
+
+        element.findByName("recipe")
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(recipe -> {
+                    int itemId = Elements.findInt(recipe, "item");
+                    int countInt = Elements.findInt(recipe, "count");
+                    entry.addReqItem(itemId, countInt);
+                }));
+        return entry;
+    }
+
+    private GemCreateEntry getGemCreateEntry(WzElement<?> element) {
+        int reqLevel = Elements.findInt(element, "reqLevel");
+        byte reqSkillLevel = (byte) Elements.findInt(element, "reqSkillLevel");
+        int cost = Elements.findInt(element, "meso");
+        int quantity = Elements.findInt(element, "itemNum");
+        GemCreateEntry entry = new GemCreateEntry(cost, reqLevel, reqSkillLevel, quantity);
+
+        element.findByName("randomReward")
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(reward -> {
+                    int itemId = Elements.findInt(reward, "item");
+                    int probInt = Elements.findInt(reward, "prob");
+                    entry.addRandomReward(itemId, probInt);
+                }));
+        element.findByName("recipe")
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(recipe -> {
+                    int itemId = Elements.findInt(recipe, "item");
+                    int countInt = Elements.findInt(recipe, "count");
+                    entry.addReqRecipe(itemId, countInt);
+                }));
+        return entry;
     }
 
     public GemCreateEntry getGemInfo(int itemid) {

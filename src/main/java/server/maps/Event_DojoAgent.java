@@ -23,6 +23,7 @@ package server.maps;
 import java.awt.Point;
 
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import server.Randomizer;
@@ -33,9 +34,9 @@ import tools.MaplePacketCreator;
 public class Event_DojoAgent {
 
     private final static int baseAgentMapId = 970030000; // 9500337 = mano
-    private final static Point point1 = new Point(140, 0),
-            point2 = new Point(-193, 0),
-            point3 = new Point(355, 0);
+    private final static Vector point1 = Vector.of(140, 0),
+            point2 = Vector.of(-193, 0),
+            point3 = Vector.of(355, 0);
 
     public static boolean warpStartAgent(final MapleCharacter c, final boolean party) {
         final int stage = 1;

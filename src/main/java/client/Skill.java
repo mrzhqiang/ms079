@@ -21,22 +21,23 @@
 package client;
 
 import constants.GameConstants;
-import java.util.ArrayList;
-import java.util.List;
-
-import provider.MapleData;
-import provider.MapleDataTool;
 import server.MapleStatEffect;
 import server.life.Element;
+
+import java.util.Collections;
+import java.util.List;
 
 public class Skill implements ISkill {
 
     //public static final int[] skills = new int[]{4311003, 4321000, 4331002, 4331005, 4341004, 4341007};
     private String name = "";
-    private final List<MapleStatEffect> effects = new ArrayList<MapleStatEffect>();
+    private List<MapleStatEffect> effects = Collections.emptyList();
     private Element element;
     private byte level;
-    private int id, animationTime, requiredSkill, masterLevel;
+    private final int id;
+    private int animationTime;
+    private int requiredSkill;
+    private int masterLevel;
     private boolean action, invisible, chargeskill, timeLimited;
 
     public Skill(final int id) {
@@ -58,167 +59,6 @@ public class Skill implements ISkill {
         return name;
     }
 
-    public static final Skill loadFromData(final int id, final MapleData data) {
-        Skill ret = new Skill(id);
-
-        boolean isBuff = false;
-        final int skillType = MapleDataTool.getInt("skillType", data, -1);
-        final String elem = MapleDataTool.getString("elemAttr", data, null);
-        if (elem != null) {
-            ret.element = Element.getFromChar(elem.charAt(0));
-        } else {
-            ret.element = Element.NEUTRAL;
-        }
-        ret.invisible = MapleDataTool.getInt("invisible", data, 0) > 0;
-        ret.timeLimited = MapleDataTool.getInt("timeLimited", data, 0) > 0;
-        ret.masterLevel = MapleDataTool.getInt("masterLevel", data, 0);
-        final MapleData effect = data.getChildByPath("effect");
-        if (skillType != -1) {
-            if (skillType == 2) {
-                isBuff = true;
-            }
-        } else {
-            final MapleData action_ = data.getChildByPath("action");
-            final MapleData hit = data.getChildByPath("hit");
-            final MapleData ball = data.getChildByPath("ball");
-
-            boolean action = false;
-            if (action_ == null) {
-                if (data.getChildByPath("prepare/action") != null) {
-                    action = true;
-                } else {
-                    switch (id) {
-                        case 5201001:
-                        case 5221009:
-                        case 4221001:
-                        case 4321001:
-                        case 4321000:
-                        case 4331001: //o_o
-                        case 3101005: //or is this really hack
-                            action = true;
-                            break;
-                    }
-                }
-            } else {
-                action = true;
-            }
-            ret.action = action;
-            isBuff = effect != null && hit == null && ball == null;
-            isBuff |= action_ != null && MapleDataTool.getString("0", action_, "").equals("alert2");
-            switch (id) {
-                case 2301002: // heal is alert2 but not overtime...
-                case 2111003: // poison mist
-                case 12111005: // Flame Gear
-                case 2111002: // explosion
-                case 4211001: // chakra
-                case 2121001: // Big bang
-                case 2221001: // Big bang
-                case 2321001: // Big bang
-                    isBuff = false;
-                    break;
-                case 1004: // monster riding
-                case 10001004:
-                case 20001004:
-                case 20011004:
-                case 30001004:
-                case 1026: //Soaring
-                case 10001026:
-                case 20001026:
-                case 20011026:
-                case 30001026:
-                case 9101004: // hide is a buff -.- atleast for us o.o"
-                case 1111002: // combo
-                case 4211003: // pickpocket
-                case 4111001: // mesoup
-                case 15111002: // Super Transformation
-                case 5111005: // Transformation
-                case 5121003: // Super Transformation
-                case 13111005: // Alabtross
-                case 21000000: // Aran Combo
-                case 21101003: // Body Pressure
-                case 21110000:
-                case 5211001: // Pirate octopus summon
-                case 5211002:
-                case 5220002: // wrath of the octopi
-                case 5001005: //dash
-                case 15001003:
-                case 5211006: //homing beacon
-                case 5220011: //bullseye
-                case 5110001: //energy charge
-                case 15100004:
-                case 5121009: //speed infusion
-                case 15111005:
-
-                case 22121001: //element reset
-                case 22131001: //magic shield
-                case 22141002: //magic booster
-                case 22151002: //killer wing
-                case 22151003: //magic resist
-                case 22171000: //maple warrior
-                case 22171004: //hero will
-                case 22181000: //onyx blessing
-                case 22181003: //soul stone
-                //case 22121000:
-                //case 22141003:
-                //case 22151001:
-                //case 22161002:
-                case 4331003: //owl spirit
-                case 15101006: //spark
-                case 15111006: //spark
-                case 4321000: //tornado spin
-                case 1320009: //beholder's buff.. passive
-                case 35120000:
-                case 35001002: //TEMP. mech
-                case 9001004: // hide
-                case 4341002:
-
-                case 32001003: //dark aura
-                case 32120000:
-                case 32101002: //blue aura
-                case 32110000:
-                case 32101003: //yellow aura
-                case 32120001:
-                case 35101007: //perfect armor
-                case 35121006: //satellite safety
-                case 35001001: //flame
-                case 35101009:
-                case 35111007: //TEMP
-                case 35121005: //missile
-                case 35121013:
-                //case 12101005://自然力重置，怎么加了没用啊
-                case 14100005://夜行者 驱逐
-                //case 35111004: //siege
-                case 35101002: //TEMP
-                case 33111003: //puppet ?
-                case 1211009:
-                case 1111007:
-                case 5221006:
-                case 1311007: //magic,armor,atk crash
-                    isBuff = true;
-                    break;
-            }
-        }
-        ret.chargeskill = data.getChildByPath("keydown") != null;
-
-        for (final MapleData level : data.getChildByPath("level")) {
-            ret.effects.add(MapleStatEffect.loadSkillEffectFromData(level, id, isBuff, Byte.parseByte(level.getName())));
-        }
-        final MapleData reqDataRoot = data.getChildByPath("req");
-        if (reqDataRoot != null) {
-            for (final MapleData reqData : reqDataRoot.getChildren()) {
-                ret.requiredSkill = Integer.parseInt(reqData.getName());
-                ret.level = (byte) MapleDataTool.getInt(reqData, 1);
-            }
-        }
-        ret.animationTime = 0;
-        if (effect != null) {
-            for (final MapleData effectEntry : effect) {
-                ret.animationTime += MapleDataTool.getIntConvert("delay", effectEntry, 0);
-            }
-        }
-        return ret;
-    }
-
     @Override
     public MapleStatEffect getEffect(final int level) {
         if (effects.size() < level) {
@@ -232,9 +72,17 @@ public class Skill implements ISkill {
         return effects.get(level - 1);
     }
 
+    public void setEffects(List<MapleStatEffect> effects) {
+        this.effects = effects;
+    }
+
     @Override
     public boolean getAction() {
         return action;
+    }
+
+    public void setAction(boolean action) {
+        this.action = action;
     }
 
     @Override
@@ -242,9 +90,29 @@ public class Skill implements ISkill {
         return chargeskill;
     }
 
+    public void setLevel(byte level) {
+        this.level = level;
+    }
+
+    public void setAnimationTime(int animationTime) {
+        this.animationTime = animationTime;
+    }
+
+    public void setRequiredSkill(int requiredSkill) {
+        this.requiredSkill = requiredSkill;
+    }
+
+    public void setChargeskill(boolean chargeskill) {
+        this.chargeskill = chargeskill;
+    }
+
     @Override
     public boolean isInvisible() {
         return invisible;
+    }
+
+    public void setInvisible(boolean invisible) {
+        this.invisible = invisible;
     }
 
     @Override
@@ -300,6 +168,10 @@ public class Skill implements ISkill {
         return timeLimited;
     }
 
+    public void setTimeLimited(boolean timeLimited) {
+        this.timeLimited = timeLimited;
+    }
+
     @Override
     public boolean isFourthJob() {
         if (id / 10000 >= 2212 && id / 10000 < 3000) { //evan skill
@@ -316,6 +188,10 @@ public class Skill implements ISkill {
         return element;
     }
 
+    public void setElement(Element element) {
+        this.element = element;
+    }
+
     @Override
     public int getAnimationTime() {
         return animationTime;
@@ -326,9 +202,14 @@ public class Skill implements ISkill {
         return masterLevel;
     }
 
+    public void setMasterLevel(int masterLevel) {
+        this.masterLevel = masterLevel;
+    }
+
     @Override
     public boolean isBeginnerSkill() {
         int jobId = id / 10000;
         return jobId == 0 || jobId == 1000 || jobId == 2000 || jobId == 2001 || jobId == 3000;
     }
+
 }

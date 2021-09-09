@@ -1,38 +1,17 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.maps;
-
-import java.awt.Point;
-import java.awt.Rectangle;
 
 import client.ISkill;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.MaplePacket;
-import java.lang.ref.WeakReference;
 import server.MapleStatEffect;
 import server.life.MapleMonster;
 import server.life.MobSkill;
 import tools.MaplePacketCreator;
+
+import java.awt.*;
 
 public class MapleMist extends AbstractMapleMapObject {
 
@@ -94,8 +73,8 @@ public class MapleMist extends AbstractMapleMapObject {
     }
 
     @Override
-    public Point getPosition() {
-        return mistPosition.getLocation();
+    public Vector getPosition() {
+        return Vector.of(mistPosition.x, mistPosition.y);
     }
 
     public ISkill getSourceSkill() {
@@ -135,7 +114,7 @@ public class MapleMist extends AbstractMapleMapObject {
     }
 
     @Override
-    public void setPosition(Point position) {
+    public void setPosition(Vector position) {
     }
 
     public MaplePacket fakeSpawnData(int level) {

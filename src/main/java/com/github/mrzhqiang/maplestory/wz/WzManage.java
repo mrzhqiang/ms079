@@ -18,14 +18,28 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
-public final class WzFiles {
+/**
+ * wz 文件管理工具。
+ */
+public final class WzManage {
+    private WzManage() {
+        // no instance
+    }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WzFiles.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WzManage.class);
 
     private static final String WZ_KEY = "wz.path";
     private static final String DEFAULT_WZ_PATH = "wz";
+
+    /**
+     * wz 目录。
+     * <p>
+     * 默认值是 wz，可通过环境变量进行修改，也可以在启动时，使用 Dwz.path=wz 修改。
+     */
     public static final File WZ_DIR = new File(System.getProperty(WZ_KEY, DEFAULT_WZ_PATH));
-    /* 未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。 */
+    /**
+     * 未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。
+     */
     @SuppressWarnings("unused")
     public static final File BASE_DIR = new File(WZ_DIR, "Base.wz");
     public static final File CHARACTER_DIR = new File(WZ_DIR, "Character.wz");
@@ -49,12 +63,8 @@ public final class WzFiles {
     @SuppressWarnings("unused")
     public static final File UI_DIR = new File(WZ_DIR, "UI.wz");
 
-    private WzFiles() {
-        // no instance
-    }
-
     /**
-     * 此方法作为解析 wz 目录和 xml 文件的例子。
+     * 作为解析 wz 目录和 xml 文件的例子。
      */
     public static void main(String[] args) {
         File[] stringFiles = STRING_DIR.listFiles((dir, name) -> name.endsWith(".xml"));

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client;
 
 import server.MapleStatEffect;
@@ -27,35 +7,35 @@ public interface ISkill {
 
     int getId();
 
-    MapleStatEffect getEffect(int level);
+    String getName();
 
     byte getMaxLevel();
 
+    MapleStatEffect getEffect(int level);
+
     int getAnimationTime();
 
-    public boolean canBeLearnedBy(int job);
+    boolean canBeLearnedBy(int job);
 
-    public boolean isFourthJob();
+    boolean isFourthJob();
 
-    public boolean getAction();
+    boolean getAction();
 
-    public boolean isTimeLimited();
+    boolean isTimeLimited();
 
-    public int getMasterLevel();
+    int getMasterLevel();
 
-    public Element getElement();
+    Element getElement();
 
-    public boolean isBeginnerSkill();
+    boolean isBeginnerSkill();
 
-    public boolean hasRequiredSkill();
+    boolean hasRequiredSkill();
 
-    public boolean isInvisible();
+    boolean isInvisible();
 
-    public boolean isChargeSkill();
+    boolean isChargeSkill();
 
-    public int getRequiredSkillLevel();
+    int getRequiredSkillLevel();
 
-    public int getRequiredSkillId();
-
-    public String getName();
+    int getRequiredSkillId();
 }

@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import client.MapleCharacter;
 import client.MapleClient;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.world.MaplePartyCharacter;
 import java.lang.ref.WeakReference;
 import server.MaplePortal;
@@ -39,9 +40,9 @@ public class MapleDoor extends AbstractMapleMapObject {
     private MaplePortal townPortal;
     private MapleMap target;
     private int skillId, ownerId;
-    private Point targetPosition;
+    private Vector targetPosition;
 
-    public MapleDoor(final MapleCharacter owner, final Point targetPosition, final int skillId) {
+    public MapleDoor(final MapleCharacter owner, final Vector targetPosition, final int skillId) {
         super();
         this.owner = new WeakReference<MapleCharacter>(owner);
         this.ownerId = owner.getId();
@@ -129,7 +130,7 @@ public class MapleDoor extends AbstractMapleMapObject {
         }
         if (target.getId() == client.getPlayer().getMapId() || getOwnerId() == client.getPlayer().getId() || (getOwner() != null && getOwner().getParty() != null && getOwner().getParty().getMemberById(client.getPlayer().getId()) != null)) {
             if (getOwner().getParty() != null && (getOwnerId() == client.getPlayer().getId() || getOwner().getParty().getMemberById(client.getPlayer().getId()) != null)) {
-                client.getSession().write(MaplePacketCreator.partyPortal(999999999, 999999999, 0, new Point(-1, -1)));
+                client.getSession().write(MaplePacketCreator.partyPortal(999999999, 999999999, 0, Vector.of(-1, -1)));
             }
             client.getSession().write(MaplePacketCreator.removeDoor(getOwnerId(), false));
             client.getSession().write(MaplePacketCreator.removeDoor(getOwnerId(), true));
@@ -164,7 +165,7 @@ public class MapleDoor extends AbstractMapleMapObject {
         return target;
     }
 
-    public final Point getTargetPosition() {
+    public final Vector getTargetPosition() {
         return targetPosition;
     }
 

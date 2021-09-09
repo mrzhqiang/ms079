@@ -21,6 +21,7 @@
 package client.inventory;
 
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import java.awt.Point;
 import java.sql.Connection;
@@ -91,7 +92,7 @@ public class MaplePet implements Serializable {
     private static final long serialVersionUID = 9179541993413738569L;
     private String name;
     private int Fh = 0, stance = 0, uniqueid, petitemid, secondsLeft = 0;
-    private Point pos;
+    private Vector pos;
     private byte fullness = 100, level = 1, summoned = 0;
     private short inventorypos = 0, closeness = 0, flags = 0;
     private boolean changed = false;
@@ -275,11 +276,11 @@ public class MaplePet implements Serializable {
         this.Fh = Fh;
     }
 
-    public final Point getPos() {
+    public final Vector getPos() {
         return pos;
     }
 
-    public final void setPos(final Point pos) {
+    public final void setPos(final Vector pos) {
         this.pos = pos;
     }
 

@@ -1,83 +1,33 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools;
 
 import client.*;
-import java.awt.Point;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import client.inventory.MapleMount;
-import client.inventory.IItem;
-import constants.GameConstants;
-import client.inventory.MapleInventoryType;
-import client.inventory.MaplePet;
 import client.inventory.IEquip.ScrollResult;
-import client.inventory.MapleRing;
 import client.inventory.*;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
+import constants.ServerConstants;
 import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
-import constants.ServerConstants;
 import handling.channel.MapleGuildRanking;
+import handling.channel.MapleGuildRanking.GuildRankingInfo;
+import handling.channel.handler.InventoryHandler;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
 import handling.world.PartyOperation;
-import handling.world.guild.MapleGuild;
-import handling.world.guild.MapleGuildCharacter;
-import handling.channel.MapleGuildRanking.GuildRankingInfo;
-import handling.channel.handler.InventoryHandler;
 import handling.world.World;
 import handling.world.guild.MapleBBSThread;
 import handling.world.guild.MapleBBSThread.MapleBBSReply;
+import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildAlliance;
-import java.net.UnknownHostException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import server.MapleItemInformationProvider;
-import server.MapleShopItem;
-import server.MapleStatEffect;
-import server.MapleTrade;
-import server.MapleDueyActions;
-import server.Randomizer;
-import server.ServerProperties;
-import server.life.SummonAttackEntry;
-import server.maps.MapleSummon;
-import server.life.MapleNPC;
-import server.life.PlayerNPC;
-import server.maps.MapleMap;
-import server.maps.MapleReactor;
-import server.maps.MapleMist;
-import server.maps.MapleMapItem;
+import handling.world.guild.MapleGuildCharacter;
+import server.*;
 import server.events.MapleSnowball.MapleSnowballs;
 import server.life.MapleMonster;
-import server.life.MobSkill;
-import server.maps.MapleDragon;
+import server.life.MapleNPC;
+import server.life.PlayerNPC;
+import server.life.SummonAttackEntry;
+import server.maps.*;
 import server.maps.MapleNodes.MapleNodeInfo;
 import server.maps.MapleNodes.MaplePlatform;
 import server.movement.LifeMovementFragment;
@@ -86,7 +36,13 @@ import server.shops.MaplePlayerShopItem;
 import tools.data.output.LittleEndianWriter;
 import tools.data.output.MaplePacketLittleEndianWriter;
 import tools.packet.PacketHelper;
-import tools.packet.PetPacket;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class MaplePacketCreator {
 
@@ -313,7 +269,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket spawnPortal(final int townId, final int targetId, final int skillId, final Point pos) {
+    public static final MaplePacket spawnPortal(final int townId, final int targetId, final int skillId, final Vector pos) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -330,7 +286,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket spawnDoor(final int oid, final Point pos, final boolean town) {
+    public static final MaplePacket spawnDoor(final int oid, final Vector pos, final boolean town) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -357,8 +313,8 @@ public class MaplePacketCreator {
         } else {
             mplew.writeShort(SendPacketOpcode.REMOVE_DOOR.getValue());
             mplew.write(/*
-                     * town ? 1 :
-                     */0);
+             * town ? 1 :
+             */0);
             mplew.writeInt(oid);
         }
 
@@ -509,8 +465,8 @@ public class MaplePacketCreator {
         }
         mplew.writeShort(SendPacketOpcode.SERVERMESSAGE.getValue());
         mplew.write(/*
-                 * rareness == 2 ? 15 :
-                 */14);
+         * rareness == 2 ? 15 :
+         */14);
         mplew.writeMapleAsciiString(name + message);
         mplew.writeInt(channel - 1); // 0~3 i think
         //mplew.writeMapleAsciiString(name);
@@ -894,7 +850,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket dropItemFromMapObject(MapleMapItem drop, Point dropfrom, Point dropto, byte mod) {
+    public static MaplePacket dropItemFromMapObject(MapleMapItem drop, Vector dropfrom, Vector dropto, byte mod) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -1003,7 +959,7 @@ public class MaplePacketCreator {
          * mplew.write(-2); mplew.write(-1); // SEA V82 mplew.write(0);
          * mplew.write(0); // SEA V82 mplew.write(0);
          */
- /*
+        /*
          * long buffmask = 0;
          *
          * if (chr.getBuffedValue(MapleBuffStat.DARKSIGHT) != null &&
@@ -1208,7 +1164,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket movePlayer(int cid, List<LifeMovementFragment> moves, Point startPos) {
+    public static MaplePacket movePlayer(int cid, List<LifeMovementFragment> moves, Vector startPos) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -1223,7 +1179,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket moveSummon(int cid, int oid, Point startPos, List<LifeMovementFragment> moves) {
+    public static MaplePacket moveSummon(int cid, int oid, Vector startPos, List<LifeMovementFragment> moves) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -1319,7 +1275,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket rangedAttack(int cid, byte tbyte, int skill, int level, byte display, byte animation, byte speed, int itemid, List<AttackPair> damage, final Point pos, int lvl, byte mastery, byte unk) {
+    public static MaplePacket rangedAttack(int cid, byte tbyte, int skill, int level, byte display, byte animation, byte speed, int itemid, List<AttackPair> damage, final Vector pos, int lvl, byte mastery, byte unk) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -1385,7 +1341,7 @@ public class MaplePacketCreator {
             if (oned.attack != null) {
                 mplew.writeInt(oned.objectid);
                 mplew.write(-1/*
-                         * 0x07
+                 * 0x07
                  */);
                 for (Pair<Integer, Boolean> eachd : oned.attack) {
                     // highest bit set = crit
@@ -2523,7 +2479,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }*/
 
- /*
+    /*
      * 其他玩家看到别人获得负面BUFF状态
      */
     public static MaplePacket giveForeignDebuff(int cid, final List<Pair<MapleDisease, Integer>> statups, int skillid, int level) {
@@ -3687,7 +3643,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket partyPortal(int townId, int targetId, int skillId, Point position) {
+    public static MaplePacket partyPortal(int townId, int targetId, int skillId, Vector position) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -5613,7 +5569,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket moveDragon(MapleDragon d, Point startPos, List<LifeMovementFragment> moves) {
+    public static MaplePacket moveDragon(MapleDragon d, Vector startPos, List<LifeMovementFragment> moves) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -6021,7 +5977,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket followEffect(int initiator, int replier, Point toMap) {
+    public static MaplePacket followEffect(int initiator, int replier, Vector toMap) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         if (ServerConstants.调试输出封包) {
             System.out.println("followEffect--------------------");
@@ -6049,7 +6005,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket moveFollow(Point otherStart, Point myStart, Point otherEnd, List<LifeMovementFragment> moves) {
+    public static MaplePacket moveFollow(Vector otherStart, Vector myStart, Vector otherEnd, List<LifeMovementFragment> moves) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -6165,8 +6121,7 @@ public class MaplePacketCreator {
     }
 
     /**
-     *
-     * @param type - (0:Light&Long 1:Heavy&Short)
+     * @param type  - (0:Light&Long 1:Heavy&Short)
      * @param delay - seconds
      * @return
      */
@@ -6296,7 +6251,7 @@ public class MaplePacketCreator {
         return mplew.getPacket();
     }
 
-    public static MaplePacket spawnLove(int oid, int itemid, String name, String msg, Point pos, int ft) {
+    public static MaplePacket spawnLove(int oid, int itemid, String name, String msg, Vector pos, int ft) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         if (ServerConstants.调试输出封包) {
             System.out.println("spawnLove--------------------");

@@ -1,25 +1,6 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.life;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -45,7 +26,7 @@ public class MobSkill {
 //    private short effect_delay;
     private short limit;
     private List<Integer> toSummon = new ArrayList<Integer>();
-    private Point lt, rb;
+    private Vector lt, rb;
 
     public MobSkill(int skillId, int level) {
         this.skillId = skillId;
@@ -92,9 +73,17 @@ public class MobSkill {
         this.prop = prop;
     }
 
-    public void setLtRb(Point lt, Point rb) {
+    public void setLtRb(Vector lt, Vector rb) {
         this.lt = lt;
         this.rb = rb;
+    }
+
+    public void setRb(Vector rb) {
+        this.rb = rb;
+    }
+
+    public void setLt(Vector lt) {
+        this.lt = lt;
     }
 
     public void setLimit(short limit) {
@@ -283,7 +272,7 @@ public class MobSkill {
                         continue;
                     }
                     toSpawn.setPosition(monster.getPosition());
-                    int ypos = (int) monster.getPosition().getY(), xpos = (int) monster.getPosition().getX();
+                    int ypos = (int) monster.getPosition().y, xpos = (int) monster.getPosition().x;
 
                     switch (mobId) {
                         case 8500003: // Pap bomb high
@@ -292,15 +281,15 @@ public class MobSkill {
                             break;
                         case 8500004: // Pap bomb
                             //Spawn between -500 and 500 from the monsters X position
-                            xpos = (int) (monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500);
-                            ypos = (int) monster.getPosition().getY();
+                            xpos = (int) (monster.getPosition().x + Math.ceil(Math.random() * 1000.0) - 500);
+                            ypos = (int) monster.getPosition().y;
                             break;
                         case 8510100: //Pianus bomb
                             if (Math.ceil(Math.random() * 5) == 1) {
                                 ypos = 78;
                                 xpos = (int) (0 + Math.ceil(Math.random() * 5)) + ((Math.ceil(Math.random() * 2) == 1) ? 180 : 0);
                             } else {
-                                xpos = (int) (monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500);
+                                xpos = (int) (monster.getPosition().x + Math.ceil(Math.random() * 1000.0) - 500);
                             }
                             break;
                         case 8820007: //mini bean
@@ -324,7 +313,7 @@ public class MobSkill {
                             }
                             break;
                     }
-                    monster.getMap().spawnMonsterWithEffect(toSpawn, getSpawnEffect(), monster.getMap().calcPointBelow(new Point(xpos, ypos - 1)));
+                    monster.getMap().spawnMonsterWithEffect(toSpawn, getSpawnEffect(), monster.getMap().calcPointBelow(Vector.of(xpos, ypos - 1)));
                 }
                 break;
         }
@@ -395,11 +384,11 @@ public class MobSkill {
         return cooltime;
     }
 
-    public Point getLt() {
+    public Vector getLt() {
         return lt;
     }
 
-    public Point getRb() {
+    public Vector getRb() {
         return rb;
     }
 
@@ -411,14 +400,14 @@ public class MobSkill {
         return prop >= 1.0 || Math.random() < prop;
     }
 
-    private Rectangle calculateBoundingBox(Point posFrom, boolean facingLeft) {
-        Point mylt, myrb;
+    private Rectangle calculateBoundingBox(Vector posFrom, boolean facingLeft) {
+        Vector mylt, myrb;
         if (facingLeft) {
-            mylt = new Point(lt.x + posFrom.x, lt.y + posFrom.y);
-            myrb = new Point(rb.x + posFrom.x, rb.y + posFrom.y);
+            mylt = Vector.of(lt.x + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(rb.x + posFrom.x, rb.y + posFrom.y);
         } else {
-            myrb = new Point(lt.x * -1 + posFrom.x, rb.y + posFrom.y);
-            mylt = new Point(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(lt.x * -1 + posFrom.x, rb.y + posFrom.y);
+            mylt = Vector.of(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
         }
         final Rectangle bounds = new Rectangle(mylt.x, mylt.y, myrb.x - mylt.x, myrb.y - mylt.y);
         return bounds;

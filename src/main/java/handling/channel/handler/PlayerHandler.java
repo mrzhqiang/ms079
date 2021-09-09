@@ -27,6 +27,7 @@ import client.inventory.IItem;
 import client.ISkill;
 import client.SkillFactory;
 import client.SkillMacro;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.inventory.MapleInventoryType;
 import client.MapleBuffStat;
@@ -631,7 +632,7 @@ public class PlayerHandler {
                 c.getSession().write(MaplePacketCreator.enableActions());
                 break;
             default:
-                Point pos = null;
+                Vector pos = null;
                 if (slea.available() == 7 || skill.getId() == 3111002 || skill.getId() == 3211002) {
                     pos = slea.readPos();
                 }
@@ -1094,7 +1095,7 @@ public class PlayerHandler {
         if (chr == null) {
             return;
         }
-        final Point Original_Pos = chr.getPosition(); // 4 bytes Added on v.80 MSEA
+        final Vector Original_Pos = chr.getPosition(); // 4 bytes Added on v.80 MSEA
         slea.skip(33);
 
         /**
@@ -1142,12 +1143,12 @@ public class PlayerHandler {
 //		map.broadcastMessage(chr, MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
 //	    }
             MovementParse.updatePosition(res, chr, 0);
-            final Point pos = chr.getPosition();
+            final Vector pos = chr.getPosition();
             map.movePlayer(chr, pos);
             if (chr.getFollowId() > 0 && chr.isFollowOn() && chr.isFollowInitiator()) {
                 final MapleCharacter fol = map.getCharacterById(chr.getFollowId());
                 if (fol != null) {
-                    final Point original_pos = fol.getPosition();
+                    final Vector original_pos = fol.getPosition();
                     // fol.getClient().getSession().write(MaplePacketCreator.moveFollow(Original_Pos, original_pos, pos, res));
                     MovementParse.updatePosition(res, fol, 0);
                     // map.broadcastMessage(fol, MaplePacketCreator.movePlayer(fol.getId(), res, original_pos), false);
@@ -1194,7 +1195,7 @@ public class PlayerHandler {
                 }
             } catch (Exception e) {
             }
-            c.getPlayer().setOldPosition(new Point(c.getPlayer().getPosition()));
+            c.getPlayer().setOldPosition(Vector.of(c.getPlayer().getPosition()));
         }
     }
 
@@ -1384,7 +1385,7 @@ public class PlayerHandler {
             return;
         }
         final MaplePortal portal = chr.getMap().getPortal(slea.readMapleAsciiString());
-        final Point Original_Pos = chr.getPosition();
+        final Vector Original_Pos = chr.getPosition();
         final int toX = slea.readShort();
         final int toY = slea.readShort();
 //	slea.readShort(); // Original X pos
@@ -1395,7 +1396,7 @@ public class PlayerHandler {
         } else if (portal.getPosition().distanceSq(chr.getPosition()) > 22500) {
             chr.getCheatTracker().registerOffense(CheatingOffense.使用过远传送点);
         }
-        chr.getMap().movePlayer(chr, new Point(toX, toY));
+        chr.getMap().movePlayer(chr, Vector.of(toX, toY));
         chr.checkFollow();
     }
 

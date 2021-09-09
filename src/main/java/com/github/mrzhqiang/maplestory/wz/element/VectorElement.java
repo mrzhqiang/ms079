@@ -1,42 +1,33 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-public final class VectorElement extends WzElement {
+/**
+ * 矢量标签元素。
+ */
+public final class VectorElement extends BaseWzElement<Vector> {
 
-    private static final String VECTOR_TAG = "vector";
+    /**
+     * 用于从 xml 元素匹配当前元素的标签。
+     */
+    static final String TAG = "vector";
 
-    public static Map<String, VectorElement> mapChildren(Element parent) {
-        Elements elements = parent.children();
-        if (elements.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return elements.stream()
-                .filter(element -> element.is(VECTOR_TAG))
-                .map(VectorElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+    private static final String X_KEY = "x";
+    private static final String Y_KEY = "y";
+
+    VectorElement(@Nullable WzElement<?> parent, Element source) {
+        super(parent, source);
     }
 
-    private final int x;
-    private final int y;
-
-    VectorElement(Element source) {
-        super(source);
-        this.x = Numbers.ofInt(source.attr("x"));
-        this.y = Numbers.ofInt(source.attr("y"));
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
+    @Override
+    protected Vector convertValue(Element source) {
+        int x = Numbers.ofInt(source.attr(X_KEY));
+        int y = Numbers.ofInt(source.attr(Y_KEY));
+        return Vector.of(x, y);
     }
 }

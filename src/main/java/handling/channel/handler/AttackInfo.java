@@ -24,6 +24,7 @@ import java.util.List;
 import java.awt.Point;
 
 import client.ISkill;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.SkillFactory;
@@ -35,7 +36,7 @@ public class AttackInfo {
 
     public int skill, charge, lastAttackTickCount;
     public List<AttackPair> allDamage;
-    public Point position;
+    public Vector position;
     public byte hits, targets, tbyte, display, animation, speed, csstar, AOE, slot, unk;
     public boolean real = true;
     int numAttacked;

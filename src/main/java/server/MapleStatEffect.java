@@ -1,47 +1,27 @@
 package server;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.io.Serializable;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-
+import client.*;
 import client.inventory.IItem;
-import client.ISkill;
-import constants.GameConstants;
-import client.MapleBuffStat;
-import client.MapleCharacter;
-import client.MapleCoolDownValueHolder;
-import client.MapleDisease;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
-import client.MapleStat;
-import client.SkillFactory;
-import client.PlayerStats;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import handling.channel.ChannelServer;
-import static java.awt.SystemColor.info;
-import provider.MapleData;
-import provider.MapleDataTool;
-import server.life.MapleMonster;
-import server.maps.MapleDoor;
-import server.maps.MapleMap;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
-import server.maps.MapleMist;
-import server.maps.MapleSummon;
-import server.maps.SummonMovementType;
-import java.util.EnumMap;
 import server.MapleCarnivalFactory.MCSkill;
 import server.Timer.BuffTimer;
+import server.life.MapleMonster;
+import server.maps.*;
 import tools.MaplePacketCreator;
 import tools.Pair;
+
+import java.awt.*;
+import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.ScheduledFuture;
 
 public class MapleStatEffect implements Serializable {
 
@@ -53,664 +33,23 @@ public class MapleStatEffect implements Serializable {
     private boolean overTime, skill, partyBuff = true;
     private List<Pair<MapleBuffStat, Integer>> statups;
     private Map<MonsterStatus, Integer> monsterStatus;
-    private Point lt, rb;
+    private Vector lt, rb;
     private int expBuff, itemup, mesoup, cashup, berserk, illusion, booster, berserk2, cp, nuffSkill;
     private byte level;
     public Map<MapleStatInfo, Integer> info;
     private List<MapleDisease> cureDebuffs;
 
-    public static final MapleStatEffect loadSkillEffectFromData(final MapleData source, final int skillid, final boolean overtime, final byte level) {
-        return loadFromData(source, skillid, true, overtime, level);
+    public void setStatups(List<Pair<MapleBuffStat, Integer>> statups) {
+        this.statups = statups;
     }
 
-    public static final MapleStatEffect loadItemEffectFromData(final MapleData source, final int itemid) {
-        return loadFromData(source, itemid, false, false, (byte) 1);
-    }
-
-    private static final void addBuffStatPairToListIfNotZero(final List<Pair<MapleBuffStat, Integer>> list, final MapleBuffStat buffstat, final Integer val) {
-        if (val.intValue() != 0) {
-            list.add(new Pair<MapleBuffStat, Integer>(buffstat, val));
-        }
-    }
-
-    private static MapleStatEffect loadFromData(final MapleData source, final int sourceid, final boolean skill, final boolean overTime, final byte level) {
-        final MapleStatEffect ret = new MapleStatEffect();
-        ret.sourceid = sourceid;
-        ret.skill = skill;
-        ret.level = level;
-        if (source == null) {
-            return ret;
-        }
-        ret.duration = MapleDataTool.getIntConvert("time", source, -1);
-        ret.hp = (short) MapleDataTool.getInt("hp", source, 0);
-        ret.hpR = MapleDataTool.getInt("hpR", source, 0) / 100.0;
-        ret.mp = (short) MapleDataTool.getInt("mp", source, 0);
-        ret.mpR = MapleDataTool.getInt("mpR", source, 0) / 100.0;
-        ret.mhpR = (byte) MapleDataTool.getInt("mhpR", source, 0);
-        ret.mmpR = (byte) MapleDataTool.getInt("mmpR", source, 0);
-        ret.mpCon = (short) MapleDataTool.getInt("mpCon", source, 0);
-        ret.hpCon = (short) MapleDataTool.getInt("hpCon", source, 0);
-        ret.prop = (short) MapleDataTool.getInt("prop", source, 100);
-        ret.cooldown = MapleDataTool.getInt("cooltime", source, 0);
-        ret.expinc = MapleDataTool.getInt("expinc", source, 0);
-        ret.morphId = MapleDataTool.getInt("morph", source, 0);
-        ret.cp = MapleDataTool.getInt("cp", source, 0);
-        ret.nuffSkill = MapleDataTool.getInt("nuffSkill", source, 0);
-        ret.mobCount = (byte) MapleDataTool.getInt("mobCount", source, 1);
-
-        if (skill) {
-            switch (sourceid) {
-                case 1100002:
-                case 1100003:
-                case 1200002:
-                case 1200003:
-                case 1300002:
-                case 1300003:
-                case 3100001:
-                case 3200001:
-                case 11101002:
-                case 13101002:
-                    ret.mobCount = 6;
-                    break;
-            }
-        }
-
-        /*
-         * final MapleData randMorph = source.getChildByPath("morphRandom"); if
-         * (randMorph != null) { for (MapleData data : randMorph.getChildren())
-         * { ret.randomMorph.add(new Pair( MapleDataTool.getInt("morph", data,
-         * 0), MapleDataTool.getIntConvert("prop", data, 0))); } }
-         */
-        if (!ret.skill && ret.duration > -1) {
-            ret.overTime = true;
-        } else {
-            ret.duration *= 1000; // items have their times stored in ms, of course
-            ret.overTime = overTime || ret.isMorph() || ret.isPirateMorph() || ret.isFinalAttack();
-        }
-        final ArrayList<Pair<MapleBuffStat, Integer>> statups = new ArrayList<Pair<MapleBuffStat, Integer>>();
-
-        ret.mastery = (byte) MapleDataTool.getInt("mastery", source, 0);
-        ret.watk = (short) MapleDataTool.getInt("pad", source, 0);
-        ret.wdef = (short) MapleDataTool.getInt("pdd", source, 0);
-        ret.matk = (short) MapleDataTool.getInt("mad", source, 0);
-        ret.mdef = (short) MapleDataTool.getInt("mdd", source, 0);
-        ret.ehp = (short) MapleDataTool.getInt("emhp", source, 0);
-        ret.emp = (short) MapleDataTool.getInt("emmp", source, 0);
-        ret.ewatk = (short) MapleDataTool.getInt("epad", source, 0);
-        ret.ewdef = (short) MapleDataTool.getInt("epdd", source, 0);
-        ret.emdef = (short) MapleDataTool.getInt("emdd", source, 0);
-        ret.acc = (short) MapleDataTool.getIntConvert("acc", source, 0);
-        ret.avoid = (short) MapleDataTool.getInt("eva", source, 0);
-        ret.speed = (short) MapleDataTool.getInt("speed", source, 0);
-        ret.jump = (short) MapleDataTool.getInt("jump", source, 0);
-        ret.expBuff = MapleDataTool.getInt("expBuff", source, 0);
-        ret.cashup = MapleDataTool.getInt("cashBuff", source, 0);
-        ret.itemup = MapleDataTool.getInt("itemupbyitem", source, 0);
-        ret.mesoup = MapleDataTool.getInt("mesoupbyitem", source, 0);
-        ret.berserk = MapleDataTool.getInt("berserk", source, 0);
-        ret.berserk2 = MapleDataTool.getInt("berserk2", source, 0);
-        ret.booster = MapleDataTool.getInt("booster", source, 0);
-        ret.illusion = MapleDataTool.getInt("illusion", source, 0);
-
-        List<MapleDisease> cure = new ArrayList<MapleDisease>(5);
-        if (MapleDataTool.getInt("poison", source, 0) > 0) {
-            cure.add(MapleDisease.POISON);
-        }
-        if (MapleDataTool.getInt("seal", source, 0) > 0) {
-            cure.add(MapleDisease.SEAL);
-        }
-        if (MapleDataTool.getInt("darkness", source, 0) > 0) {
-            cure.add(MapleDisease.DARKNESS);
-        }
-        if (MapleDataTool.getInt("weakness", source, 0) > 0) {
-            cure.add(MapleDisease.WEAKEN);
-        }
-        if (MapleDataTool.getInt("curse", source, 0) > 0) {
-            cure.add(MapleDisease.CURSE);
-        }
-        ret.cureDebuffs = cure;
-
-        final MapleData ltd = source.getChildByPath("lt");
-        if (ltd != null) {
-            ret.lt = (Point) ltd.getData();
-            ret.rb = (Point) source.getChildByPath("rb").getData();
-        }
-
-        ret.x = MapleDataTool.getInt("x", source, 0);
-        ret.y = MapleDataTool.getInt("y", source, 0);
-        ret.z = MapleDataTool.getInt("z", source, 0);
-        ret.damage = (short) MapleDataTool.getIntConvert("damage", source, 100);
-        ret.attackCount = (byte) MapleDataTool.getIntConvert("attackCount", source, 1);
-        ret.bulletCount = (byte) MapleDataTool.getIntConvert("bulletCount", source, 1);
-        ret.bulletConsume = MapleDataTool.getIntConvert("bulletConsume", source, 0);
-        ret.moneyCon = MapleDataTool.getIntConvert("moneyCon", source, 0);
-
-        ret.itemCon = MapleDataTool.getInt("itemCon", source, 0);
-        ret.itemConNo = MapleDataTool.getInt("itemConNo", source, 0);
-        ret.moveTo = MapleDataTool.getInt("moveTo", source, -1);
-
-        Map<MonsterStatus, Integer> monsterStatus = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
-        if (ret.overTime && ret.getSummonMovementType() == null) {
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.WATK, Integer.valueOf(ret.watk));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.WDEF, Integer.valueOf(ret.wdef));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.MATK, Integer.valueOf(ret.matk));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.MDEF, Integer.valueOf(ret.mdef));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ACC, Integer.valueOf(ret.acc));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.AVOID, Integer.valueOf(ret.avoid));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.速度, Integer.valueOf(ret.speed));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.跳跃, Integer.valueOf(ret.jump));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.MAXHP, (int) ret.mhpR);
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.MAXMP, (int) ret.mmpR);
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.EXPRATE, Integer.valueOf(ret.expBuff)); // EXP
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ACASH_RATE, Integer.valueOf(ret.cashup)); // custom
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.DROP_RATE, Integer.valueOf(ret.itemup * 200)); // defaults to 2x
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.MESO_RATE, Integer.valueOf(ret.mesoup * 200)); // defaults to 2x
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.BERSERK_FURY, Integer.valueOf(ret.berserk2));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.PYRAMID_PQ, Integer.valueOf(ret.berserk));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.BOOSTER, Integer.valueOf(ret.booster));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ILLUSION, Integer.valueOf(ret.illusion));
-
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ENHANCED_WATK, Integer.valueOf(ret.ewatk));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ENHANCED_WDEF, Integer.valueOf(ret.ewdef));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ENHANCED_MDEF, Integer.valueOf(ret.emdef));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ENHANCED_MAXHP, Integer.valueOf(ret.ehp));
-            addBuffStatPairToListIfNotZero(statups, MapleBuffStat.ENHANCED_MAXMP, Integer.valueOf(ret.ehp));
-        }
-        if (skill) { // hack because we can't get from the datafile...
-            switch (sourceid) {
-                case 2001002: // magic guard
-                case 12001001:
-                case 22111001:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAGIC_GUARD, ret.x));
-                    break;
-                case 2301003: // invincible
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.INVINCIBLE, ret.x));
-                    break;
-                case 35120000:
-                case 35001002: //TEMP. mech
-                    ret.duration = 60 * 120 * 1000;
-                    break;
-                case 9001004: // hide
-                    ret.duration = 60 * 120 * 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DARKSIGHT, ret.x));
-                    break;
-                case 13101006: // Wind Walk
-                case 4001003: // darksight
-                case 14001003: // cygnus ds
-                case 4330001:
-                case 30001001: //resist beginner hide
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DARKSIGHT, ret.x));
-                    break;
-                case 4211003: // pickpocket
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.PICKPOCKET, ret.x));
-                    break;
-                case 4211005: // mesoguard
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MESOGUARD, ret.x));
-                    break;
-                case 4111001: // mesoup
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MESOUP, ret.x));
-                    break;
-                case 4111002: // shadowpartner
-                case 14111000: // cygnus
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SHADOWPARTNER, ret.x));
-                    break;
-                case 11101002: // All Final attack
-                case 13101002:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.FINALATTACK, ret.x));
-                    break;
-                case 3101004: // soul arrow
-                case 3201004:
-                case 2311002: // mystic door - hacked buff icon
-                case 13101003:
-                case 33101003:
-                case 8001:
-                case 10008001:
-                case 20008001:
-                case 20018001:
-                case 30008001:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SOULARROW, ret.x));
-                    break;
-                case 1211006: // wk charges
-                case 1211003:
-                case 1211004:
-                case 1211005:
-                case 1211008:
-                case 1211007:
-                case 1221003:
-                case 1221004:
-                case 11111007:
-                case 21111005:
-                case 15101006:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.属性攻击, ret.x));
-                    break;
-                case 12101005:
-                case 22121001: // Elemental Reset
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ELEMENT_RESET, ret.x));
-                    break;
-                case 3121008:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.CONCENTRATE, ret.x));
-                    break;
-                case 5110001: // Energy Charge
-                case 15100004:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ENERGY_CHARGE, 0));
-                    break;
-                case 1101005: // booster
-                case 1101004:
-                case 1201005:
-                case 1201004:
-                case 1301005:
-                case 1301004:
-                case 3101002:
-                case 3201002:
-                case 4101003:
-                case 4201002:
-                case 2111005: // spell booster, do these work the same?
-                case 2211005:
-                case 5101006:
-                case 5201003:
-                case 11101001:
-                case 12101004:
-                case 13101001:
-                case 14101002:
-                case 15101002:
-                case 21001003: // Aran - Pole Arm Booster
-                case 22141002: // Magic Booster
-                case 4301002:
-                case 32101005:
-                case 33001003:
-                case 35101006:
-                case 35001003: //TEMP.BOOSTER
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, ret.x));
-                    break;
-                case 5121009://极速领域
-                case 15111005:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.极速领域, ret.x));
-                    break;
-                case 5001005://改为疾驰
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.疾驰移动, ret.x));
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.疾驰跳跃, ret.y)); //always 0 but its there
-                    break;
-                case 15001003:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.疾驰移动, ret.x));
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.疾驰跳跃, ret.y));
-                    break;
-                case 1101007: // 剑客伤害反击
-                case 1201007: // 准骑士伤害反击
-                case 21101003://战神抗压
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.伤害反击, ret.x));
-                    break;
-                case 32111004: //conversion
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.CONVERSION, ret.x));
-                    break;
-                case 1301007: // hyper body
-                case 9001008:
-                case 8003:
-                case 10008003:
-                case 20008003:
-                case 20018003:
-                case 30008003:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXHP, ret.x));
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXMP, ret.y));
-                    break;
-                case 1001: // recovery
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.RECOVERY, ret.x));
-                    break;
-                case 1111002: // combo
-                case 11111001: // combo
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.COMBO, 1));
-                    break;
-                case 21120007: //combo barrier
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.COMBO_BARRIER, ret.x));
-                    break;
-                case 5211006: // 导航
-                case 5220011: // 导航辅助
-                case 22151002: //079不存在
-                    ret.duration = 60 * 120000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.HOMING_BEACON, ret.x));
-                    break;
-                case 1011: // Berserk fury
-                case 10001011:
-                case 20001011:
-                case 20011011:
-                case 30001011:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BERSERK_FURY, 1));
-                    break;
-                case 1010:
-                case 10001010:// Invincible Barrier
-                case 20001010:
-                case 20011010:
-                case 30001010:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DIVINE_BODY, 1));
-                    break;
-                case 1311006: //dragon roar
-                    ret.hpR = -ret.x / 100.0;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DRAGON_ROAR, ret.y));
-                    break;
-                case 4341007:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.THORNS, ret.x << 8 | ret.y));
-                    break;
-                case 4341002:
-                    ret.duration = 60 * 1000;
-                    ret.hpR = -ret.x / 100.0;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.FINAL_CUT, ret.y));
-                    break;
-                case 4331002:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MIRROR_IMAGE, ret.x));
-                    break;
-                case 4331003:
-                    ret.duration = 60 * 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.OWL_SPIRIT, ret.y));
-                    break;
-                case 1311008: // dragon blood
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DRAGONBLOOD, ret.x));
-                    break;
-                case 1121000: // maple warrior, all classes
-                case 1221000:
-                case 1321000:
-                case 2121000:
-                case 2221000:
-                case 2321000:
-                case 3121000:
-                case 3221000:
-                case 4121000:
-                case 4221000:
-                case 5121000:
-                case 5221000:
-                case 21121000: // Aran - Maple Warrior
-                case 22171000:
-                case 4341000:
-                case 32121007:
-                case 33121007:
-                case 35121007:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAPLE_WARRIOR, ret.x));
-                    break;
-                case 15111006: //spark
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SPARK, ret.x));
-                    break;
-                case 3121002: // sharp eyes bow master
-                case 3221002: // sharp eyes marksmen
-                case 33121004:
-                case 8002:
-                case 10008002:
-                case 20008002:
-                case 20018002:
-                case 30008002:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SHARP_EYES, ret.x << 8 | ret.y));
-                    break;
-                case 22151003: //magic resistance
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAGIC_RESISTANCE, ret.x));
-                    break;
-                /* case 21101003: // 抗压
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.POWERGUARD, ret.x));
-                    break;*/
-                case 21000000: // Aran Combo
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ARAN_COMBO, 100));
-                    break;
-                case 21100005: // Combo Drain
-                case 32101004:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.COMBO_DRAIN, ret.x));
-                    break;
-                case 21111001: // Smart Knockback
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SMART_KNOCKBACK, ret.x));
-                    break;
-                case 22131001: //magic shield
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAGIC_SHIELD, ret.x));
-                    break;
-                case 22181003: //soul stone
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SOUL_STONE, 1));
-                    break;
-                case 4001002: // disorder
-                case 14001002: // cygnus disorder
-                    monsterStatus.put(MonsterStatus.物攻, ret.x);
-                    monsterStatus.put(MonsterStatus.物防, ret.y);
-                    break;
-                case 5221009: //- 心灵控制 - 诱惑怪物，使怪物在一定时间内攻击其他怪物。
-                    monsterStatus.put(MonsterStatus.心灵控制, 1);
-                    break;
-                case 1201006: // threaten
-                    monsterStatus.put(MonsterStatus.物攻, ret.x);
-                    monsterStatus.put(MonsterStatus.物防, ret.y);
-                    break;
-                case 1211002: // charged blow
-                case 1111008: // shout
-                case 4211002: // assaulter
-                case 3101005: // arrow bomb
-                case 1111005: // coma: sword
-                case 1111006: // coma: axe
-                case 4221007: // boomerang step
-                case 5101002: // Backspin Blow
-                case 5101003: // Double Uppercut
-                case 5121004: // Demolition
-                case 5121005: // Snatch
-                case 5121007: // Barrage
-                case 5201004: // pirate blank shot
-                case 4121008: // Ninja Storm
-                case 22151001:
-                case 4201004: //steal, new
-                case 33101001:
-                case 33101002:
-                case 32111010:
-                case 32121004:
-                case 33111002:
-                case 33121002:
-                case 35101003:
-                case 35111015:
-                case 5111002: //energy blast
-                case 15101005:
-                case 4331005:
-                    monsterStatus.put(MonsterStatus.眩晕, 1);
-                    break;
-                case 4321002:
-                    monsterStatus.put(MonsterStatus.恐慌, 1);
-                    break;
-                case 4221003:
-                case 4121003:
-                case 33121005:
-                    monsterStatus.put(MonsterStatus.挑衅, ret.x);
-                    monsterStatus.put(MonsterStatus.魔防, ret.x);
-                    monsterStatus.put(MonsterStatus.物防, ret.x);
-                    break;
-                case 2201004: // cold beam
-                case 2211002: // ice strike
-                case 3211003: // blizzard
-                case 2211006: // il elemental compo
-                case 2221007: // Blizzard
-                case 5211005: // Ice Splitter
-                case 2121006: // Paralyze
-                case 21120006: // Tempest
-                case 22121000:
-                    monsterStatus.put(MonsterStatus.冻结, Integer.valueOf(1));
-                    ret.duration *= 2; // freezing skills are a little strange
-                    break;
-                case 2101003: // fp slow
-                case 2201003: // il slow
-                case 12101001:
-                case 22141003: // Slow
-                    monsterStatus.put(MonsterStatus.速度, ret.x);
-                    break;
-                case 2101005: // poison breath
-                case 2111006: // fp elemental compo
-                case 2121003: // ice demon
-                case 2221003: // fire demon
-                case 3111003: //inferno, new
-                case 22161002: //phantom imprint
-                    monsterStatus.put(MonsterStatus.中毒, 1);
-                    break;
-                case 4121004: // - 忍者伏击 - [最高等级 : 30]\n给一定范围内的敌人持续的伤害.一次不能攻击6只以上,HP不掉到1以下.\n必要技能 : #c假动作等级5以上#
-                case 4221004: //- 忍者伏击 - 躲藏的同伴突然出现在一定时间内持续攻击敌人.\n一次无法攻击6只以上,HP不会掉到1以下.\n必要技能 : #c假动作 5级 以上#
-                    monsterStatus.put(MonsterStatus.忍者伏击, (int) ret.damage);
-                    break;
-                case 2311005://- 巫毒术 - [最高等级:30]\n使周围怪物变成蜗牛,攻击力和移动速度均下降。对BOSS无效,最多变化6个怪物
-                    monsterStatus.put(MonsterStatus.巫毒, 1);
-                    break;
-                case 32111006:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.REAPER, 1));
-                    break;
-                case 4341006:
-                case 3111002: // puppet ranger
-                case 3211002: // puppet sniper
-                case 13111004: // puppet cygnus
-                case 5211001: // Pirate octopus summon
-                case 5220002: // wrath of the octopi
-                case 33111003:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.PUPPET, 1));
-                    break;
-                case 3211005: // golden eagle
-                case 3111005: // golden hawk
-                case 33111005:
-                case 35111002:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SUMMON, 1));
-                    monsterStatus.put(MonsterStatus.眩晕, Integer.valueOf(1));
-                    break;
-                case 3221005: // frostprey
-                case 2121005: // elquines
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SUMMON, 1));
-                    monsterStatus.put(MonsterStatus.冻结, Integer.valueOf(1));
-                    break;
-                case 2311006: // summon dragon
-                case 3121006: // phoenix
-                case 2221005: // ifrit
-                case 2321003: // bahamut
-                case 1321007: // Beholder
-                case 5211002: // Pirate bird summon
-                case 11001004:
-                case 12001004:
-                case 12111004: // Itrit
-                case 13001004:
-                case 14001005:
-                case 15001004:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SUMMON, 1));
-                    break;
-                case 2311003: // hs
-                case 9001002: // GM hs
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.HOLY_SYMBOL, ret.x));
-                    break;
-                case 2211004: // il seal
-                case 2111004: // fp seal
-                case 12111002: // cygnus seal
-                    monsterStatus.put(MonsterStatus.封印, 1);
-                    break;
-                case 4111003: // shadow web
-                case 14111001:
-                    monsterStatus.put(MonsterStatus.影网, 1);
-                    break;
-                case 4121006: // spirit claw
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SPIRIT_CLAW, 0));
-                    break;
-                case 2121004:
-                case 2221004:
-                case 2321004: // Infinity
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.INFINITY, ret.x));
-                    break;
-                case 1121002:
-                case 1221002:
-                case 1321002: // Stance
-                case 21121003: // Aran - Freezing Posture
-                case 32121005:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.STANCE, (int) ret.prop));
-                    break;
-                case 1005: // Echo of Hero
-                case 10001005: // Cygnus Echo
-                case 20001005: // Aran
-                case 20011005: // Evan
-                case 30001005:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ECHO_OF_HERO, ret.x));
-                    break;
-                case 1026: // Soaring
-                case 10001026: // Soaring
-                case 20001026: // Soaring
-                case 20011026: // Soaring
-                case 30001026:
-                    ret.duration = 60 * 120 * 1000; //because it seems to dispel asap.
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SOARING, 1));
-                    break;
-                case 2121002: // mana reflection
-                case 2221002:
-                case 2321002:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MANA_REFLECTION, 1));
-                    break;
-                case 2321005: // holy shield
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.HOLY_SHIELD, ret.x));
-                    break;
-                case 3121007: // Hamstring
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.HAMSTRING, ret.x));
-                    monsterStatus.put(MonsterStatus.速度, ret.x);
-                    break;
-                case 3221006: // Blind
-                case 33111004:
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BLIND, ret.x));
-                    monsterStatus.put(MonsterStatus.命中, ret.x);
-                    break;
-                case 33121006: //feline berserk
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXHP, ret.x));
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.WATK, ret.y));//temp
-                    //statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DASH_SPEED, ret.z));
-                    break;
-                case 32001003: //dark aura
-                case 32120000:
-                    ret.duration = 60 * 120 * 1000; //because it seems to dispel asap.
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DARK_AURA, ret.x));
-                    break;
-                case 32101002: //blue aura
-                case 32110000:
-                    ret.duration = 60 * 120 * 1000; //because it seems to dispel asap.
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BLUE_AURA, ret.x));
-                    break;
-                case 32101003: //yellow aura
-                case 32120001:
-                    ret.duration = 60 * 120 * 1000; //because it seems to dispel asap.
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.YELLOW_AURA, ret.x));
-                    break;
-                case 33101004: //it's raining mines
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.RAINING_MINES, ret.x)); //x?
-                    break;
-                case 35101007: //perfect armor
-                    ret.duration = 60 * 120 * 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.PERFECT_ARMOR, ret.x));
-                    break;
-                case 35121006: //satellite safety
-                    ret.duration = 60 * 120 * 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SATELLITESAFE_PROC, ret.x));
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SATELLITESAFE_ABSORB, ret.y));
-                    break;
-                case 35001001: //flame
-                case 35101009:
-                case 35111007: //TEMP
-                    //pre-bb = 35111007,
-                    ret.duration = 8000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MECH_CHANGE, (int) level)); //ya wtf
-                    break;
-                case 35121013:
-                //case 35111004: //siege
-                case 35101002: //TEMP
-                    ret.duration = 5000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MECH_CHANGE, (int) level)); //ya wtf
-                    break;
-                case 35121005: //missile
-                    ret.duration = 60 * 120 * 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MECH_CHANGE, (int) level)); //ya wtf
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (ret.isMonsterRiding()) {
-            statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.骑兽技能, 1));
-        }
-        if (ret.isMorph() || ret.isPirateMorph()) {
-            statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MORPH, ret.getMorph()));
-        }
-        ret.monsterStatus = monsterStatus;
-        statups.trimToSize();
-        ret.statups = statups;
-
-        return ret;
+    public void setMonsterStatus(Map<MonsterStatus, Integer> monsterStatus) {
+        this.monsterStatus = monsterStatus;
     }
 
     /**
      * @param applyto
      * @param obj
-     * @param attack damage done by the skill
      */
     public final void applyPassive(final MapleCharacter applyto, final MapleMapObject obj) {
         if (makeChanceResult()) {
@@ -740,15 +79,15 @@ public class MapleStatEffect implements Serializable {
         return applyTo(chr, chr, true, null, duration);
     }
 
-    public final boolean applyTo(MapleCharacter chr, Point pos) {
+    public final boolean applyTo(MapleCharacter chr, Vector pos) {
         return applyTo(chr, chr, true, pos, duration);
     }
 
-    private final boolean applyTo(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final Point pos) {
+    private final boolean applyTo(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final Vector pos) {
         return applyTo(applyfrom, applyto, primary, pos, duration);
     }
 
-    public final boolean applyTo(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final Point pos, int newDuration) {
+    public final boolean applyTo(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final Vector pos, int newDuration) {
         if (isHeal() && (applyfrom.getMapId() == 749040100 || applyto.getMapId() == 749040100)) {
             return false; //z
             //} else if (isSoaring() && !applyfrom.getMap().canSoar()) {
@@ -872,7 +211,7 @@ public class MapleStatEffect implements Serializable {
         }
         final SummonMovementType summonMovementType = getSummonMovementType();
         if (summonMovementType != null) {
-            final MapleSummon tosummon = new MapleSummon(applyfrom, this, new Point(pos == null ? applyfrom.getPosition() : pos), summonMovementType);
+            final MapleSummon tosummon = new MapleSummon(applyfrom, this, Vector.of(pos == null ? applyfrom.getPosition() : pos), summonMovementType);
             if (!tosummon.isPuppet()) {
                 applyfrom.getCheatTracker().resetSummonAttack();
             }
@@ -886,7 +225,7 @@ public class MapleStatEffect implements Serializable {
                 applyfrom.cancelEffectFromBuffStat(MapleBuffStat.MIRROR_IMAGE);
             }
         } else if (isMagicDoor()) { // Magic Door
-            MapleDoor door = new MapleDoor(applyto, new Point(applyto.getPosition()), sourceid); // Current Map door
+            MapleDoor door = new MapleDoor(applyto, Vector.of(applyto.getPosition()), sourceid); // Current Map door
             if (door.getTownPortal() != null) {
 
                 applyto.getMap().spawnDoor(door);
@@ -904,7 +243,7 @@ public class MapleStatEffect implements Serializable {
             }
 
         } else if (isMist()) {
-            final Rectangle bounds = calculateBoundingBox(pos != null ? pos : new Point(applyfrom.getPosition()), applyfrom.isFacingLeft());
+            final Rectangle bounds = calculateBoundingBox(pos != null ? pos : Vector.of(applyfrom.getPosition()), applyfrom.isFacingLeft());
             final MapleMist mist = new MapleMist(bounds, applyfrom, this);
             applyfrom.getMap().spawnMist(mist, getDuration(), false);
             /*
@@ -1073,24 +412,60 @@ public class MapleStatEffect implements Serializable {
         }
     }
 
-    private final Rectangle calculateBoundingBox(final Point posFrom, final boolean facingLeft) {
+    private final Rectangle calculateBoundingBox(final Vector posFrom, final boolean facingLeft) {
         if (lt == null || rb == null) {
             return new Rectangle(posFrom.x, posFrom.y, facingLeft ? 1 : -1, 1);
         }
-        Point mylt;
-        Point myrb;
+        Vector mylt;
+        Vector myrb;
         if (facingLeft) {
-            mylt = new Point(lt.x + posFrom.x, lt.y + posFrom.y);
-            myrb = new Point(rb.x + posFrom.x, rb.y + posFrom.y);
+            mylt = Vector.of(lt.x + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(rb.x + posFrom.x, rb.y + posFrom.y);
         } else {
-            myrb = new Point(lt.x * -1 + posFrom.x, rb.y + posFrom.y);
-            mylt = new Point(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(lt.x * -1 + posFrom.x, rb.y + posFrom.y);
+            mylt = Vector.of(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
         }
         return new Rectangle(mylt.x, mylt.y, myrb.x - mylt.x, myrb.y - mylt.y);
     }
 
     public final void setDuration(int d) {
         this.duration = d;
+    }
+
+    public short getProp() {
+        return prop;
+    }
+
+    public double getHpR() {
+        return hpR;
+    }
+
+    public void setHpR(double hpR) {
+        this.hpR = hpR;
+    }
+
+    public void setMpR(double mpR) {
+        this.mpR = mpR;
+    }
+
+    public void setMhpR(byte mhpR) {
+        this.mhpR = mhpR;
+    }
+
+    public void setMmpR(byte mmpR) {
+        this.mmpR = mmpR;
+    }
+
+    public void setExpinc(int expinc) {
+        this.expinc = expinc;
+    }
+
+    public void setCp(int cp) {
+        this.cp = cp;
+    }
+
+    public void setNuffSkill(int nuffSkill) {
+        this.nuffSkill = nuffSkill;
     }
 
     public final void silentApplyBuff(final MapleCharacter chr, final long starttime) {
@@ -1254,7 +629,7 @@ public class MapleStatEffect implements Serializable {
             case 35111007: //TEMP
             case 35101002: //TEMP
             case 35121013:
-            //  case 35111004: siege
+                //  case 35111004: siege
             case 35121005: { //missile
                 final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MECH_CHANGE, 1));
                 applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto, applyto.getId(), stat, this), false);
@@ -1298,7 +673,8 @@ public class MapleStatEffect implements Serializable {
                     int mountid = parseMountInfo(applyto, sourceid);
                     int mountid2 = parseMountInfo_Pure(applyto, sourceid);
                     if (sourceid == 1013 && applyto.getMountId() != 0) {
-                        mountid = applyto.getMountId();;
+                        mountid = applyto.getMountId();
+                        ;
                         mountid2 = applyto.getMountId();
                     }
                     if (mountid != 0 && mountid2 != 0) {
@@ -1495,6 +871,178 @@ public class MapleStatEffect implements Serializable {
         return mpchange;
     }
 
+    public void setMpCon(short mpCon) {
+        this.mpCon = mpCon;
+    }
+
+    public void setHpCon(short hpCon) {
+        this.hpCon = hpCon;
+    }
+
+    public void setProp(short prop) {
+        this.prop = prop;
+    }
+
+    public void setCooldown(int cooldown) {
+        this.cooldown = cooldown;
+    }
+
+    public void setMorphId(int morphId) {
+        this.morphId = morphId;
+    }
+
+    public void setMobCount(byte mobCount) {
+        this.mobCount = mobCount;
+    }
+
+    public void setOverTime(boolean overTime) {
+        this.overTime = overTime;
+    }
+
+    public void setMastery(byte mastery) {
+        this.mastery = mastery;
+    }
+
+    public void setWatk(short watk) {
+        this.watk = watk;
+    }
+
+    public void setEhp(short ehp) {
+        this.ehp = ehp;
+    }
+
+    public void setEmp(short emp) {
+        this.emp = emp;
+    }
+
+    public void setEwatk(short ewatk) {
+        this.ewatk = ewatk;
+    }
+
+    public void setEwdef(short ewdef) {
+        this.ewdef = ewdef;
+    }
+
+    public void setEmdef(short emdef) {
+        this.emdef = emdef;
+    }
+
+    public void setAcc(short acc) {
+        this.acc = acc;
+    }
+
+    public void setWdef(short wdef) {
+        this.wdef = wdef;
+    }
+
+    public void setMatk(short matk) {
+        this.matk = matk;
+    }
+
+    public void setMdef(short mdef) {
+        this.mdef = mdef;
+    }
+
+    public void setAvoid(short avoid) {
+        this.avoid = avoid;
+    }
+
+    public void setSpeed(short speed) {
+        this.speed = speed;
+    }
+
+    public void setJump(short jump) {
+        this.jump = jump;
+    }
+
+    public void setExpBuff(int expBuff) {
+        this.expBuff = expBuff;
+    }
+
+    public void setCashup(int cashup) {
+        this.cashup = cashup;
+    }
+
+    public void setItemup(int itemup) {
+        this.itemup = itemup;
+    }
+
+    public void setMesoup(int mesoup) {
+        this.mesoup = mesoup;
+    }
+
+    public void setBerserk(int berserk) {
+        this.berserk = berserk;
+    }
+
+    public void setBerserk2(int berserk2) {
+        this.berserk2 = berserk2;
+    }
+
+    public void setBooster(int booster) {
+        this.booster = booster;
+    }
+
+    public void setIllusion(int illusion) {
+        this.illusion = illusion;
+    }
+
+    public void setCureDebuffs(List<MapleDisease> cureDebuffs) {
+        this.cureDebuffs = cureDebuffs;
+    }
+
+    public void setLt(Vector lt) {
+        this.lt = lt;
+    }
+
+    public void setRb(Vector rb) {
+        this.rb = rb;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setZ(int z) {
+        this.z = z;
+    }
+
+    public void setDamage(short damage) {
+        this.damage = damage;
+    }
+
+    public void setAttackCount(byte attackCount) {
+        this.attackCount = attackCount;
+    }
+
+    public void setBulletCount(byte bulletCount) {
+        this.bulletCount = bulletCount;
+    }
+
+    public void setBulletConsume(int bulletConsume) {
+        this.bulletConsume = bulletConsume;
+    }
+
+    public void setMoneyCon(int moneyCon) {
+        this.moneyCon = moneyCon;
+    }
+
+    public void setItemCon(int itemCon) {
+        this.itemCon = itemCon;
+    }
+
+    public void setItemConNo(int itemConNo) {
+        this.itemConNo = itemConNo;
+    }
+
+    public void setMoveTo(int moveTo) {
+        this.moveTo = moveTo;
+    }
+
     private final int alchemistModifyVal(final MapleCharacter chr, final int val, final boolean withX) {
         if (!skill) {
             int offset = chr.getStat().RecoveryUP;
@@ -1539,6 +1087,10 @@ public class MapleStatEffect implements Serializable {
 
     public final void setSourceId(final int newid) {
         sourceid = newid;
+    }
+
+    public void setSkill(boolean skill) {
+        this.skill = skill;
     }
 
     private final boolean isGmBuff() {
@@ -1629,8 +1181,16 @@ public class MapleStatEffect implements Serializable {
         return hp;
     }
 
+    public void setHp(short hp) {
+        this.hp = hp;
+    }
+
     public final short getMp() {
         return mp;
+    }
+
+    public void setMp(short mp) {
+        this.mp = mp;
     }
 
     public final byte getMastery() {
@@ -1671,6 +1231,38 @@ public class MapleStatEffect implements Serializable {
 
     public final short getJump() {
         return jump;
+    }
+
+    public byte getMhpR() {
+        return mhpR;
+    }
+
+    public byte getMmpR() {
+        return mmpR;
+    }
+
+    public double getMpR() {
+        return mpR;
+    }
+
+    public int getExpBuff() {
+        return expBuff;
+    }
+
+    public int getCashup() {
+        return cashup;
+    }
+
+    public int getItemup() {
+        return itemup;
+    }
+
+    public int getMesoup() {
+        return mesoup;
+    }
+
+    public int getBerserk2() {
+        return berserk2;
     }
 
     public final int getDuration() {
@@ -1735,6 +1327,34 @@ public class MapleStatEffect implements Serializable {
 
     public final int getBerserk() {
         return berserk;
+    }
+
+    public int getBooster() {
+        return booster;
+    }
+
+    public int getIllusion() {
+        return illusion;
+    }
+
+    public short getEwatk() {
+        return ewatk;
+    }
+
+    public short getEwdef() {
+        return ewdef;
+    }
+
+    public short getEmdef() {
+        return emdef;
+    }
+
+    public short getEmp() {
+        return emp;
+    }
+
+    public short getEhp() {
+        return ehp;
     }
 
     public final boolean isHide() {
@@ -1927,6 +1547,10 @@ public class MapleStatEffect implements Serializable {
         return level;
     }
 
+    public void setLevel(byte level) {
+        this.level = level;
+    }
+
     public final SummonMovementType getSummonMovementType() {
         if (!skill) {
             return null;
@@ -1994,7 +1618,6 @@ public class MapleStatEffect implements Serializable {
     }
 
     /**
-     *
      * @return true if the effect should happen based on it's probablity, false
      * otherwise
      */
@@ -2029,18 +1652,18 @@ public class MapleStatEffect implements Serializable {
         }
     }
 
-    public final Rectangle calculateBoundingBox(final Point posFrom, final boolean facingLeft, int addedRange) {
+    public final Rectangle calculateBoundingBox(final Vector posFrom, final boolean facingLeft, int addedRange) {
         if ((lt == null) || (rb == null)) {
             return new Rectangle((facingLeft ? -200 - addedRange : 0) + posFrom.x, -100 - addedRange + posFrom.y, 200 + addedRange, 100 + addedRange);
         }
-        Point myrb;
-        Point mylt;
+        Vector myrb;
+        Vector mylt;
         if (facingLeft) {
-            mylt = new Point(lt.x + posFrom.x - addedRange, lt.y + posFrom.y);
-            myrb = new Point(rb.x + posFrom.x, rb.y + posFrom.y);
+            mylt = Vector.of(lt.x + posFrom.x - addedRange, lt.y + posFrom.y);
+            myrb = Vector.of(rb.x + posFrom.x, rb.y + posFrom.y);
         } else {
-            myrb = new Point(lt.x * -1 + posFrom.x + addedRange, rb.y + posFrom.y);
-            mylt = new Point(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(lt.x * -1 + posFrom.x + addedRange, rb.y + posFrom.y);
+            mylt = Vector.of(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
         }
         return new Rectangle(mylt.x, mylt.y, myrb.x - mylt.x, myrb.y - mylt.y);
     }

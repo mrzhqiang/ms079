@@ -1,44 +1,54 @@
 package server;
 
 import client.MapleDisease;
-import java.io.File;
+import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.Elements;
+import server.life.MobSkill;
+import server.life.MobSkillFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import com.github.mrzhqiang.maplestory.wz.WzFiles;
-import server.life.MobSkillFactory;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleData;
-import provider.MapleDataTool;
-import server.life.MobSkill;
-
-public class MapleCarnivalFactory {
+public final class MapleCarnivalFactory {
 
     private final static MapleCarnivalFactory instance = new MapleCarnivalFactory();
-    private final Map<Integer, MCSkill> skills = new HashMap<Integer, MCSkill>();
-    private final Map<Integer, MCSkill> guardians = new HashMap<Integer, MCSkill>();
-    private final MapleDataProvider dataRoot = MapleDataProviderFactory.getDataProvider(WzFiles.SKILL_DIR);
+    private final Map<Integer, MCSkill> skills = new HashMap<>();
+    private final Map<Integer, MCSkill> guardians = new HashMap<>();
 
     public MapleCarnivalFactory() {
         //whoosh
         initialize();
     }
 
-    public static final MapleCarnivalFactory getInstance() {
+    public static MapleCarnivalFactory getInstance() {
         return instance;
     }
 
     private void initialize() {
-        if (skills.size() != 0) {
+        if (!skills.isEmpty()) {
             return;
         }
-        for (MapleData z : dataRoot.getData("MCSkill.img")) {
-            skills.put(Integer.parseInt(z.getName()), new MCSkill(MapleDataTool.getInt("spendCP", z, 0), MapleDataTool.getInt("mobSkillID", z, 0), MapleDataTool.getInt("level", z, 0), MapleDataTool.getInt("target", z, 1) > 1));
-        }
-        for (MapleData z : dataRoot.getData("MCGuardian.img")) {
-            guardians.put(Integer.parseInt(z.getName()), new MCSkill(MapleDataTool.getInt("spendCP", z, 0), MapleDataTool.getInt("mobSkillID", z, 0), MapleDataTool.getInt("level", z, 0), true));
-        }
+        WzData.SKILL.directory().findFile("MCSkill.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(element -> {
+                    int skillId = Numbers.ofInt(element.name());
+                    MCSkill skill = MCSkill.of(element);
+                    boolean targetBool = Elements.findInt(element, "target", 1) > 1;
+                    skill.setTargetsAll(targetBool);
+                    skills.put(skillId, skill);
+                }));
+        WzData.SKILL.directory().findFile("MCGuardian.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .ifPresent(stream -> stream.forEach(element -> {
+                    int skillId = Numbers.ofInt(element.name());
+                    MCSkill skill = MCSkill.of(element);
+                    guardians.put(skillId, skill);
+                }));
     }
 
     public MCSkill getSkill(final int id) {
@@ -49,16 +59,26 @@ public class MapleCarnivalFactory {
         return guardians.get(id);
     }
 
-    public static class MCSkill {
+    public static final class MCSkill {
 
         public int cpLoss, skillid, level;
         public boolean targetsAll;
 
-        public MCSkill(int _cpLoss, int _skillid, int _level, boolean _targetsAll) {
+        public static MCSkill of(WzElement<?> element) {
+            int cpInt = Elements.findInt(element, "spendCP");
+            int mobSkillInt = Elements.findInt(element, "mobSkillID");
+            int levelInt = Elements.findInt(element, "level");
+            return new MCSkill(cpInt, mobSkillInt, levelInt);
+        }
+
+        public MCSkill(int _cpLoss, int _skillid, int _level) {
             cpLoss = _cpLoss;
             skillid = _skillid;
             level = _level;
-            targetsAll = _targetsAll;
+        }
+
+        public void setTargetsAll(boolean targetsAll) {
+            this.targetsAll = targetsAll;
         }
 
         public MobSkill getSkill() {

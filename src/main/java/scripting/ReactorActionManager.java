@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package scripting;
 
 import java.awt.Point;
@@ -28,6 +8,7 @@ import java.util.List;
 import client.inventory.Equip;
 import client.inventory.IItem;
 import client.inventory.Item;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -90,9 +71,9 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
             items.add(new ReactorDropEntry(0, mesoChance, -1));
             numItems++;
         }
-        final Point dropPos = reactor.getPosition();
+        Vector dropPos = reactor.getPosition();
 
-        dropPos.x -= (12 * numItems);
+        dropPos = Vector.of(dropPos.x - (12 * numItems), dropPos.y);
 
         int range, mesoDrop;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
@@ -110,7 +91,7 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
                 }
                 reactor.getMap().spawnItemDrop(reactor, getPlayer(), drop, dropPos, false, false);
             }
-            dropPos.x += 25;
+            dropPos = Vector.of(dropPos.x + 25, dropPos.y);
         }
     }
 
@@ -120,9 +101,9 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
     }
 
     // returns slightly above the reactor's position for monster spawns
-    public Point getPosition() {
-        Point pos = reactor.getPosition();
-        pos.y -= 10;
+    public Vector getPosition() {
+        Vector pos = reactor.getPosition();
+        pos = Vector.of(pos.x, pos.y - 10);
         return pos;
     }
 
@@ -140,7 +121,7 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
 
     // summon one monster, remote location
     public void spawnFakeMonster(int id, int x, int y) {
-        spawnFakeMonster(id, 1, new Point(x, y));
+        spawnFakeMonster(id, 1, Vector.of(x, y));
     }
 
     // multiple monsters, reactor location
@@ -150,11 +131,11 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
 
     // multiple monsters, remote location
     public void spawnFakeMonster(int id, int qty, int x, int y) {
-        spawnFakeMonster(id, qty, new Point(x, y));
+        spawnFakeMonster(id, qty, Vector.of(x, y));
     }
 
     // handler for all spawnFakeMonster
-    private void spawnFakeMonster(int id, int qty, Point pos) {
+    private void spawnFakeMonster(int id, int qty, Vector pos) {
         for (int i = 0; i < qty; i++) {
             reactor.getMap().spawnFakeMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), pos);
         }

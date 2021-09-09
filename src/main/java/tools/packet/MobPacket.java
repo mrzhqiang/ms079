@@ -1,41 +1,21 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.packet;
-
-import java.util.Map;
-import java.util.List;
-import java.awt.Point;
 
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
-import java.util.Collection;
-import java.util.Collections;
 import server.life.MapleMonster;
 import server.life.MobSkill;
 import server.movement.LifeMovementFragment;
 import tools.data.output.LittleEndianWriter;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class MobPacket {
 
@@ -162,12 +142,12 @@ public class MobPacket {
         mplew.write(6);
         mplew.write(5);
 
-	//colour legend: (applies to both colours)
+        //colour legend: (applies to both colours)
         //1 = red, 2 = dark blue, 3 = light green, 4 = dark green, 5 = black, 6 = light blue, 7 = purple
         return mplew.getPacket();
     }
 
-    public static MaplePacket moveMonster(boolean useskill, int skill, int skill1, int skill2, int skill3, int skill4, int oid, Point startPos, Point endPos, List<LifeMovementFragment> moves) {
+    public static MaplePacket moveMonster(boolean useskill, int skill, int skill1, int skill2, int skill3, int skill4, int oid, Vector startPos, Vector endPos, List<LifeMovementFragment> moves) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.调试输出封包) {
@@ -201,7 +181,7 @@ public class MobPacket {
         }
     }
 
-    
+
     public static MaplePacket spawnMonster(MapleMonster life, int spawnType, int effect, int link) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
@@ -271,6 +251,7 @@ public class MobPacket {
         }
         //wh spawn - 15 zeroes instead of 16, then 98 F4 56 A6 C7 C9 01 28, then 7 zeroes
     }
+
     public static MaplePacket controlMonster(MapleMonster life, boolean newSpawn, boolean aggro) {
         return spawnMonsterInternal(life, true, newSpawn, aggro, 0, false);
     }

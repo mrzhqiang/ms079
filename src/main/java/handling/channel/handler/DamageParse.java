@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import client.ISkill;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.inventory.IItem;
 import client.MapleBuffStat;
@@ -730,7 +731,8 @@ public class DamageParse {
         for (Pair eachde : oned.attack) {
             Integer eachd = (Integer) eachde.left;
             if (s.makeChanceResult()) {
-                player.getMap().spawnMesoDrop(Math.min((int) Math.max(eachd / 20000.0D * maxmeso, 1.0D), maxmeso), new Point((int) (mob.getTruePosition().getX() + Randomizer.nextInt(100) - 50.0D), (int) mob.getTruePosition().getY()), mob, player, false, (byte) 0);
+                player.getMap().spawnMesoDrop(Math.min((int) Math.max(eachd / 20000.0D * maxmeso, 1.0D), maxmeso),
+                        Vector.of((int) (mob.getTruePosition().x + Randomizer.nextInt(100) - 50.0D), (int) mob.getTruePosition().x), mob, player, false, (byte) 0);
             }
         }
     }

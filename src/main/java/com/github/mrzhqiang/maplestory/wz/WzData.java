@@ -1,33 +1,27 @@
 package com.github.mrzhqiang.maplestory.wz;
 
-import com.github.mrzhqiang.maplestory.wz.element.ImgDirElement;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Map;
 
+/**
+ * wz 数据。
+ * <p>
+ * 这是一系列数据的单例实现，包含相关目录和文件。
+ * <p>
+ * 枚举类是最好的单例。
+ */
 public enum WzData {
-    CHARACTER(WzFiles.CHARACTER_DIR),
-    ETC(WzFiles.ETC_DIR),
-    ITEM(WzFiles.ITEM_DIR),
-    MAP(WzFiles.MAP_DIR),
-    MOB(WzFiles.MOB_DIR),
-    NPC(WzFiles.NPC_DIR),
-    QUEST(WzFiles.QUEST_DIR),
-    REACTOR(WzFiles.REACTOR_DIR),
-    SKILL(WzFiles.SKILL_DIR),
-    STRING(WzFiles.STRING_DIR),
+    CHARACTER(WzManage.CHARACTER_DIR),
+    ETC(WzManage.ETC_DIR),
+    ITEM(WzManage.ITEM_DIR),
+    MAP(WzManage.MAP_DIR),
+    MOB(WzManage.MOB_DIR),
+    NPC(WzManage.NPC_DIR),
+    QUEST(WzManage.QUEST_DIR),
+    REACTOR(WzManage.REACTOR_DIR),
+    SKILL(WzManage.SKILL_DIR),
+    STRING(WzManage.STRING_DIR),
 //    BASE(WzFiles.BASE_DIR),
 //    EFFECT(WzFiles.EFFECT_DIR),
 //    MORPH(WzFiles.MORPH_DIR),
@@ -35,108 +29,43 @@ public enum WzData {
 //    TAMING_MOB(WzFiles.TAMING_MOB_DIR),
 //    UI(WzFiles.UI_DIR),
     ;
-    private static final Logger LOGGER = LoggerFactory.getLogger(WzData.class);
 
-    public static void load() {
-        for (WzData value : WzData.values()) {
-            value.root.clean();
-            value.root.parse();
+    /**
+     * 将文件内容解析并加载到相应的 ConcurrentHashMap（支持并发操作的内存缓存） 中。
+     * <p>
+     * 这个方法可以重复调用，以更新修改后的内容。
+     * <p>
+     * 注意：如果新增或删除 xml 文件以及文件中的内容，此方法将不保证得到预期的效果。
+     */
+    public static synchronized void load() {
+        for (WzData data : WzData.values()) {
+            // 只是修改内容，可以重加载。
+            // 如果是删除了某些内容，则必须重启服务器，以防止程序异常。
+//            data.root.clean();
+            data.directory.parse();
         }
     }
 
-    private final WzDirectory root;
+    /**
+     * 单个 wz 顶级目录。
+     */
+    private final WzDirectory directory;
 
     /**
-     * wz/Character.wz
-     * wz/String.wz
+     * @param wzFile 单个 wz 顶级目录。
      */
     WzData(File wzFile) {
         Preconditions.checkNotNull(wzFile, "wz file == null");
         Preconditions.checkArgument(wzFile.exists(), "wz file %s is not exists", wzFile);
-        this.root = new WzDirectory(wzFile.toPath());
+        this.directory = new WzDirectory(wzFile.toPath());
     }
 
-    public WzDirectory root() {
-        return root;
-    }
-
-
-    public static final class WzDirectory {
-
-        private final Map<Path, WzDirectory> dirs = Maps.newHashMap();
-        private final Map<Path, WzFile> files = Maps.newHashMap();
-
-        private final Path path;
-
-        WzDirectory(Path path) {
-            Preconditions.checkNotNull(path, "path == null");
-            this.path = path;
-        }
-
-        @Nullable
-        public WzDirectory dir(String name) {
-            if (Strings.isNullOrEmpty(name) || dirs.isEmpty()) {
-                return null;
-            }
-            return dirs.get(path.resolve(name));
-        }
-
-        @Nullable
-        public WzFile file(String name) {
-            if (Strings.isNullOrEmpty(name) || files.isEmpty()) {
-                return null;
-            }
-            if (!name.endsWith(".xml")) {
-                name = name + ".xml";
-            }
-            return files.get(path.resolve(name));
-        }
-
-        private void parse() {
-            if (!Files.isDirectory(path)) {
-                return;
-            }
-
-            try {
-                Files.list(path).forEach(this::attemptParse);
-            } catch (IOException e) {
-                LOGGER.error("无法列出 {} 目录：{}", path, e);
-            }
-        }
-
-        private void attemptParse(Path path) {
-            try {
-                if (Files.isDirectory(path)) {
-                    WzDirectory directory = new WzDirectory(path);
-                    dirs.put(path, directory);
-                } else {
-                    Elements imgDir = Jsoup.parse(path.toFile(), "UTF-8").body().children();
-                    files.put(path, new WzFile(imgDir));
-                }
-            } catch (IOException e) {
-                LOGGER.error("解析 {} 出现问题：{}", path, e);
-            }
-        }
-
-        public void clean() {
-            dirs.clear();
-            files.clear();
-        }
-    }
-
-
-    public static class WzFile {
-
-        private final ImgDirElement imgDir;
-
-        WzFile(Elements imgDir) {
-            Preconditions.checkNotNull(imgDir, "imgdir == null");
-            this.imgDir = ImgDirElement.of(imgDir.first());
-        }
-
-        @Nonnull
-        public ImgDirElement imgDir() {
-            return imgDir;
-        }
+    /**
+     * wz 文件夹下的顶级目录，比如：wz/Character.wz
+     *
+     * @return wz 顶级目录。永不返回 Null 值。
+     */
+    public WzDirectory directory() {
+        return directory;
     }
 }

@@ -21,6 +21,8 @@
 package server.movement;
 
 import java.awt.Point;
+
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 
 public class BounceMovement extends AbstractLifeMovement {
@@ -28,7 +30,7 @@ public class BounceMovement extends AbstractLifeMovement {
     private int unk;
     private int fh;
 
-    public BounceMovement(int type, Point position, int duration, int newstate) {
+    public BounceMovement(int type, Vector position, int duration, int newstate) {
         super(type, position, duration, newstate);
     }
 

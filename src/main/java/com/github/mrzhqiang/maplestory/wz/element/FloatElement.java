@@ -1,36 +1,27 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-public final class FloatElement extends WzElement {
+/**
+ * 单精度浮点数标签元素。
+ */
+public final class FloatElement extends BaseWzElement<Float> {
 
-    private static final String FLOAT_TAG = "float";
+    /**
+     * 用于从 xml 元素匹配当前元素的标签。
+     */
+    static final String TAG = "float";
 
-    public static Map<String, FloatElement> mapChildren(Element parent) {
-        Elements elements = parent.children();
-        if (elements.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return elements.stream()
-                .filter(element -> element.is(FLOAT_TAG))
-                .map(FloatElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+    FloatElement(@Nullable WzElement<?> parent, Element source) {
+        super(parent, source);
     }
 
-    private final float value;
-
-    FloatElement(Element source) {
-        super(source);
-        this.value = Numbers.ofFloat(source.val());
-    }
-
-    public float getValue() {
-        return value;
+    @Override
+    protected Float convertValue(Element source) {
+        return Numbers.ofFloat(source.val());
     }
 }

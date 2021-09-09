@@ -22,6 +22,7 @@ package server.shops;
 
 import client.inventory.IItem;
 import client.inventory.ItemFlag;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -209,7 +210,7 @@ public class HiredMerchant extends AbstractPlayerStore {
                 for (int i = 910000001; i <= 910000022; i++) {
                     map = ch.getMapFactory().getMap(i);
                     if (map != null) {
-                        List<MapleMapObject> HMS = map.getMapObjectsInRange(new Point(0, 0), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT));
+                        List<MapleMapObject> HMS = map.getMapObjectsInRange(Vector.of(0, 0), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT));
                         for (MapleMapObject HM : HMS) {
                             HiredMerchant HMM = (HiredMerchant) HM;
                             if (HMM.getOwnerId() == getOwnerId()) {

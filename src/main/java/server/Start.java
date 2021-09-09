@@ -2,6 +2,8 @@ package server;
 
 import client.MapleCharacter;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.google.common.base.Stopwatch;
 import constants.ServerConstants;
 import handling.MapleServerHandler;
 import handling.channel.ChannelServer;
@@ -17,6 +19,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.PreparedStatement;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.Timer.*;
 import server.events.MapleOxQuizFactory;
 import server.life.MapleLifeFactory;
@@ -24,7 +29,9 @@ import server.quest.MapleQuest;
 import tools.FileoutputUtil;
 import tools.StringUtil;
 
-public class Start {
+public final class Start {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Start.class);
 
     public static boolean Check = true;
     public static final Start instance = new Start();
@@ -34,7 +41,7 @@ public class Start {
     //设置服务端单一实例.启动一个ServerSocket，用以控制只启动一个实例  禁止服务端多开
     //设置srv端口 = 6350//用于控制启动唯一实例的端口号，这个端口如果保存在配置文件中会更灵活
 
-    protected static void checkSingleInstance() {
+    static void checkSingleInstance() {
         try {
             srvSocket = new ServerSocket(srvPort);
         } catch (IOException ex) {
@@ -79,6 +86,9 @@ public class Start {
         TimerManager.getInstance().start();//点卷赌博的时钟线程
         System.out.println("时钟线程加载完成 耗时：" + (System.currentTimeMillis() - szxctime) / 1000.0 + "秒");
         System.out.println("====================================================-[ 加载NPC ]");
+        Stopwatch wzDataWatch = Stopwatch.createStarted();
+        WzData.load();
+        LOGGER.info("加载 wz 数据完成，用时：{}", wzDataWatch.stop());
         long npctime = System.currentTimeMillis();
         MapleLifeFactory.loadQuestCounts();
         System.out.println("NPC数据加载完成 耗时：" + (System.currentTimeMillis() - npctime) / 1000.0 + "秒");

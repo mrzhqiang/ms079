@@ -1,36 +1,27 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-public final class ShortElement extends WzElement {
+/**
+ * 短整型标签元素。
+ */
+public final class ShortElement extends BaseWzElement<Short> {
 
-    private static final String SHORT_TAG = "short";
+    /**
+     * 用于从 xml 元素匹配当前元素的标签。
+     */
+    static final String TAG = "short";
 
-    public static Map<String, ShortElement> mapChildren(Element parent) {
-        Elements elements = parent.children();
-        if (elements.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return elements.stream()
-                .filter(element -> element.is(SHORT_TAG))
-                .map(ShortElement::new)
-                .collect(Collectors.toMap(WzElement::getName, it -> it));
+    ShortElement(@Nullable WzElement<?> parent, Element source) {
+        super(parent, source);
     }
 
-    private final short value;
-
-    ShortElement(Element source) {
-        super(source);
-        this.value = Numbers.ofShort(source.val());
-    }
-
-    public short getValue() {
-        return value;
+    @Override
+    protected Short convertValue(Element source) {
+        return Numbers.ofShort(source.val());
     }
 }
