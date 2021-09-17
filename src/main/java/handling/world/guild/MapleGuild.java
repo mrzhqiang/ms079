@@ -3,9 +3,6 @@ package handling.world.guild;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
 import client.MapleClient;
-import com.github.mrzhqiang.maplestory.domain.DGuild;
-import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
-import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.world.World;
@@ -22,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Stream;
 
 public final class MapleGuild implements java.io.Serializable {
 

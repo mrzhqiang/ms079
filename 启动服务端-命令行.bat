@@ -3,5 +3,5 @@
 set PATH=%PATH%;JAVA_HOME%\bin
 set JRE_HOME=%JAVA_HOME%\jre
 set CLASSPATH=%CLASSPATH%;./*;./lib/*
-java -server -Dwzpath=wz server.Start
+java -server -Dwzpath=wz com.github.mrzhqiang.maplestory.MapleStoryApplication
 pause

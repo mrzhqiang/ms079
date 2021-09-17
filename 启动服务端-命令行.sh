@@ -10,7 +10,7 @@ HOME=`pwd`
 
 export SERVER_PID=$HOME/ms079.pid
 export SERVER_LOG_PATH=$HOME/logs
-export SERVER_CLASS=server.Start
+export SERVER_CLASS=com.github.mrzhqiang.maplestory.MapleStoryApplication
 
 if [[ ! -d "$SERVER_LOG_PATH" ]]
 then
