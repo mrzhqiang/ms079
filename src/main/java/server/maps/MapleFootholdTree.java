@@ -1,12 +1,16 @@
 package server.maps;
 
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MapleFootholdTree {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleFootholdTree.class);
 
     private MapleFootholdTree nw = null;
     private MapleFootholdTree ne = null;
@@ -93,7 +97,7 @@ public class MapleFootholdTree {
     private final MapleFoothold findWallR(final Vector p1, final Vector p2) {
         MapleFoothold ret;
         for (final MapleFoothold f : footholds) {
-            //if (f.isWall()) System.out.println(f.getX1() + " " + f.getX2());
+            //if (f.isWall()) LOGGER.debug(f.getX1() + " " + f.getX2());
             if (f.isWall() && f.getX1() >= p1.x && f.getX1() <= p2.x && f.getY1() >= p1.y && f.getY2() <= p1.y) {
                 return f;
             }
@@ -146,7 +150,7 @@ public class MapleFootholdTree {
         for (final MapleFoothold fh2 : footholds) { // To
             if (fh2.getX1() <= tox && fh2.getX2() >= tox && fh2.getY1() <= toy && fh2.getY2() >= toy) { // monster pos is within
                 if (!(fhdata.getId() == fh2.getId() || fh2.getId() == fhdata.getNext() || fh2.getId() == fhdata.getPrev())) {
-                    System.out.println("Couldn't find the correct pos for next/prev");
+                    LOGGER.debug("Couldn't find the correct pos for next/prev");
                     return false;
                 }
                 return true;

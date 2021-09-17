@@ -34,11 +34,15 @@ import javax.script.ScriptEngine;
 
 import client.MapleClient;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.maps.ReactorDropEntry;
 import server.maps.MapleReactor;
 import tools.FileoutputUtil;
 
 public class ReactorScriptManager extends AbstractScriptManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReactorScriptManager.class);
 
     private static final ReactorScriptManager instance = new ReactorScriptManager();
     private final Map<Integer, List<ReactorDropEntry>> drops = new HashMap<Integer, List<ReactorDropEntry>>();
@@ -64,7 +68,7 @@ public class ReactorScriptManager extends AbstractScriptManager {
             scriptengine.put("rm", rm);
             iv.invokeFunction("act");
         } catch (Exception e) {
-            System.err.println("Error executing reactor script. ReactorID: " + reactor.getReactorId() + ", ReactorName: " + reactor.getName() + ":" + e);
+            LOGGER.error("Error executing reactor script. ReactorID: " + reactor.getReactorId() + ", ReactorName: " + reactor.getName() + ":" + e);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Error executing reactor script. ReactorID: " + reactor.getReactorId() + ", ReactorName: " + reactor.getName() + ":" + e);
         }
     }
@@ -91,7 +95,7 @@ public class ReactorScriptManager extends AbstractScriptManager {
             rs.close();
             ps.close();
         } catch (final SQLException e) {
-            System.err.println("Could not retrieve drops for reactor " + rid + e);
+            LOGGER.error("Could not retrieve drops for reactor " + rid + e);
             return ret;
         } finally {
             try {

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.packet;
 
 import client.MapleCharacter;
@@ -30,16 +10,21 @@ import handling.world.family.MapleFamilyBuff;
 import handling.world.family.MapleFamilyBuff.MapleFamilyBuffEntry;
 import handling.world.family.MapleFamilyCharacter;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class FamilyPacket {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FamilyPacket.class);
+
     public static MaplePacket getFamilyData() {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("getFamilyData--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("getFamilyData--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY.getValue());
        /*  String[] title = {"直接移动到学院成员身边", "直接召唤学院成员", "我的爆率 1.5倍(15分钟)", "我的经验值 1.5倍(15分钟)", "学院成员的团结(30分钟)", "我的爆率 2倍(15分钟)", "我的经验值 2倍(15分钟)", "我的爆率 2倍(30分钟)", "我的经验值 2倍(30分钟)", "我的组队爆率 2倍(30分钟)", "我的组队经验值 2倍(30分钟)"};
@@ -68,8 +53,8 @@ public class FamilyPacket {
 
     public static MaplePacket changeRep(int r) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("changeRep--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("changeRep--------------------");
         }
         mplew.writeShort(SendPacketOpcode.REP_INCREASE.getValue());
         mplew.writeInt(r);
@@ -79,8 +64,8 @@ public class FamilyPacket {
 
     public static MaplePacket getFamilyInfo(MapleCharacter chr) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("getFamilyInfo--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("getFamilyInfo--------------------");
         }
         mplew.writeShort(SendPacketOpcode.OPEN_FAMILY.getValue());
         mplew.writeInt(chr.getCurrentRep()); //rep
@@ -107,8 +92,8 @@ public class FamilyPacket {
     }
 
     public static void addFamilyCharInfo(MapleFamilyCharacter ldr, MaplePacketLittleEndianWriter mplew) {
-        if (ServerConstants.调试输出封包) {
-            System.out.println("addFamilyCharInfo--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("addFamilyCharInfo--------------------");
         }
         mplew.writeInt(ldr.getId());
         mplew.writeInt(ldr.getSeniorId());
@@ -125,8 +110,8 @@ public class FamilyPacket {
 
     public static MaplePacket getFamilyPedigree(MapleCharacter chr) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("getFamilyPedigree--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("getFamilyPedigree--------------------");
         }
         mplew.writeShort(SendPacketOpcode.SEND_PEDIGREE.getValue());
         mplew.writeInt(chr.getId());
@@ -232,8 +217,8 @@ public class FamilyPacket {
     public static MaplePacket sendFamilyInvite(int cid, int otherLevel, int otherJob, String inviter) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("sendFamilyInvite--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("sendFamilyInvite--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY_INVITE.getValue());
         mplew.writeInt(cid); //the inviter
@@ -246,8 +231,8 @@ public class FamilyPacket {
 
     public static MaplePacket getSeniorMessage(String name) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("getSeniorMessage--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("getSeniorMessage--------------------");
         }
         mplew.writeShort(SendPacketOpcode.SENIOR_MESSAGE.getValue());
         mplew.writeMapleAsciiString(name);
@@ -256,8 +241,8 @@ public class FamilyPacket {
 
     public static MaplePacket sendFamilyJoinResponse(boolean accepted, String added) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("sendFamilyJoinResponse--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("sendFamilyJoinResponse--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY_JUNIOR.getValue());
         mplew.write(accepted ? 1 : 0);
@@ -267,8 +252,8 @@ public class FamilyPacket {
 
     public static MaplePacket familyBuff(int type, int buffnr, int amount, int time) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("familyBuff--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("familyBuff--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY_BUFF.getValue());
         mplew.write(type);
@@ -284,16 +269,16 @@ public class FamilyPacket {
     }
 
     public static MaplePacket cancelFamilyBuff() {
-        if (ServerConstants.调试输出封包) {
-            System.out.println("cancelFamilyBuff--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("cancelFamilyBuff--------------------");
         }
         return familyBuff(0, 0, 0, 0);
     }
 
     public static MaplePacket familyLoggedIn(boolean online, String name) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("familyLoggedIn--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("familyLoggedIn--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY_LOGGEDIN.getValue());
         mplew.write(online ? 1 : 0);
@@ -303,8 +288,8 @@ public class FamilyPacket {
 
     public static MaplePacket familySummonRequest(String name, String mapname) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("familySummonRequest--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("familySummonRequest--------------------");
         }
         mplew.writeShort(SendPacketOpcode.FAMILY_USE_REQUEST.getValue());
         mplew.writeMapleAsciiString(name);

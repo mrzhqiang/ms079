@@ -20,6 +20,9 @@
  */
 package tools;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -37,6 +40,8 @@ import javax.crypto.spec.SecretKeySpec;
  * @since Revision 320
  */
 public class MapleAESOFB {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleAESOFB.class);
 
     private byte iv[];
     private Cipher cipher;
@@ -144,11 +149,11 @@ public class MapleAESOFB {
             cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.ENCRYPT_MODE, skey);
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("ERROR" + e);
+            LOGGER.error("ERROR" + e);
         } catch (NoSuchPaddingException e) {
-            System.err.println("ERROR" + e);
+            LOGGER.error("ERROR" + e);
         } catch (InvalidKeyException e) {
-            System.err.println("Error initalizing the encryption cipher.  Make sure you're using the Unlimited Strength cryptography jar files.");
+            LOGGER.error("Error initalizing the encryption cipher.  Make sure you're using the Unlimited Strength cryptography jar files.");
         }
 
         this.setIv(iv);
@@ -281,7 +286,7 @@ public class MapleAESOFB {
         // ;)
         for (int x = 0; x < 4; x++) {
             funnyShit(oldIv[x], in);
-            // System.out.println(HexTool.toString(in));
+            // LOGGER.debug(HexTool.toString(in));
         }
         return in;
     }

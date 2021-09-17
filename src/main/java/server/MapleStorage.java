@@ -21,10 +21,15 @@ import database.DatabaseConnection;
 import database.DatabaseException;
 import java.sql.*;
 import java.util.EnumMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.Pair;
 
 public class MapleStorage implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleStorage.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
     private int id;
@@ -89,7 +94,7 @@ public class MapleStorage implements Serializable {
                 ps.close();
             }
         } catch (SQLException ex) {
-            System.err.println("Error loading storage" + ex);
+            LOGGER.error("Error loading storage" + ex);
         }
         return ret;
     }
@@ -114,7 +119,7 @@ public class MapleStorage implements Serializable {
             }
             ItemLoader.STORAGE.saveItems(listing, accountId);
         } catch (SQLException ex) {
-            System.err.println("Error saving storage" + ex);
+            LOGGER.error("Error saving storage" + ex);
         }
     }
 

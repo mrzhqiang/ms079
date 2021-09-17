@@ -1,62 +1,38 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; w"ithout even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package scripting;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.WeakHashMap;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.concurrent.ScheduledFuture;
-import javax.script.Invocable;
-import javax.script.ScriptException;
-
 import client.MapleCharacter;
+import database.DatabaseConnection;
 import handling.channel.ChannelServer;
 import handling.world.MapleParty;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleSquad;
 import server.Randomizer;
 import server.Timer.EventTimer;
 import server.events.MapleEvent;
 import server.events.MapleEventType;
-import server.life.MapleMonster;
 import server.life.MapleLifeFactory;
+import server.life.MapleMonster;
 import server.life.OverrideMonsterStats;
 import server.maps.MapleMap;
-import server.maps.MapleMapObject;
 import server.maps.MapleMapFactory;
+import server.maps.MapleMapObject;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
-import database.DatabaseConnection;
+
+import javax.script.Invocable;
+import javax.script.ScriptException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EventManager {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(EventManager.class);
 
     private static int[] eventChannel = new int[2];
     private Invocable iv;
@@ -75,7 +51,7 @@ public class EventManager {
         try {
             iv.invokeFunction("cancelSchedule", (Object) null);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : cancelSchedule:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : cancelSchedule:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : cancelSchedule:\n" + ex);
         }
     }
@@ -87,7 +63,7 @@ public class EventManager {
                 try {
                     iv.invokeFunction(methodName, (Object) null);
                 } catch (Exception ex) {
-                    System.out.println("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    LOGGER.debug("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                     FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                 }
             }
@@ -101,7 +77,7 @@ public class EventManager {
                 try {
                     iv.invokeFunction(methodName, eim);
                 } catch (Exception ex) {
-                    System.out.println("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    LOGGER.debug("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                     FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                 }
             }
@@ -115,12 +91,13 @@ public class EventManager {
                 try {
                     iv.invokeFunction(methodName, eim);
                 } catch (Exception ex) {
-                    System.out.println("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    LOGGER.debug("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                     FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                 }
             }
         }, delay);
     }
+
     public ScheduledFuture<?> scheduleAtTimestamp(final String methodName, long timestamp) {
         return EventTimer.getInstance().scheduleAtTimestamp(new Runnable() {
 
@@ -128,9 +105,9 @@ public class EventManager {
                 try {
                     iv.invokeFunction(methodName, (Object) null);
                 } catch (ScriptException ex) {
-                    System.out.println("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    LOGGER.debug("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                 } catch (NoSuchMethodException ex) {
-                    System.out.println("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
+                    LOGGER.debug("Event name : " + name + ", method Name : " + methodName + ":\n" + ex);
                 }
             }
         }, timestamp);
@@ -232,7 +209,7 @@ public class EventManager {
             eim.setProperty("guildid", String.valueOf(character.getGuildId()));
             setProperty("guildid", String.valueOf(character.getGuildId()));
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-Guild:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-Guild:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-Guild:\n" + ex);
         }
     }
@@ -242,7 +219,7 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", character.getId()));
             eim.registerPlayer(character);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-CharID:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-CharID:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-CharID:\n" + ex);
         }
     }
@@ -252,7 +229,7 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", (Object) null));
             eim.registerPlayer(character);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-character:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-character:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-character:\n" + ex);
         }
     }
@@ -263,7 +240,7 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", party.getId()));
             eim.registerParty(party, map);
         } catch (ScriptException ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-partyid:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-partyid:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-partyid:\n" + ex);
         } catch (Exception ex) {
             //ignore
@@ -280,7 +257,7 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", (Object) null));
             eim.registerParty(party, map);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-party:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-party:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-party:\n" + ex + "\n" + (old == null ? "no old exception" : old));
         }
     }
@@ -291,7 +268,7 @@ public class EventManager {
             iv.invokeFunction("setup", eim);
             eim.setProperty("leader", leader);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-leader:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-leader:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-leader:\n" + ex);
         }
     }
@@ -318,7 +295,7 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", squad.getLeaderName()));
             eim.registerSquad(squad, map, questID);
         } catch (Exception ex) {
-            System.out.println("Event name : " + name + ", method Name : setup-squad:\n" + ex);
+            LOGGER.debug("Event name : " + name + ", method Name : setup-squad:\n" + ex);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Event name : " + name + ", method Name : setup-squad:\n" + ex);
         }
     }
@@ -349,10 +326,11 @@ public class EventManager {
             EventInstanceManager eim = (EventInstanceManager) (EventInstanceManager) this.iv.invokeFunction("setup", squad.getLeaderName());
             eim.registerSquad(squad, map, Integer.parseInt(bossid));
         } catch (Exception ex) {
-            System.out.println(new StringBuilder().append("Event name : ").append(this.name).append(", method Name : setup-squad:\n").append(ex).toString());
+            LOGGER.debug(new StringBuilder().append("Event name : ").append(this.name).append(", method Name : setup-squad:\n").append(ex).toString());
             FileoutputUtil.log("日志\\log\\Script_Except.log", new StringBuilder().append("Event name : ").append(this.name).append(", method Name : setup-squad:\n").append(ex).toString());
         }
     }
+
     public void warpAllPlayer(int from, int to) {
         final MapleMap tomap = getMapFactory().getMap(to);
         final MapleMap frommap = getMapFactory().getMap(from);
@@ -363,8 +341,8 @@ public class EventManager {
             }
         }
     }
-    
-        public int online() {
+
+    public int online() {
         Connection con = DatabaseConnection.getConnection();
         PreparedStatement ps;
         ResultSet re;
@@ -379,7 +357,7 @@ public class EventManager {
             Logger.getLogger(EventInstanceManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         return count;
-    }    
+    }
 
     public MapleMapFactory getMapFactory() {
         return getChannelServer().getMapFactory();
@@ -406,7 +384,7 @@ public class EventManager {
     }
 
     public void broadcastYellowMsg(final String msg) {
-      //  getChannelServer().broadcastPacket(MaplePacketCreator.yellowChat(msg));
+        //  getChannelServer().broadcastPacket(MaplePacketCreator.yellowChat(msg));
     }
 
     public void broadcastServerMsg(final int type, final String msg, final boolean weather) {
@@ -439,7 +417,7 @@ public class EventManager {
             for (MapleEventType x : MapleEventType.values()) {
                 //if (Randomizer.nextInt(MapleEventType.values().length) == 0 && x != MapleEventType.OxQuiz/*選邊站*/) {
                 if (Randomizer.nextInt(MapleEventType.values().length) == 0) {
-                     t = x;
+                    t = x;
                     break;
                 }
             }

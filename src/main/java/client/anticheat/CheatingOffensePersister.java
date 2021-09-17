@@ -94,7 +94,7 @@ public class CheatingOffensePersister {
              insertps.close();
              updateps.close();
              } catch (SQLException e) {
-             System.err.println("error persisting cheatlog" + e);
+             LOGGER.error("error persisting cheatlog" + e);
              }*/
         }
     }

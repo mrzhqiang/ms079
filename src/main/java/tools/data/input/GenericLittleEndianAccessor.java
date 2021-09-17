@@ -1,6 +1,8 @@
 package tools.data.input;
 
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides a generic interface to a Little Endian stream of bytes.
@@ -10,6 +12,8 @@ import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
  * @since Revision 323
  */
 public class GenericLittleEndianAccessor implements LittleEndianAccessor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericLittleEndianAccessor.class);
 
     private final ByteInputStream bs;
 
@@ -131,7 +135,7 @@ public class GenericLittleEndianAccessor implements LittleEndianAccessor {
             String str = new String(ret, "gbk");//勿改
             return str;
         } catch (Exception e) {
-            System.err.println(e);
+            LOGGER.error("", e);
         }
         return null;
     }
@@ -145,7 +149,7 @@ public class GenericLittleEndianAccessor implements LittleEndianAccessor {
      String str = new String(ret, "BIG5");
      return str;
      } catch (Exception e) {
-     System.err.println(e);
+     LOGGER.error(e);
      }
      return "";
      }*/

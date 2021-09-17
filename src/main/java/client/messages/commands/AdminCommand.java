@@ -31,7 +31,7 @@ import handling.login.LoginServer;
 import handling.login.handler.AutoRegister;
 import handling.world.World;
 import handling.world.CheaterData;
-import java.awt.Point;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,6 +43,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripting.EventManager;
 import scripting.PortalScriptManager;
 import scripting.ReactorScriptManager;
@@ -82,7 +85,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.LinkedHashSet;
 import server.CashItemFactory;
-import server.Timer.WorldTimer;
 import server.events.MapleOxQuizFactory;
 import tools.*;
 import tools.data.output.MaplePacketLittleEndianWriter;
@@ -92,6 +94,8 @@ import tools.data.output.MaplePacketLittleEndianWriter;
  * @author Emilyx3
  */
 public class AdminCommand {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminCommand.class);
 
     public static PlayerGMRank getPlayerLevelRequired() {
         return PlayerGMRank.ADMIN;
@@ -252,11 +256,11 @@ public class AdminCommand {
 
     public static class setUserLimit extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             int UserLimit = LoginServer.getUserLimit();
             try {
                 UserLimit = Integer.parseInt(splitted[1]);
-            } catch (Exception ex) {
+            } catch (Exception ignored) {
             }
             LoginServer.setUserLimit(UserLimit);
             c.getPlayer().dropMessage("服务器人数上限已更改为" + UserLimit);
@@ -1127,7 +1131,7 @@ public class AdminCommand {
             String splitString = StringUtil.joinStringFrom(splitted, 2);
             List<Integer> chars = new ArrayList<>();
             splitString = splitString.toUpperCase();
-            // System.out.println(splitString);
+            // LOGGER.debug(splitString);
             for (int i = 0; i < splitString.length(); i++) {
                 char chr = splitString.charAt(i);
                 if (chr == ' ') {
@@ -3110,7 +3114,7 @@ public class AdminCommand {
                     sampler.save(fw, 1, 10);
                 }
             } catch (IOException e) {
-                System.err.println("Error saving profile" + e);
+                LOGGER.error("Error saving profile" + e);
             }
             sampler.reset();
             return 1;
@@ -3736,7 +3740,7 @@ public class AdminCommand {
             try {
                 con = (Connection) DatabaseConnection.getConnection();
             } catch (Exception ex) {
-                System.out.println("register错误1" + ex);
+                LOGGER.debug("register错误1" + ex);
                 return 0;
             }
 
@@ -3748,7 +3752,7 @@ public class AdminCommand {
                     ps.close();
                 }
             } catch (SQLException ex) {
-                System.out.println("register错误2" + ex);
+                LOGGER.debug("register错误2" + ex);
                 return 0;
             }
             c.getPlayer().dropMessage("[注册完成]账号: " + acc + " 密码: " + password);

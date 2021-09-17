@@ -20,6 +20,9 @@
  */
 package tools.data.input;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 /**
@@ -32,6 +35,8 @@ import java.io.IOException;
  * @see tools.data.input.GenericLittleEndianAccessor
  */
 public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAccessor implements SeekableLittleEndianAccessor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericSeekableLittleEndianAccessor.class);
 
     private final SeekableInputStreamBytestream bs;
 
@@ -57,7 +62,7 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
         try {
             bs.seek(offset);
         } catch (IOException e) {
-            System.err.println("Seek failed" + e);
+            LOGGER.error("Seek failed" + e);
         }
     }
 
@@ -73,7 +78,7 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
         try {
             return bs.getPosition();
         } catch (IOException e) {
-            System.err.println("getPosition failed" + e);
+            LOGGER.error("getPosition failed" + e);
             return -1;
         }
     }

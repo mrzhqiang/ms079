@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import client.MapleCharacter;
@@ -25,6 +5,9 @@ import client.MapleClient;
 //import net.sf.odinms.server.Randomizer;
 import client.MapleDisease;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleCarnivalFactory;
 import server.MapleCarnivalFactory.MCSkill;
 import server.Randomizer;
@@ -36,6 +19,8 @@ import tools.packet.MonsterCarnivalPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class MonsterCarnivalHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonsterCarnivalHandler.class);
 
     public static final void MonsterCarnival(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer().getCarnivalParty() == null) {
@@ -54,12 +39,12 @@ public class MonsterCarnivalHandler {
             }
             final MapleMonster mons = MapleLifeFactory.getMonster(mobs.get(num).left);
             if (c.getPlayer().isGM()) {
-                System.out.println("tab：" + tab);
-                System.out.println("num：" + num);
-                System.out.println("mons：" + mons);
-                System.out.println("num：" + num);
-                System.out.println("判断A：" + mons != null);
-                System.out.println("判断B：" + c.getPlayer().getMap().makeCarnivalSpawn(c.getPlayer().getCarnivalParty().getTeam(), mons, num));
+                LOGGER.debug("tab：" + tab);
+                LOGGER.debug("num：" + num);
+                LOGGER.debug("mons：" + mons);
+                LOGGER.debug("num：" + num);
+                LOGGER.debug("判断A：" + (mons != null));
+                LOGGER.debug("判断B：" + c.getPlayer().getMap().makeCarnivalSpawn(c.getPlayer().getCarnivalParty().getTeam(), mons, num));
             }
             if (mons != null && c.getPlayer().getMap().makeCarnivalSpawn(c.getPlayer().getCarnivalParty().getTeam(), mons, num)) {
                 c.getPlayer().getCarnivalParty().useCP(c.getPlayer(), mobs.get(num).right);

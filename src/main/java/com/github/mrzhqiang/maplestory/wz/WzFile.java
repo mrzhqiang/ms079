@@ -2,6 +2,7 @@ package com.github.mrzhqiang.maplestory.wz;
 
 import com.github.mrzhqiang.maplestory.wz.element.ImgdirElement;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import org.jsoup.select.Elements;
 
 import java.util.Collection;
@@ -36,10 +37,10 @@ public final class WzFile {
         Preconditions.checkNotNull(filename, "filename == null");
         Preconditions.checkArgument(!filename.isEmpty(), "filename is empty!");
 
-        if (filename.contains(FILE_INFIX)) {
-            if (filename.endsWith(FILE_SUFFIX)) {
-                return filename;
-            }
+        if (filename.endsWith(FILE_SUFFIX)) {
+            return filename;
+        }
+        if (filename.endsWith(FILE_INFIX)) {
             return String.format("%s%s", filename, FILE_SUFFIX);
         }
         return String.format("%s%s%s", filename, FILE_INFIX, FILE_SUFFIX);
@@ -53,7 +54,10 @@ public final class WzFile {
      */
     public static String hideFormat(String filename) {
         Preconditions.checkNotNull(filename, "filename == null");
-        return filename.replaceAll(FILE_SUFFIX, "").replaceAll(FILE_INFIX, "");
+        if (filename.endsWith(FILE_SUFFIX) || filename.endsWith(FILE_INFIX)) {
+            return Splitter.on(".").splitToList(filename).get(0);
+        }
+        return filename;
     }
 
     /* Skill.img.xml */

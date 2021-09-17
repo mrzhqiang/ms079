@@ -2,13 +2,13 @@ package server;
 
 public class CashItemInfo {
 
-    private int itemId;
-    private int count;
-    private int price;
-    private int sn;
-    private int expire;
-    private int gender;
-    private boolean onSale;
+    private final int itemId;
+    private final int count;
+    private final int price;
+    private final int sn;
+    private final int expire;
+    private final int gender;
+    private final boolean onSale;
     private String name;
 
     public CashItemInfo(int itemId, int count, int price, int sn, int expire, int gender, boolean sale) {
@@ -20,7 +20,8 @@ public class CashItemInfo {
         this.gender = gender;
         this.onSale = sale;
     }
- public CashItemInfo(int itemId, int count, int price, int sn, int expire, int gender, boolean sale, String name) {
+
+    public CashItemInfo(int itemId, int count, int price, int sn, int expire, int gender, boolean sale, String name) {
         this.itemId = itemId;
         this.count = count;
         this.price = price;
@@ -30,6 +31,7 @@ public class CashItemInfo {
         this.onSale = sale;
         this.name = name;
     }
+
     public int getId() {
         return itemId;
     }
@@ -41,9 +43,11 @@ public class CashItemInfo {
         return 0;
 
     }
+
     public int getExpire() {
         return expire;
     }
+
     public int getCount() {
         return count;
     }
@@ -78,7 +82,9 @@ public class CashItemInfo {
         public boolean showUp, packagez;
         private CashItemInfo cii;
 
-        public CashModInfo(int sn, int discount, int mark, boolean show, int itemid, int priority, boolean packagez, int period, int gender, int count, int meso, int unk_1, int unk_2, int unk_3, int extra_flags) {
+        public CashModInfo(int sn, int discount, int mark, boolean show, int itemid, int priority,
+                           boolean packagez, int period, int gender, int count, int meso, int unk_1,
+                           int unk_2, int unk_3, int extra_flags) {
             this.sn = sn;
             this.itemid = itemid;
             this.discountPrice = discount;

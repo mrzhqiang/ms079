@@ -5,6 +5,7 @@ import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import database.DatabaseConnection;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -19,6 +20,8 @@ import java.util.logging.Logger;
  */
 public class DumpOxQuizData {
 
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DumpOxQuizData.class);
+
     private final Connection con = DatabaseConnection.getConnection();
     static CharsetEncoder asciiEncoder = Charset.forName("GBK").newEncoder();
 
@@ -29,14 +32,14 @@ public class DumpOxQuizData {
             //File cashTxt = new File("ox.sql");
             //outputDir.mkdir();
             //cashTxt.createNewFile();
-            System.out.println("OXQuiz.img Loading ...");
+            LOGGER.debug("OXQuiz.img Loading ...");
             //try (PrintWriter writer = new PrintWriter(new FileOutputStream(cashTxt))) {
             //    writer.println("INSERT INTO `wz_oxdata` (`questionset`, `questionid`, `question`, `display`, `answer`) VALUES");
             DumpOxQuizData dump = new DumpOxQuizData();
             dump.dumpOxData();
             //    writer.flush();
             //}
-            System.out.println("Ox quiz data is complete");
+            LOGGER.debug("Ox quiz data is complete");
         } catch (SQLException ex) {
             Logger.getLogger(DumpOxQuizData.class.getName()).log(Level.SEVERE, null, ex);
         }

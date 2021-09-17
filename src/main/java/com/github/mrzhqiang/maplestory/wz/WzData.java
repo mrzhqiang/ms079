@@ -12,6 +12,7 @@ import java.io.File;
  * 枚举类是最好的单例。
  */
 public enum WzData {
+
     CHARACTER(WzManage.CHARACTER_DIR),
     ETC(WzManage.ETC_DIR),
     ITEM(WzManage.ITEM_DIR),

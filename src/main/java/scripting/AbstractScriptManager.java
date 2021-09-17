@@ -30,6 +30,9 @@ import javax.script.ScriptEngineManager;
 
 import client.MapleClient;
 import java.io.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 
@@ -38,6 +41,8 @@ import tools.MaplePacketCreator;
  * @author Matze
  */
 public abstract class AbstractScriptManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractScriptManager.class);
 
     private static final ScriptEngineManager sem = new ScriptEngineManager();
 
@@ -76,7 +81,7 @@ public abstract class AbstractScriptManager {
             }
             return (Invocable) engine;
         } catch (Exception e) {
-            System.err.println("Error executing script. Path: " + path + "\nException " + e);
+            LOGGER.error("Error executing script. Path: " + path + "\nException " + e);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Error executing script. Path: " + path + "\nException " + e);
             return null;
         } finally {

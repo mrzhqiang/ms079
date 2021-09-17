@@ -20,10 +20,10 @@
  */
 package constants;
 
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import handling.login.Balloon;
 import java.util.ArrayList;
 import java.util.List;
-import server.ServerProperties;
 
 public class ServerConstants {
     // Start of Poll
@@ -42,21 +42,22 @@ public class ServerConstants {
     public static final int MTS_MESO = 5000; //mesos needed
     public static final int CHANNEL_COUNT = 200;
     //服务端输出操作
-    public static boolean 封包显示 = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.封包显示", "false"));
-    public static boolean 调试输出封包 = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.调试输出封包", "false"));
-    public static boolean 自动注册 = false;
+    public static boolean autoRegister = false;
     public static boolean Super_password = false;
     public static String superpw = "";
-    public static final List<Balloon> lBalloon = new ArrayList();
-    public static boolean 防卡号 = true;
+    public static final List<Balloon> lBalloon = new ArrayList<>();
+    public static boolean preventLockAccount = true;
+
+    // todo DI IoC
+    public static ServerProperties properties;
 
     public static boolean getAutoReg() {
-        return 自动注册;
+        return autoRegister;
     }
 
     public static String ChangeAutoReg() {
-        自动注册 = !getAutoReg();
-        return 自动注册 ? "开启" : "关闭";
+        autoRegister = !getAutoReg();
+        return autoRegister ? "开启" : "关闭";
     }
 
     public static List<Balloon> getBalloons() {

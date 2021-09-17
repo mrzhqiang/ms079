@@ -1,10 +1,14 @@
 package server;
 
+import com.github.mrzhqiang.maplestory.domain.DCashShopModifiedItem;
+import com.github.mrzhqiang.maplestory.domain.query.QDCashShopModifiedItem;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.CashItemInfo.CashModInfo;
 
 import java.sql.Connection;
@@ -14,6 +18,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CashItemFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CashItemFactory.class);
 
     private final static CashItemFactory instance = new CashItemFactory();
     private final static int[] BEST_ITEMS = new int[]{50100010, 50100010, 50100010, 50100010, 50100010};
@@ -94,10 +100,6 @@ public class CashItemFactory {
          return itemPackage.get(itemId);
      }*/
     public static List<CashItemInfo> getPackageItems(int itemId) {
-        if (CASH_PACKAGES.isEmpty()) {
-            return Collections.emptyList();
-        }
-
         List<CashItemInfo> list = CASH_PACKAGES.get(itemId);
         if (list != null) {
             return list;
@@ -122,25 +124,19 @@ public class CashItemFactory {
 
     public final CashModInfo getModInfo(int sn) {
         CashModInfo ret = itemMods.get(sn);
-        //  System.out.println(itemMods.toString());
+        //  LOGGER.debug(itemMods.toString());
         if (ret == null) {
             if (initialized) {
                 return null;
             }
-            try {
-                Connection con = DatabaseConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial = ?");
-                ps.setInt(1, sn);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    ret = new CashModInfo(sn, rs.getInt("discount_price"), rs.getInt("mark"), rs.getInt("showup") > 0, rs.getInt("itemid"), rs.getInt("priority"), rs.getInt("package") > 0, rs.getInt("period"), rs.getInt("gender"), rs.getInt("count"), rs.getInt("meso"), rs.getInt("unk_1"), rs.getInt("unk_2"), rs.getInt("unk_3"), rs.getInt("extra_flags"));
-                    itemMods.put(sn, ret);
-                }
-                rs.close();
-                ps.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            ret = new QDCashShopModifiedItem()
+                    .serial.eq(sn)
+                    .findOneOrEmpty()
+                    .map(item -> new CashModInfo(sn, item.discountPrice, item.mark, item.showup,
+                            item.itemid, item.priority, item.packageField, item.period, item.gender, item.count,
+                            item.meso, item.unk1, item.unk2, item.unk3, item.extraFlags))
+                    .orElse(null);
+            itemMods.put(sn, ret);
         }
         return ret;
     }

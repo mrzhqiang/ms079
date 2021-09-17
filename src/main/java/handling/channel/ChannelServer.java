@@ -1,28 +1,11 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel;
 
 import KinMS.db.AutoCherryMSEventManager;
 import client.MapleCharacter;
 import client.MapleClient;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import constants.ServerConstants;
 import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
 import handling.MapleServerHandler;
@@ -32,15 +15,15 @@ import handling.mina.MapleCodecFactory;
 import handling.world.CheaterData;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
-import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripting.EventScriptManager;
 import server.MapleSquad;
 import server.MapleSquad.MapleSquadType;
-import server.ServerProperties;
 import server.Timer;
 import server.events.*;
 import server.life.PlayerNPC;
@@ -58,22 +41,24 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ChannelServer implements Serializable {
 
-    public static long serverStartTime;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChannelServer.class);
+
     private int expRate, mesoRate, dropRate, cashRate, BossdropRate = 1;
     private int doubleExp = 1;
     private int doubleMeso = 1;
     private int doubleDrop = 1;
-    private short port = 7574;
+    private int port = 7574;
     private static final short DEFAULT_PORT = 7574;
     private int channel, running_MerchantID = 0, flags = 0;
     private String serverMessage, key, ip, serverName;
     private boolean shutdown = false, finishedShutdown = false, MegaphoneMuteState = false, adminOnly = false;
     private PlayerStorage players;
-    private MapleServerHandler serverHandler;
+    private final MapleServerHandler serverHandler;
     private IoAcceptor acceptor;
     private final MapleMapFactory mapFactory;
+    private final MapleCodecFactory codecFactory;
     private EventScriptManager eventSM;
-    private static final Map<Integer, ChannelServer> instances = new HashMap<Integer, ChannelServer>();
+    private static final Map<Integer, ChannelServer> INSTANCE_CACHED = new HashMap<>();
     private final Map<MapleSquadType, MapleSquad> mapleSquads = new ConcurrentEnumMap<MapleSquadType, MapleSquad>(MapleSquadType.class);
     private final Map<Integer, HiredMerchant> merchants = new HashMap<Integer, HiredMerchant>();
     private final Map<Integer, PlayerNPC> playerNPCs = new HashMap<Integer, PlayerNPC>();
@@ -90,17 +75,21 @@ public class ChannelServer implements Serializable {
 //        mapFactory = new MapleMapFactory();
 //        mapFactory.setChannel(channel);
 //    }
-    private ChannelServer(final int channel) {
-        this.channel = channel;
-        this.mapFactory = new MapleMapFactory(channel);
+    @Inject
+    public ChannelServer(LoginServer loginServer, MapleCodecFactory codecFactory) {
+        this.mapFactory = new MapleMapFactory();
         /*
          * this.channel = channel; mapFactory = new MapleMapFactory();
          * mapFactory.setChannel(channel);
          */
+        this.serverHandler = new MapleServerHandler();
+        this.serverHandler.setLoginServer(loginServer);
+        this.serverHandler.setChannel(channel);
+        this.codecFactory = codecFactory;
     }
 
     public static Set<Integer> getAllInstance() {
-        return new HashSet<Integer>(instances.keySet());
+        return new HashSet<Integer>(INSTANCE_CACHED.keySet());
     }
 
     public final void loadEvents() {
@@ -115,34 +104,29 @@ public class ChannelServer implements Serializable {
         events.put(MapleEventType.雪球赛, new MapleSnowball(channel, MapleEventType.雪球赛.mapids));
     }
 
-    public final void run_startup_configurations() {
-        setChannel(this.channel); //instances.put
+    public void run_startup_configurations() {
         try {
-            expRate = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Exp"));
-            mesoRate = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Meso"));
-            dropRate = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Drop"));
-            BossdropRate = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.BDrop"));
-            cashRate = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Cash"));
-            serverMessage = ServerProperties.getProperty("ZlhssMS.ServerMessage");
-            serverName = ServerProperties.getProperty("ZlhssMS.ServerName");
-            flags = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.WFlags", "0"));
-            adminOnly = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.Admin", "false"));
-            eventSM = new EventScriptManager(this, ServerProperties.getProperty("ZlhssMS.Events").split(","));
-            port = Short.parseShort(ServerProperties.getProperty("ZlhssMS.Port" + this.channel, String.valueOf(DEFAULT_PORT + this.channel)));
-            //他不会去 启动 tms.Port  而是启动的 DEFAULT_PORT的yto
-            //   port = Short.parseShort(ServerProperties.getProperty("ZlhssMS.Port" + channel));
-            // port = Integer.parseInt(this.props.getProperty("channel.net.port"));
-
+            expRate = ServerConstants.properties.getExpRate();
+            mesoRate = ServerConstants.properties.getGoldRate();
+            dropRate = ServerConstants.properties.getDropRate();
+            BossdropRate = ServerConstants.properties.getBossDropRate();
+            cashRate = ServerConstants.properties.getCashRate();
+            serverMessage = ServerConstants.properties.getLoginMessage();
+            serverName = ServerConstants.properties.getName();
+            flags = ServerConstants.properties.getWorldFlags();
+            adminOnly = ServerConstants.properties.isAdminLogin();
+            eventSM = new EventScriptManager(this, ServerConstants.properties.getEvents());
+            port = ServerConstants.properties.getChannelPort() + channel;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        ip = ServerProperties.getProperty("ZlhssMS.IP") + ":" + port;
+        ip = ServerConstants.properties.getAddress() + ":" + port;
 
         IoBuffer.setUseDirectBuffer(false);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
         acceptor = new NioSocketAcceptor();
-        acceptor.getFilterChain().addLast("codec", (IoFilter) new ProtocolCodecFilter(new MapleCodecFactory()));
+        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(codecFactory));
         players = new PlayerStorage(channel);
         loadEvents();
         Timer tMan = Timer.TimerManager.getInstance();
@@ -150,14 +134,14 @@ public class ChannelServer implements Serializable {
             tMan.register(AutoCherryMSEventManager.getInstance(this, getMapFactory()), 120000L);
         }
         try {
-            acceptor.setHandler(new MapleServerHandler(channel, false));
+            acceptor.setHandler(serverHandler);
             acceptor.bind(new InetSocketAddress(port));
             ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
 
-            System.out.println("频道 " + this.channel + ": 绑定端口 " + port + ": 服务器IP " + ip + "");
+            LOGGER.info("频道 {}: 绑定端口 {}: 服务器IP {}", channel, port, ip);
             eventSM.init();
         } catch (IOException e) {
-            System.out.println("Binding to port " + port + " failed (ch: " + getChannel() + ")" + e);
+            LOGGER.error("Binding to port " + port + " failed (ch: " + getChannel() + ")" + e);
         }
     }
 
@@ -169,16 +153,16 @@ public class ChannelServer implements Serializable {
         // dc all clients by hand so we get sessionClosed...
         shutdown = true;
 
-        System.out.println("Channel " + channel + ", Saving hired merchants...");
+        LOGGER.debug("Channel " + channel + ", Saving hired merchants...");
 
-        System.out.println("Channel " + channel + ", Saving characters...");
+        LOGGER.debug("Channel " + channel + ", Saving characters...");
 
         // getPlayerStorage().disconnectAll();
-        System.out.println("Channel " + channel + ", Unbinding...");
+        LOGGER.debug("Channel " + channel + ", Unbinding...");
 
         //temporary while we dont have !addchannel
-        instances.remove(channel);
-        LoginServer.removeChannel(channel);
+        INSTANCE_CACHED.remove(channel);
+        serverHandler.getLoginServer().removeChannel(channel);
         setFinishShutdown();
 //        if (threadToNotify != null) {
 //            synchronized (threadToNotify) {
@@ -195,15 +179,8 @@ public class ChannelServer implements Serializable {
         return mapFactory;
     }
 
-    //    public static final ChannelServer newInstance(final String key, final int channel) {
-//        return new ChannelServer(key, channel);
-//    }
-    public static final ChannelServer newInstance(final int channel) {
-        return new ChannelServer(channel);
-    }
-
-    public static final ChannelServer getInstance(final int channel) {
-        return instances.get(channel);
+    public static ChannelServer getInstance(Integer channel) {
+        return INSTANCE_CACHED.get(channel);
     }
 
     public final void addPlayer(final MapleCharacter chr) {
@@ -270,12 +247,14 @@ public class ChannelServer implements Serializable {
     }
 
     public final void setChannel(final int channel) {
-        instances.put(channel, this);
-        LoginServer.addChannel(channel);
+        this.channel = channel;
+        this.mapFactory.setChannel(channel);
+        INSTANCE_CACHED.put(channel, this);
+        serverHandler.getLoginServer().addChannel(channel);
     }
 
     public static final Collection<ChannelServer> getAllInstances() {
-        return Collections.unmodifiableCollection(instances.values());
+        return Collections.unmodifiableCollection(INSTANCE_CACHED.values());
     }
 
     public final String getSocket() {
@@ -304,7 +283,7 @@ public class ChannelServer implements Serializable {
 
     public final void reloadEvents() {//事件脚本启动
         eventSM.cancel();
-        eventSM = new EventScriptManager(this, ServerProperties.getProperty("ZlhssMS.Events").split(","));
+        eventSM = new EventScriptManager(this, ServerConstants.properties.getEvents());
         eventSM.init();
     }
 
@@ -377,26 +356,15 @@ public class ChannelServer implements Serializable {
         }
     }
 
-    public static void startChannel_Main() {
-        serverStartTime = System.currentTimeMillis();
-        int ch = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Count", "0"));
+    public static void startChannel_Main(Injector injector) {
+        int ch = ServerConstants.properties.getChannelCount();
         if (ch > 10) {
             ch = 10;
         }
         for (int i = 0; i < ch; i++) {
-            newInstance(i + 1).run_startup_configurations();
-        }
-    }
-
-    public static final void startChannel(final int channel) {
-        serverStartTime = System.currentTimeMillis();
-        for (int i = 0; i < Integer.parseInt(ServerProperties.getProperty("ZlhssMS.Count", "0")); i++) {
-            if (channel == i + 1) {
-
-                //newInstance(ServerConstants.Channel_Key[i], i + 1).run_startup_configurations();
-                newInstance(i + 1).run_startup_configurations();
-                break;
-            }
+            ChannelServer channelServer = injector.getInstance(ChannelServer.class);
+            channelServer.setChannel(i + 1);
+            channelServer.run_startup_configurations();
         }
     }
 
@@ -575,17 +543,17 @@ public class ChannelServer implements Serializable {
     }
 
     public static final Set<Integer> getChannelServer() {
-        return new HashSet<Integer>(instances.keySet());
+        return new HashSet<Integer>(INSTANCE_CACHED.keySet());
     }
 
     public final void setShutdown() {
         this.shutdown = true;
-        System.out.println("频道 " + channel + " 已开始关闭.");
+        LOGGER.debug("频道 " + channel + " 已开始关闭.");
     }
 
     public final void setFinishShutdown() {
         this.finishedShutdown = true;
-        System.out.println("频道 " + channel + " 已关闭完成.");
+        LOGGER.debug("频道 " + channel + " 已关闭完成.");
     }
 
     public final boolean isAdminOnly() {
@@ -593,7 +561,7 @@ public class ChannelServer implements Serializable {
     }
 
     public final static int getChannelCount() {
-        return instances.size();
+        return INSTANCE_CACHED.size();
     }
 
     public final MapleServerHandler getServerHandler() {
@@ -606,7 +574,7 @@ public class ChannelServer implements Serializable {
 
     public static Map<Integer, Integer> getChannelLoad() {
         Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
-        for (ChannelServer cs : instances.values()) {
+        for (ChannelServer cs : INSTANCE_CACHED.values()) {
             ret.put(cs.getChannel(), cs.getConnectedClients());
         }
         return ret;
@@ -647,7 +615,7 @@ public class ChannelServer implements Serializable {
                 chr.saveToDB(false, false);
             }
         }
-        System.out.println("[自动存档] 已经将频道 " + this.channel + " 的 " + ppl + " 个玩家保存到数据中.");
+        LOGGER.debug("[自动存档] 已经将频道 " + this.channel + " 的 " + ppl + " 个玩家保存到数据中.");
     }
 
     public void AutoNx(int dy) {
@@ -687,16 +655,16 @@ public class ChannelServer implements Serializable {
         broadcastPacket(MaplePacketCreator.serverNotice(0, "游戏即将关闭维护..."));
 
         this.shutdown = true;
-        System.out.println("频道 " + this.channel + " 正在清理活动脚本...");
+        LOGGER.debug("频道 " + this.channel + " 正在清理活动脚本...");
 
         this.eventSM.cancel();
 
-        System.out.println("频道 " + this.channel + " 正在保存所有角色数据...");
+        LOGGER.debug("频道 " + this.channel + " 正在保存所有角色数据...");
 
         // getPlayerStorage().disconnectAll();
-        System.out.println("频道 " + this.channel + " 解除绑定端口...");
+        LOGGER.debug("频道 " + this.channel + " 解除绑定端口...");
         acceptor.unbind(new InetSocketAddress(port));
-        instances.remove(Integer.valueOf(this.channel));
+        INSTANCE_CACHED.remove(Integer.valueOf(this.channel));
         setFinishShutdown();
     }
 

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.packet;
 
 import java.util.List;
@@ -45,6 +25,8 @@ import client.inventory.IItem;
 import client.SkillEntry;
 import client.inventory.*;
 import constants.ServerConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleItemInformationProvider;
 import tools.Pair;
 import server.movement.LifeMovementFragment;
@@ -56,6 +38,8 @@ import tools.data.output.LittleEndianWriter;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class PacketHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PacketHelper.class);
 
     private final static long FT_UT_OFFSET = 116444592000000000L; // EDT
     public final static long MAX_TIME = 150842304000000000L; //00 80 05 BB 46 E6 17 02
@@ -197,24 +181,24 @@ public class PacketHelper {
         mplew.writeInt(chr.getBeans());
         mplew.writeInt(0);
         mplew.write(chr.getInventory(MapleInventoryType.EQUIP).getSlotLimit()); // equip slots
-        if (ServerConstants.调试输出封包) {
-            System.out.println("-------背包装备格子数据输出：" + chr.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("-------背包装备格子数据输出：" + chr.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
         }
         mplew.write(chr.getInventory(MapleInventoryType.USE).getSlotLimit()); // use slots
-        if (ServerConstants.调试输出封包) {
-            System.out.println("-------背包消耗格子数据输出：" + chr.getInventory(MapleInventoryType.USE).getSlotLimit());
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("-------背包消耗格子数据输出：" + chr.getInventory(MapleInventoryType.USE).getSlotLimit());
         }
         mplew.write(chr.getInventory(MapleInventoryType.SETUP).getSlotLimit()); // set-up slots
-        if (ServerConstants.调试输出封包) {
-            System.out.println("-------背包特殊格子数据输出：" + chr.getInventory(MapleInventoryType.SETUP).getSlotLimit());
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("-------背包特殊格子数据输出：" + chr.getInventory(MapleInventoryType.SETUP).getSlotLimit());
         }
         mplew.write(chr.getInventory(MapleInventoryType.ETC).getSlotLimit()); // etc slots
-        if (ServerConstants.调试输出封包) {
-            System.out.println("-------背包其他格子数据输出：" + chr.getInventory(MapleInventoryType.ETC).getSlotLimit());
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("-------背包其他格子数据输出：" + chr.getInventory(MapleInventoryType.ETC).getSlotLimit());
         }
         mplew.write(chr.getInventory(MapleInventoryType.CASH).getSlotLimit()); // cash slots
-        if (ServerConstants.调试输出封包) {
-            System.out.println("-------背包现金格子数据输出：" + chr.getInventory(MapleInventoryType.CASH).getSlotLimit());
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("-------背包现金格子数据输出：" + chr.getInventory(MapleInventoryType.CASH).getSlotLimit());
         }
 
         //   mplew.write(unk1);

@@ -1,67 +1,45 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.login.handler;
 
-import java.util.List;
-import java.util.Calendar;
-
-import client.inventory.IItem;
-import client.inventory.Item;
-import client.LoginCrypto;
-import client.MapleClient;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
+import client.MapleClient;
+import client.inventory.IItem;
+import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
-import constants.GameConstants;
+import constants.ServerConstants;
 import handling.channel.ChannelServer;
 import handling.login.LoginInformationProvider;
 import handling.login.LoginServer;
 import handling.login.LoginWorker;
 import server.MapleItemInformationProvider;
 import server.quest.MapleQuest;
-import server.ServerProperties;
 import tools.FileoutputUtil;
-import tools.MaplePacketCreator;
-import tools.packet.LoginPacket;
 import tools.KoreanDateUtil;
+import tools.MaplePacketCreator;
 import tools.StringUtil;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.LoginPacket;
 
+import java.util.Calendar;
+import java.util.List;
+
+/**
+ * todo interface
+ */
 public class CharLoginHandler {
 
-    private static final boolean loginFailCount(final MapleClient c) {
+    private static boolean loginFailCount(MapleClient c) {
         c.loginAttempt++;
-        if (c.loginAttempt > 5) {
-            return true;
-        }
-        return false;
+        return c.loginAttempt > 5;
     }
 
-    public static final void Welcome(final MapleClient c) {
+    public static void Welcome(MapleClient c) {
     }
 
-    public static final void login(final SeekableLittleEndianAccessor slea, final MapleClient c) {
-        final String login = slea.readMapleAsciiString();
-        final String pwd = slea.readMapleAsciiString();
+    public static void login(SeekableLittleEndianAccessor slea, MapleClient c, LoginServer loginServer) {
+        String login = slea.readMapleAsciiString();
+        String pwd = slea.readMapleAsciiString();
 
         c.setAccountName(login);
 
@@ -84,7 +62,7 @@ public class CharLoginHandler {
         final boolean banned = ipBan || macBan;
 
         int loginok = 0;
-        if (Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.AutoRegister"))) {
+        if (ServerConstants.properties.isAutoRegister()) {
 
             if (AutoRegister.autoRegister && !AutoRegister.getAccountExists(login) && (!banned)) {
                 if (pwd.equalsIgnoreCase("disconnect") || pwd.equalsIgnoreCase("fixme")) {
@@ -128,7 +106,7 @@ public class CharLoginHandler {
             FileoutputUtil.logToFile("日志/logs/ACPW.txt", "ACC: " + login + " PW: " + pwd + " MAC : " + macData + " IP: " + c.getSession().getRemoteAddress().toString() + "\r\n");
             c.updateMacs();
             c.loginAttempt = 0;
-            LoginWorker.registerClient(c);
+            LoginWorker.registerClient(c, loginServer);
 
         }
     }
@@ -157,7 +135,7 @@ public class CharLoginHandler {
      * c.getBanReason())); } } else { c.loginAttempt = 0;
      * LoginWorker.registerClient(c); } }
      */
-    public static final void SetGenderRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void SetGenderRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         byte gender = slea.readByte();
         String username = slea.readMapleAsciiString();
         // String password = slea.readMapleAsciiString();
@@ -174,20 +152,20 @@ public class CharLoginHandler {
         }
     }
 
-    public static final void ServerListRequest(final MapleClient c) {
-        c.getSession().write(LoginPacket.getServerList(0, LoginServer.getServerName(), LoginServer.getLoad()));
+    public static void ServerListRequest(MapleClient c, LoginServer loginServer) {
+        c.getSession().write(LoginPacket.getServerList(0, loginServer.getServerName(), loginServer.getLoad()));
         //c.getSession().write(MaplePacketCreator.getServerList(1, "Scania", LoginServer.getInstance().getChannels(), 1200));
         //c.getSession().write(MaplePacketCreator.getServerList(2, "Scania", LoginServer.getInstance().getChannels(), 1200));
         //c.getSession().write(MaplePacketCreator.getServerList(3, "Scania", LoginServer.getInstance().getChannels(), 1200));
         c.getSession().write(LoginPacket.getEndOfServerList());
     }
 
-    public static final void ServerStatusRequest(final MapleClient c) {
+    public static void ServerStatusRequest(MapleClient c, LoginServer loginServer) {
         // 0 = Select world normally
         // 1 = "Since there are many users, you may encounter some..."
         // 2 = "The concurrent users in this world have reached the max"
-        final int numPlayer = LoginServer.getUsersOn();
-        final int userLimit = LoginServer.getUserLimit();
+        final int numPlayer = loginServer.getUsersOn();
+        final int userLimit = loginServer.getUserLimit();
         if (numPlayer >= userLimit) {
             c.getSession().write(LoginPacket.getServerStatus(2));
         } else if (numPlayer * 2 >= userLimit) {
@@ -197,7 +175,7 @@ public class CharLoginHandler {
         }
     }
 
-    public static final void LicenseRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void LicenseRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         if (slea.readByte() == 1) {
             c.getSession().write(MaplePacketCreator.licenseResult());
             c.updateLoginState(0);
@@ -206,14 +184,14 @@ public class CharLoginHandler {
         }
     }
 
-    public static final void CharlistRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void CharlistRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         // slea.readByte();
         final int server = slea.readByte();
         final int channel = slea.readByte() + 1;
         slea.readInt();
 
         c.setWorld(server);
-        //System.out.println("Client " + c.getSession().getRemoteAddress().toString().split(":")[0] + " is connecting to server " + server + " channel " + channel + "");
+        //LOGGER.debug("Client " + c.getSession().getRemoteAddress().toString().split(":")[0] + " is connecting to server " + server + " channel " + channel + "");
         c.setChannel(channel);
 
         final List<MapleCharacter> chars = c.loadCharacters(server);
@@ -224,28 +202,28 @@ public class CharLoginHandler {
         }
     }
 
-    public static final void CheckCharName(final String name, final MapleClient c) {
+    public static void CheckCharName(final String name, final MapleClient c) {
         c.getSession().write(LoginPacket.charNameResponse(name, !MapleCharacterUtil.canCreateChar(name) || LoginInformationProvider.getInstance().isForbiddenName(name)));
     }
 
     //创建角色处理函数
-    public static final void CreateChar(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void CreateChar(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         final String name = slea.readMapleAsciiString();
         /*if(name == "ZlhssMS"){
             c.getSession().write(MaplePacketCreator.serverNotice(1, "此名称无法创建"));
             return;
         }*/
         final int JobType = slea.readInt(); // 1 = 冒险家, 0 = 骑士团, 2 = 战神
-        boolean 冒险家 = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.冒险家", "false"));
-        boolean 骑士团 = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.骑士团", "false"));
-        boolean 战神 = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.战神", "false"));
-        if (!骑士团 && JobType == 0) {
+        boolean adventurer = ServerConstants.properties.isAdventurer();
+        boolean knights = ServerConstants.properties.isKnights();
+        boolean warGod = ServerConstants.properties.isWarGod();
+        if (!knights && JobType == 0) {
             c.getSession().write(MaplePacketCreator.serverNotice(1, "骑士团职业未开放！"));
             return;//直接return可能会导致客户端收不到消息，假死状态,需重新登录方可
-        } else if (!冒险家 && JobType == 1) {
+        } else if (!adventurer && JobType == 1) {
             c.getSession().write(MaplePacketCreator.serverNotice(1, "冒险家职业未开放！"));
             return;//直接return可能会导致客户端收不到消息，假死状态,需重新登录方可
-        } else if (!战神 && JobType == 2) {
+        } else if (!warGod && JobType == 2) {
             c.getSession().write(MaplePacketCreator.serverNotice(1, "战神职业未开放！"));
             return;//直接return可能会导致客户端收不到消息，假死状态,需重新登录方可
         }
@@ -400,7 +378,7 @@ public class CharLoginHandler {
         }
     }
 
-    public static final void DeleteChar(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void DeleteChar(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         slea.readByte();
         String Secondpw_Client = null;
 //        if (slea.readByte() > 0) { // Specific if user have second password or not
@@ -432,7 +410,8 @@ public class CharLoginHandler {
         c.getSession().write(LoginPacket.deleteCharResponse(Character_ID, state));
     }
 
-    public static void Character_WithoutSecondPassword(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void Character_WithoutSecondPassword(final SeekableLittleEndianAccessor slea,
+                                                       final MapleClient c, LoginServer loginServer) {
 //        slea.skip(1);
         /*
          * if (c.getLoginState() != 2) { return; }
@@ -450,11 +429,11 @@ public class CharLoginHandler {
             c.getIdleTask().cancel(true);
         }
         String ip = c.getSessionIPAddress();
-        LoginServer.putLoginAuth(charId, ip.substring(ip.indexOf('/') + 1, ip.length()), c.getTempIP(), c.getChannel());
+        loginServer.putLoginAuth(charId, ip.substring(ip.indexOf('/') + 1), c.getTempIP(), c.getChannel());
         // c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, ip);
         /*
          * if (c.getLoginState() == 2) { c.updateLoginState(2, ip);
-         * System.out.println("输出登录2"); } else {
+         * LOGGER.debug("输出登录2"); } else {
          */
         c.getSession().write(MaplePacketCreator.getServerIP(Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getIP().split(":")[1]), charId));
 
@@ -475,14 +454,14 @@ public class CharLoginHandler {
         //   String ip = c.getSessionIPAddress();
         //   LoginServer.putLoginAuth(charId, ip.substring(ip.indexOf('/') + 1, ip.length()), c.getTempIP(), c.getChannel());
         //   c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, c.getSessionIPAddress());        
-        //   System.out.println("··········A"+charId);
-        //    System.out.println("··········C"+c.getSessionIPAddress());
-        //    System.out.println("··········B"+ChannelServer.getInstance(c.getChannel()).getIP());
+        //   LOGGER.debug("··········A"+charId);
+        //    LOGGER.debug("··········C"+c.getSessionIPAddress());
+        //    LOGGER.debug("··········B"+ChannelServer.getInstance(c.getChannel()).getIP());
         //    c.getSession().write(MaplePacketCreator.getServerIP(Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getIP().split(":")[1]), charId));
         //  c.getSession().write(MaplePacketCreator.getServerIP(0, charId));
     }
 
-    public static final void Character_WithSecondPassword(final SeekableLittleEndianAccessor slea, final MapleClient c) {
+    public static void Character_WithSecondPassword(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         final String password = slea.readMapleAsciiString();
         final int charId = slea.readInt();
 

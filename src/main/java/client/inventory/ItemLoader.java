@@ -33,6 +33,9 @@ import java.sql.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 
 public enum ItemLoader {
@@ -52,6 +55,8 @@ public enum ItemLoader {
     private int value;
     private String table, table_equip;
     private List<String> arg;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemLoader.class);
 
     private ItemLoader(String table, String table_equip, int value, String... arg) {
         this.table = table;
@@ -266,12 +271,12 @@ public enum ItemLoader {
         saveItems(items, con, id);
         /*
          * con.commit(); } catch (Exception e) { e.printStackTrace();
-         * System.err.println("[charsave] Error saving inventory" + e); try {
+         * LOGGER.error("[charsave] Error saving inventory" + e); try {
          * con.rollback(); } catch (SQLException ex) {
-         * System.err.println("[charsave] Error Rolling Back inventory" + e); }
+         * LOGGER.error("[charsave] Error Rolling Back inventory" + e); }
          * } finally { try { con.setAutoCommit(true);
          * con.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-         * } catch (SQLException e) { System.err.println("[charsave] Error going
+         * } catch (SQLException e) { LOGGER.error("[charsave] Error going
          * back to autocommit mode inventory" + e); } }
          */
     }
@@ -349,7 +354,7 @@ public enum ItemLoader {
                     ps.setString(i + 10, item.getGiftFrom());
                     ps.executeUpdate();
                 } catch (Exception ex) {
-                    System.err.println("GMLOG : " + item.getGMLog() + " Table_equip : " + table + " " + ex);
+                    LOGGER.error("GMLOG : " + item.getGMLog() + " Table_equip : " + table + " " + ex);
                 }
                 if (mit.equals(MapleInventoryType.EQUIP) || mit.equals(MapleInventoryType.EQUIPPED)) {
                     ResultSet rs = ps.getGeneratedKeys();
@@ -395,7 +400,7 @@ public enum ItemLoader {
             pse.close();
             ps.close();
         } catch (Exception ex) {
-            System.err.println("table_equip: " + table_equip + " " + ex);
+            LOGGER.error("table_equip: " + table_equip + " " + ex);
         }
     }
 }

@@ -61,7 +61,8 @@ public final class MapleLifeFactory {
 
         WzData.MOB.directory().findDir("QuestCountGroup")
                 .map(WzDirectory::fileStream)
-                .ifPresent(stream -> stream.forEach(file -> file.content().findByName("info")
+                .ifPresent(stream -> stream.forEach(file -> file.content()
+                        .findByName("info")
                         .map(it -> it.childrenStream().map(Elements::ofInt).collect(Collectors.toList()))
                         .ifPresent(integers -> {
                             int id = Numbers.ofInt(file.smallName());

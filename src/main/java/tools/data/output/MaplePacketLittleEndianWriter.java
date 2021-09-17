@@ -1,31 +1,14 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.data.output;
 
-import java.io.ByteArrayOutputStream;
-
+import constants.ServerConstants;
 import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
-import server.ServerProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.github.mrzhqiang.maplestory.config.ServerConfiguration;
 import tools.HexTool;
+
+import java.io.ByteArrayOutputStream;
 
 /**
  * Writes a maplestory-packet little-endian stream of bytes.
@@ -36,8 +19,9 @@ import tools.HexTool;
  */
 public class MaplePacketLittleEndianWriter extends GenericLittleEndianWriter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaplePacketLittleEndianWriter.class);
+
     private final ByteArrayOutputStream baos;
-    private static boolean debugMode = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.Debug", "false"));
 
     /**
      * Constructor - initializes this stream with a default size.
@@ -63,9 +47,9 @@ public class MaplePacketLittleEndianWriter extends GenericLittleEndianWriter {
      * @return A <code>MaplePacket</code> with the bytes in this stream.
      */
     public final MaplePacket getPacket() {
-        if (debugMode) {
+        if (ServerConstants.properties.isDebug()) {
             MaplePacket packet = new ByteArrayMaplePacket(baos.toByteArray());
-            System.out.println("Packet to be sent:\n" + packet.toString());
+            LOGGER.debug("Packet to be sent:\n" + packet.toString());
         }
         return new ByteArrayMaplePacket(baos.toByteArray());
     }

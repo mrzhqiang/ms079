@@ -66,20 +66,20 @@ public class MapleOxQuizFactory {
         if (initialized) {
             return;
         }
-        //System.out.println("加载 OX Quiz  :::");
         try {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_oxdata");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                questionCache.put(new Pair<Integer, Integer>(rs.getInt("questionset"), rs.getInt("questionid")), get(rs));
+                int questionset = rs.getInt("questionset");
+                int questionid = rs.getInt("questionid");
+                questionCache.put(new Pair<>(questionset, questionid), get(rs));
             }
             rs.close();
             ps.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.print("Done\r");
         initialized = true;
     }
 

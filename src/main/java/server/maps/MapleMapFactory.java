@@ -58,10 +58,6 @@ public class MapleMapFactory {
     private final ReentrantLock lock = new ReentrantLock(true);
     private int channel;
 
-    public MapleMapFactory(int channel) {
-        this.channel = channel;
-    }
-
     public final MapleMap getMap(final int mapid) {
         return getMap(mapid, true, true, true);
     }
@@ -325,7 +321,7 @@ public class MapleMapFactory {
     private static AbstractLoadedMapleLife loadLife(int id, int f, boolean hide, int fh, int cy, int rx0, int rx1, int x, int y, String type, int mtime) {
         final AbstractLoadedMapleLife myLife = MapleLifeFactory.getLife(id, type);
         if (myLife == null) {
-            System.err.println("载入 npc " + id + " 异常...");
+            LOGGER.error("载入 npc " + id + " 异常...");
             return null;
         }
         myLife.setCy(cy);
@@ -461,7 +457,7 @@ public class MapleMapFactory {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error loading custom life..." + e);
+            LOGGER.error("Error loading custom life..." + e);
         }
     }
 

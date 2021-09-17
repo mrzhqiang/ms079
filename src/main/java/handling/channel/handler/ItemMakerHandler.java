@@ -43,7 +43,7 @@ import tools.data.input.SeekableLittleEndianAccessor;
 public class ItemMakerHandler {
 
     public static final void ItemMaker(final SeekableLittleEndianAccessor slea, final MapleClient c) {
-        //System.out.println(slea.toString()); //change?
+        //LOGGER.debug(slea.toString()); //change?
         final int makerType = slea.readInt();
 
         switch (makerType) {

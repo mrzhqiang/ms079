@@ -1,75 +1,55 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.world.guild;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.Lock;
 
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
 import client.MapleClient;
+import com.github.mrzhqiang.maplestory.domain.DGuild;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.world.World;
 import handling.world.guild.MapleBBSThread.MapleBBSReply;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.StringUtil;
 import tools.data.output.MaplePacketLittleEndianWriter;
 import tools.packet.UIPacket;
 
-public class MapleGuild implements java.io.Serializable {
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
-    private static enum BCOp {
+public final class MapleGuild implements java.io.Serializable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleGuild.class);
+
+    private enum BCOp {
         NONE, DISBAND, EMBELMCHANGE
     }
+
     public static final long serialVersionUID = 6322150443228168192L;
-    private final List<MapleGuildCharacter> members = new CopyOnWriteArrayList<MapleGuildCharacter>();
-    private final String rankTitles[] = new String[5]; // 1 = master, 2 = jr, 5 = lowest member
+
+    // COW 写入时复制，避免多线程环境下，遍历时的修改导致并发异常或下标越界；
+    // 其他线程安全的 List 需要在遍历时手动加锁，COW 不需要；
+    // 但是遍历的同时，其他线程修改了 COW，则会产生新的数组，占据内存消耗，遍历的还是旧的数组。
+    private final List<MapleGuildCharacter> members = new CopyOnWriteArrayList<>();
+
+    private final String[] rankTitles = new String[5]; // 1 = master, 2 = jr, 5 = the lowest member
     private String name, notice;
     private int id, gp, logo, logoColor, leader, capacity, logoBG, logoBGColor, signature;
     private boolean bDirty = true, proper = true;
     private int allianceid = 0, invitedid = 0;
-    private final Map<Integer, MapleBBSThread> bbs = new HashMap<Integer, MapleBBSThread>();
+    private final Map<Integer, MapleBBSThread> bbs = new HashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock rL = lock.readLock(), wL = lock.writeLock();
     private boolean init = false;
 
-    public MapleGuild(final int guildid) {
-        super();
-
+    public MapleGuild(int guildid) {
         try {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds WHERE guildid = ?");
@@ -107,7 +87,7 @@ public class MapleGuild implements java.io.Serializable {
             rs = ps.executeQuery();
 
             if (!rs.first()) {
-                System.err.println("No members in guild " + id + ".  Impossible... guild is disbanding");
+                LOGGER.error("No members in guild " + id + ".  Impossible... guild is disbanding");
                 rs.close();
                 ps.close();
                 //   writeToDB(true);
@@ -125,7 +105,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
 
             if (!leaderCheck) {
-                System.err.println("Leader " + leader + " isn't in guild " + id + ".  Impossible... guild is disbanding.");
+                LOGGER.error("Leader " + leader + " isn't in guild " + id + ".  Impossible... guild is disbanding.");
                 //  writeToDB(true);
                 proper = false;
                 return;
@@ -150,7 +130,7 @@ public class MapleGuild implements java.io.Serializable {
             rs.close();
             ps.close();
         } catch (SQLException se) {
-            System.err.println("unable to read guild information from sql");
+            LOGGER.error("unable to read guild information from sql");
             se.printStackTrace();
         }
     }
@@ -159,8 +139,8 @@ public class MapleGuild implements java.io.Serializable {
         return proper;
     }
 
-    public static final Collection<MapleGuild> loadAll() {
-        final Collection<MapleGuild> ret = new ArrayList<MapleGuild>();
+    public static Collection<MapleGuild> loadAll() {
+        final Collection<MapleGuild> ret = new ArrayList<>();
         MapleGuild g;
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -175,7 +155,7 @@ public class MapleGuild implements java.io.Serializable {
             rs.close();
             ps.close();
         } catch (SQLException se) {
-            System.err.println("unable to read guild information from sql");
+            LOGGER.error("unable to read guild information from sql");
             se.printStackTrace();
         }
         return ret;
@@ -192,7 +172,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException se) {
-            System.err.println("Error saving guildGP to SQL");
+            LOGGER.error("Error saving guildGP to SQL");
             se.printStackTrace();
         }
     }
@@ -294,7 +274,7 @@ public class MapleGuild implements java.io.Serializable {
                 broadcast(MaplePacketCreator.guildDisband(id));
             }
         } catch (SQLException se) {
-            System.err.println("Error saving guild to SQL");
+            LOGGER.error("Error saving guild to SQL");
             se.printStackTrace();
         }
     }
@@ -484,13 +464,13 @@ public class MapleGuild implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Saving allianceid ERROR" + e);
+            LOGGER.error("Saving allianceid ERROR" + e);
         }
     }
 
     // function to create guild, returns the guild id if successful, 0 if not
-    public static final int createGuild(final int leaderId, final String name) {
-        if (name.length() > 12) {
+    public static int createGuild(int leaderId, String name) {
+        if (name == null || name.length() > 12) {
             return 0;
         }
         try {
@@ -520,9 +500,8 @@ public class MapleGuild implements java.io.Serializable {
             rs.close();
             ps.close();
             return ret;
-        } catch (SQLException se) {
-            System.err.println("SQL THROW");
-            se.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.error("创建公会失败", e);
             return 0;
         }
     }
@@ -642,7 +621,7 @@ public class MapleGuild implements java.io.Serializable {
             }
         }
         // it should never get to this point unless cid was incorrect o_O
-        System.err.println("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
+        LOGGER.error("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
     }
 
     public final void changeRank(final int cid, final int newRank) {
@@ -659,7 +638,7 @@ public class MapleGuild implements java.io.Serializable {
             }
         }
         // it should never get to this point unless cid was incorrect o_O
-        System.err.println("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
+        LOGGER.error("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
     }
 
     public final void setGuildNotice(final String notice) {
@@ -722,7 +701,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Saving guild logo / BG colo ERROR");
+            LOGGER.error("Saving guild logo / BG colo ERROR");
             e.printStackTrace();
         }
     }
@@ -751,7 +730,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Saving guild capacity ERROR");
+            LOGGER.error("Saving guild capacity ERROR");
             e.printStackTrace();
         }
         return true;
@@ -872,7 +851,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException se) {
-            System.out.println("SQLException: " + se.getLocalizedMessage());
+            LOGGER.debug("SQLException: " + se.getLocalizedMessage());
             se.printStackTrace();
         }
     }
@@ -886,7 +865,7 @@ public class MapleGuild implements java.io.Serializable {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(
                     "SELECT `name`, `level`, `str`, `dex`, "
-                    + "`int`, `luk` FROM characters ORDER BY `level` DESC LIMIT 100");
+                            + "`int`, `luk` FROM characters ORDER BY `level` DESC LIMIT 100");
 
             ResultSet rs = ps.executeQuery();
             c.getSession().write(MaplePacketCreator.等级排行榜(npcid, rs));
@@ -894,7 +873,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
             rs.close();
         } catch (Exception e) {
-            System.err.println("获取等级排行出错" + e);
+            LOGGER.error("获取等级排行出错" + e);
 
         }
     }
@@ -904,7 +883,7 @@ public class MapleGuild implements java.io.Serializable {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(
                     "SELECT `name`, `fame`, `str`, `dex`, "
-                    + "`int`, `luk` FROM characters ORDER BY `fame` DESC LIMIT 100");
+                            + "`int`, `luk` FROM characters ORDER BY `fame` DESC LIMIT 100");
 
             ResultSet rs = ps.executeQuery();
             c.getSession().write(MaplePacketCreator.人气排行榜(npcid, rs));
@@ -912,7 +891,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
             rs.close();
         } catch (Exception e) {
-            System.err.println("获取人气排行出错" + e);
+            LOGGER.error("获取人气排行出错" + e);
         }
     }
 
@@ -921,7 +900,7 @@ public class MapleGuild implements java.io.Serializable {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(
                     "SELECT `name`, `meso`, `str`, `dex`, "
-                    + "`int`, `luk` FROM characters ORDER BY `meso` DESC LIMIT 100");
+                            + "`int`, `luk` FROM characters ORDER BY `meso` DESC LIMIT 100");
 
             ResultSet rs = ps.executeQuery();
             c.getSession().write(MaplePacketCreator.金币排行榜(npcid, rs));
@@ -929,7 +908,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
             rs.close();
         } catch (Exception e) {
-            System.err.println("获取金币排行出错" + e);
+            LOGGER.error("获取金币排行出错" + e);
         }
     }
 
@@ -938,7 +917,7 @@ public class MapleGuild implements java.io.Serializable {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(
                     "SELECT `name`, `sg`, `str`, `dex`, "
-                    + "`int`, `luk` FROM characters ORDER BY `sg` DESC LIMIT 100");
+                            + "`int`, `luk` FROM characters ORDER BY `sg` DESC LIMIT 100");
 
             ResultSet rs = ps.executeQuery();
             c.getSession().write(MaplePacketCreator.杀怪排行榜(npcid, rs));
@@ -946,7 +925,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
             rs.close();
         } catch (Exception e) {
-            System.err.println("获取金币排行出错" + e);
+            LOGGER.error("获取金币排行出错" + e);
         }
     }
 
@@ -955,7 +934,7 @@ public class MapleGuild implements java.io.Serializable {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(
                     "SELECT `name`, `GP`, `logoBG`, `logoBGColor`, "
-                    + "`logo`, `logoColor` FROM guilds ORDER BY `GP` DESC LIMIT 50");
+                            + "`logo`, `logoColor` FROM guilds ORDER BY `GP` DESC LIMIT 50");
 
             ResultSet rs = ps.executeQuery();
             c.getSession().write(MaplePacketCreator.家族排行榜(npcid, rs));
@@ -963,7 +942,7 @@ public class MapleGuild implements java.io.Serializable {
             ps.close();
             rs.close();
         } catch (SQLException e) {
-            System.err.println("获取家族排行出错" + e);
+            LOGGER.error("获取家族排行出错" + e);
         }
     }
 

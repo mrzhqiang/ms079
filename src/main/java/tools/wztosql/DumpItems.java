@@ -48,7 +48,7 @@ public class DumpItems {
                 dumpItems(psa, psr, ps, pse);
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println(id + " quest.");
+                LOGGER.debug(id + " quest.");
                 hadError = true;
             } finally {
                 psa.executeBatch();
@@ -401,12 +401,12 @@ public class DumpItems {
             delete("DELETE FROM wz_itemequipdata");
             delete("DELETE FROM wz_itemadddata");
             delete("DELETE FROM wz_itemrewarddata");
-            System.out.println("Deleted wz_itemdata successfully.");
+            LOGGER.debug("Deleted wz_itemdata successfully.");
         }
-        System.out.println("Adding into wz_itemdata.....");
+        LOGGER.debug("Adding into wz_itemdata.....");
         dumpItems(WzData.ITEM.directory(), psa, psr, ps, pse, false);
         dumpItems(WzData.CHARACTER.directory(), psa, psr, ps, pse, true);
-        System.out.println("Done wz_itemdata...");
+        LOGGER.debug("Done wz_itemdata...");
     }
 
     public int currentId() {
@@ -425,14 +425,14 @@ public class DumpItems {
         int currentQuest = 0;
         try {
             final DumpItems dq = new DumpItems(update);
-            System.out.println("Dumping Items");
+            LOGGER.debug("Dumping Items");
             dq.dumpItems();
             hadError |= dq.isHadError();
             currentQuest = dq.currentId();
         } catch (Exception e) {
             hadError = true;
             e.printStackTrace();
-            System.out.println(currentQuest + " quest.");
+            LOGGER.debug(currentQuest + " quest.");
         }
         long endTime = System.currentTimeMillis();
         double elapsedSeconds = (endTime - startTime) / 1000.0;
@@ -443,7 +443,7 @@ public class DumpItems {
         if (hadError) {
             withErrors = " with errors";
         }
-        System.out.println("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
+        LOGGER.debug("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
     }
 
     //    private final MapleDataProvider string = MapleDataProviderFactory.getDataProvider(WzManage.STRING_DIR);

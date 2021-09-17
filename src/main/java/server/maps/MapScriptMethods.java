@@ -526,7 +526,7 @@ public class MapScriptMethods {
                 break;
             }
             default: {
-                //  System.out.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
+                //  LOGGER.debug("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 //    FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 break;
             }
@@ -914,7 +914,7 @@ public class MapScriptMethods {
                 break;
             }
             default: {
-                //  System.out.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
+                //  LOGGER.debug("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 //  FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 break;
             }

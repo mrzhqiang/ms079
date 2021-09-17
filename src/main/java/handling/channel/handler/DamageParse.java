@@ -574,7 +574,7 @@ public class DamageParse {
                             if (eachd > maxDamagePerHit) {
                                 player.getCheatTracker().registerOffense(CheatingOffense.魔法伤害过高);
                                 if (eachd > MaxDamagePerHit * 2) {
-//				    System.out.println("EXCEED!!! Client damage : " + eachd + " Server : " + MaxDamagePerHit);
+//				    LOGGER.debug("EXCEED!!! Client damage : " + eachd + " Server : " + MaxDamagePerHit);
                                     eachd = (int) (MaxDamagePerHit * 2); // Convert to server calculated damage
                                     FileoutputUtil.logToFile_chr(player, FileoutputUtil.fixdam_ph, " 技能 " + attack.skill + " 怪物 " + monster.getId() + " 预计伤害:" + (long) MaxDamagePerHit + "  实际" + eachd);
                                     player.getCheatTracker().registerOffense(CheatingOffense.魔法伤害过高2);
@@ -933,7 +933,7 @@ public class DamageParse {
                                          */) < CriticalRate;
                             }
                             eachd_copy.get(hit - 1).right = eachd.right;
-                            //System.out.println("CRITICAL RATE: " + CriticalRate + ", passive rate: " + chr.getStat().passive_sharpeye_rate() + ", critical: " + eachd.right);
+                            //LOGGER.debug("CRITICAL RATE: " + CriticalRate + ", passive rate: " + chr.getStat().passive_sharpeye_rate() + ", critical: " + eachd.right);
                         }
                     }
                 }
@@ -943,13 +943,13 @@ public class DamageParse {
     }
 
     public static final AttackInfo parseDmgMa(final LittleEndianAccessor lea, final MapleCharacter chr) {
-        //System.out.println(lea.toString());
+        //LOGGER.debug(lea.toString());
         final AttackInfo ret = new AttackInfo();
 
         lea.skip(1);
         lea.skip(8);
         ret.tbyte = lea.readByte();
-        //System.out.println("TBYTE: " + tbyte);
+        //LOGGER.debug("TBYTE: " + tbyte);
         ret.targets = (byte) ((ret.tbyte >>> 4) & 0xF);
         ret.hits = (byte) (ret.tbyte & 0xF);
         lea.skip(8); //?
@@ -1005,13 +1005,13 @@ public class DamageParse {
     }
 
     public static final AttackInfo parseDmgM(final LittleEndianAccessor lea, final MapleCharacter chr) {
-        //System.out.println(lea.toString());
+        //LOGGER.debug(lea.toString());
         final AttackInfo ret = new AttackInfo();
 
         lea.skip(1);
         lea.skip(8);
         ret.tbyte = lea.readByte();
-        //System.out.println("TBYTE: " + tbyte);
+        //LOGGER.debug("TBYTE: " + tbyte);
         ret.targets = (byte) ((ret.tbyte >>> 4) & 0xF);
         ret.hits = (byte) (ret.tbyte & 0xF);
         lea.skip(8);
@@ -1049,7 +1049,7 @@ public class DamageParse {
 
         for (int i = 0; i < ret.targets; i++) {
             oid = lea.readInt();
-//	    System.out.println(tools.HexTool.toString(lea.read(14)));
+//	    LOGGER.debug(tools.HexTool.toString(lea.read(14)));
             lea.skip(14); // [1] Always 6?, [3] unk, [4] Pos1, [4] Pos2, [2] seems to change randomly for some attack
 
             allDamageNumbers = new ArrayList<Pair<Integer, Boolean>>();
@@ -1062,7 +1062,7 @@ public class DamageParse {
 //                } else {
 //                    damage = Damage_NoSkillPD(chr, damage);
 //                }
-                // System.out.println("Damage: " + damage);
+                // LOGGER.debug("Damage: " + damage);
                 allDamageNumbers.add(new Pair<Integer, Boolean>(Integer.valueOf(damage), false));
             }
             lea.skip(4); // CRC of monster [Wz Editing]
@@ -1073,13 +1073,13 @@ public class DamageParse {
     }
 
     public static final AttackInfo parseDmgR(final LittleEndianAccessor lea, final MapleCharacter chr) {
-        //System.out.println(lea.toString()); //<-- packet needs revision
+        //LOGGER.debug(lea.toString()); //<-- packet needs revision
         final AttackInfo ret = new AttackInfo();
 
         lea.skip(1);
         lea.skip(8);
         ret.tbyte = lea.readByte();
-        //System.out.println("TBYTE: " + tbyte);
+        //LOGGER.debug("TBYTE: " + tbyte);
         ret.targets = (byte) ((ret.tbyte >>> 4) & 0xF);
         ret.hits = (byte) (ret.tbyte & 0xF);
         lea.skip(8);
@@ -1114,7 +1114,7 @@ public class DamageParse {
 
         for (int i = 0; i < ret.targets; i++) {
             oid = lea.readInt();
-//	    System.out.println(tools.HexTool.toString(lea.read(14)));
+//	    LOGGER.debug(tools.HexTool.toString(lea.read(14)));
             lea.skip(14); // [1] Always 6?, [3] unk, [4] Pos1, [4] Pos2, [2] seems to change randomly for some attack
 
             MapleMonster monster = chr.getMap().getMonsterByOid(oid);
@@ -1127,10 +1127,10 @@ public class DamageParse {
 //                    damage = Damage_NoSkillPD(chr, damage);
 //                }
                 allDamageNumbers.add(new Pair<Integer, Boolean>(Integer.valueOf(damage), false));
-                //System.out.println("Hit " + j + " from " + i + " to mobid " + oid + ", damage " + damage);
+                //LOGGER.debug("Hit " + j + " from " + i + " to mobid " + oid + ", damage " + damage);
             }
             lea.skip(4); // CRC of monster [Wz Editing]
-//	    System.out.println(tools.HexTool.toString(lea.read(4)));
+//	    LOGGER.debug(tools.HexTool.toString(lea.read(4)));
 
             ret.allDamage.add(new AttackPair(Integer.valueOf(oid), allDamageNumbers));
         }
@@ -1141,7 +1141,7 @@ public class DamageParse {
     }
 
     public static final AttackInfo parseMesoExplosion(final LittleEndianAccessor lea, final AttackInfo ret, final MapleCharacter chr) {
-        //System.out.println(lea.toString(true));
+        //LOGGER.debug(lea.toString(true));
         byte bullets;
         if (ret.hits == 0) {
             lea.skip(4);
@@ -1401,27 +1401,27 @@ public class DamageParse {
      * //
      * c.dropMessage(1,"[战神技能攻击力检测+A]\r\n非法使用外挂或者修改WZ\r\n导致:攻击力过高.\r\n攻击力无效！\r\n请勿再次使用后果自负！");
      * damage = 1; return damage;
-     * }//////System.out.println("战神伤害处理A||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
+     * }//////LOGGER.debug("战神伤害处理A||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
      * <= "+damage/3.6+" ||实际:"+damage+""); } else if
      * (GameConstants.Ares_Skill_140(ret.skill)) { if
      * ((c.getStat().getCurrentMaxBaseDamage() <= damage / 20)) { //
      * c.dropMessage(1,"[战神技能攻击力检测+B]\r\n非法使用外挂或者修改WZ\r\n导致:攻击力过高.\r\n攻击力无效！\r\n请勿再次使用后果自负！");
      * damage = 1; return damage;
-     * }//////System.out.println("战神伤害处理B||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
+     * }//////LOGGER.debug("战神伤害处理B||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
      * <= "+damage/3+" ||实际:"+damage+""); } else if
      * (GameConstants.Ares_Skill_1500(ret.skill)) { if
      * ((c.getStat().getCurrentMaxBaseDamage() <= damage / 21)) {
-     * //////System.out.println("角色名："+c.getPartner().getName()+"。输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
+     * //////LOGGER.debug("角色名："+c.getPartner().getName()+"。输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
      * <= "+damage/17+"||实际伤害为:"+damage+""); damage = 1; return damage; //
      * c.dropMessage(1,"[战神技能攻击力检测+C]\r\n非法使用外挂或者修改WZ\r\n导致:攻击力过高.\r\n攻击力无效！\r\n请勿再次使用后果自负！");
      * } } else if (GameConstants.Ares_Skill_800(ret.skill)) { if
      * ((c.getStat().getCurrentMaxBaseDamage() <= damage / 14)) { damage = 1;
      * return damage; //
      * c.dropMessage(1,"[战神技能攻击力检测+D]\r\n非法使用外挂或者修改WZ\r\n导致:攻击力过高.\r\n攻击力无效！\r\n请勿再次使用后果自负！");
-     * }//////System.out.println("战神伤害处理D||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
+     * }//////LOGGER.debug("战神伤害处理D||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
      * <= "+damage/10+" ||实际:"+damage+""); //
      * c.dropMessage(1,"[战神技能攻击力检测+E]\r\n非法使用外挂或者修改WZ\r\n导致:攻击力过高.\r\n攻击力无效！\r\n请勿再次使用后果自负！");
-     * }//////System.out.println("战神伤害处理E||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
+     * }//////LOGGER.debug("战神伤害处理E||输出伤害:"+c.getStat().getCurrentMaxBaseDamage()+"
      * <= "+damage/2+" ||实际:"+damage+""); } else if (c.getJob() == 100 ||
      * c.getJob() == 110 || c.getJob() == 111 || c.getJob() == 112 || c.getJob()
      * == 120 || c.getJob() == 121 || c.getJob() == 122 || c.getJob() == 130 ||

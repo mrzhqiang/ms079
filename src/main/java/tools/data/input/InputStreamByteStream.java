@@ -20,6 +20,9 @@
  */
 package tools.data.input;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -31,6 +34,8 @@ import java.io.InputStream;
  * @since Revision 323
  */
 public class InputStreamByteStream implements ByteInputStream {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InputStreamByteStream.class);
 
     private final InputStream is;
     private long read = 0;
@@ -84,7 +89,7 @@ public class InputStreamByteStream implements ByteInputStream {
         try {
             return is.available();
         } catch (IOException e) {
-            System.err.println("ERROR" + e);
+            LOGGER.error("ERROR" + e);
             return 0;
         }
     }

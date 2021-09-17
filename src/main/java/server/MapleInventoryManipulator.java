@@ -1046,7 +1046,7 @@ public class MapleInventoryManipulator {
             if (c.getPlayer().isGM()) {
                 c.getPlayer().dropMessage("[丢弃道具] " + c.getPlayer().getName() + " 物品: " + target.getItemId() + " x " + target.getQuantity() + " - " + ii.getName(target.getItemId()) + " 地图: " + c.getPlayer().getMapId());
             }
-//System.out.println("[丢弃道具] " + c.getPlayer().getName() + " 物品: " + target.getItemId() + " x " + target.getQuantity() + " - " + ii.getName(target.getItemId()) + " 地图: " + c.getPlayer().getMapId());
+//LOGGER.debug("[丢弃道具] " + c.getPlayer().getName() + " 物品: " + target.getItemId() + " x " + target.getQuantity() + " - " + ii.getName(target.getItemId()) + " 地图: " + c.getPlayer().getMapId());
 
             if (ii.isDropRestricted(target.getItemId()) || ii.isAccountShared(target.getItemId())) {
                 if (ItemFlag.KARMA_EQ.check(flag)) {

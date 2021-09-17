@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import client.MapleCharacter;
 import client.MapleClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class BeanGame {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanGame.class);
+
     public static void BeanGame1(SeekableLittleEndianAccessor slea, MapleClient c) {
-        //System.out.println("豆�?�出?��???" +slea.toString());
+        //LOGGER.debug("豆�?�出?��???" +slea.toString());
         MapleCharacter chr = c.getPlayer();
         List<Beans> beansInfo = new ArrayList<Beans>();
         
@@ -21,7 +25,7 @@ public class BeanGame {
             //01 E8 03
             力度 = slea.readShort();
             chr.setBeansRange(力度);
-            //System.out.println("??��?��?��?�度1�?"+??�度);
+            //LOGGER.debug("??��?��?��?�度1�?"+??�度);
             c.getSession().write(MaplePacketCreator.enableActions());
         } else if (type == 0) { //没�?�在??��?��??
             力度 = slea.readShort();
@@ -66,7 +70,7 @@ public class BeanGame {
            // }
             c.getSession().write(MaplePacketCreator.showBeans(力度,size, Pos, Type));
         } else {
-                System.out.println("未處理的類型【" + type + "】\n包" + slea.toString());
+                LOGGER.debug("未處理的類型【" + type + "】\n包" + slea.toString());
         }
     }
 

@@ -6,6 +6,8 @@ import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.google.common.base.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -23,6 +25,8 @@ import java.util.Map;
 
 public class MonsterDropCreator {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonsterDropCreator.class);
+
     private static final int COMMON_ETC_RATE = 600000;
     private static final int SUPER_BOSS_ITEM_RATE = 300000;
     private static final int POTION_RATE = 20000;
@@ -38,16 +42,16 @@ public class MonsterDropCreator {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, NotBoundException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException {
         //  MapleData data = MapleDataProviderFactory.getDataProvider(new File(new StringBuilder().append(System.getProperty("wzpath")).append("String.wz").toString())).getData("MonsterBook.img");
-        System.out.println("準備提取數據!");
-        System.out.println("按任意鍵繼續...");
+        LOGGER.debug("準備提取數據!");
+        LOGGER.debug("按任意鍵繼續...");
         System.console().readLine();
 
         long currtime = System.currentTimeMillis();
         // addFlagData = Boolean.parseBoolean(args[0]);
         addFlagData = false;
-        System.out.println("載入: 物品名稱.");
+        LOGGER.debug("載入: 物品名稱.");
         getAllItems();
-        System.out.println("載入: 怪物數據.");
+        LOGGER.debug("載入: 怪物數據.");
         getAllMobs();
 
         StringBuilder sb = new StringBuilder();
@@ -105,7 +109,7 @@ public class MonsterDropCreator {
             sb.delete(0, 2147483647);
         }
 
-        System.out.println("載入: Drops from String.wz/MonsterBook.img.");
+        LOGGER.debug("載入: Drops from String.wz/MonsterBook.img.");
         WzData.STRING.directory().findFile("MonsterBook.img")
                 .map(WzFile::content)
                 .map(WzElement::childrenStream)
@@ -205,7 +209,7 @@ public class MonsterDropCreator {
                     }
                     sb.delete(0, 2147483647);
                 }));
-        System.out.println("載入: 怪物書數據.");
+        LOGGER.debug("載入: 怪物書數據.");
         StringBuilder SQL = new StringBuilder();
         StringBuilder bookName = new StringBuilder();
         for (Pair<Integer, String> Pair : itemNameCache) {
@@ -239,7 +243,7 @@ public class MonsterDropCreator {
                 bookName.delete(0, 2147483647);
             }
         }
-        System.out.println("載入: 怪物卡數據.");
+        LOGGER.debug("載入: 怪物卡數據.");
         SQL.append("\n");
         int i = 1;
         int lastmonsterbookid = 0;
@@ -272,7 +276,7 @@ public class MonsterDropCreator {
         long time = System.currentTimeMillis() - currtime;
         time /= 1000L;
 
-        System.out.println("Time taken : " + time);
+        LOGGER.debug("Time taken : " + time);
     }
 
     private static void retriveNLogItemName(StringBuilder sb, int id) {
@@ -643,7 +647,7 @@ public class MonsterDropCreator {
                 }
                 return 2000;
         }
-        System.out.println("未處理的數據, ID : " + id);
+        LOGGER.debug("未處理的數據, ID : " + id);
         return 999999;
     }
 

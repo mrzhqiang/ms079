@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import java.sql.Connection;
@@ -38,6 +18,9 @@ import database.DatabaseConnection;
 import java.sql.*;
 import java.util.Collections;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.data.input.SeekableLittleEndianAccessor;
 import server.MapleDueyActions;
 import server.MapleInventoryManipulator;
@@ -46,6 +29,8 @@ import tools.MaplePacketCreator;
 import tools.Pair;
 
 public class DueyHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DueyHandler.class);
 
     /*
      * 19 = Successful
@@ -160,7 +145,7 @@ public class DueyHandler {
                     return;
                 }
                 final int packageid = slea.readInt();
-                //System.out.println("Item attempted : " + packageid);
+                //LOGGER.debug("Item attempted : " + packageid);
                 final MapleDueyActions dp = loadSingleItem(packageid, c.getPlayer().getId());
                 if (dp == null) {
                     return;
@@ -173,7 +158,7 @@ public class DueyHandler {
                     return;
                 }
                 removeItemFromDB(packageid, c.getPlayer().getId()); // Remove first
-                //System.out.println("Item removed : " + packageid);
+                //LOGGER.debug("Item removed : " + packageid);
                 if (dp.getItem() != null) {
                     MapleInventoryManipulator.addFromDrop(c, dp.getItem(), false);
                 }
@@ -197,7 +182,7 @@ public class DueyHandler {
                 break;
             }
             default: {
-                System.out.println("Unhandled Duey operation : " + slea.toString());
+                LOGGER.debug("Unhandled Duey operation : " + slea.toString());
                 break;
             }
         }

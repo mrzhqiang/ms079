@@ -34,8 +34,12 @@ import java.util.Map;
 import client.MapleCharacter;
 import client.inventory.MapleInventoryType;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MapleMonsterInformationProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleMonsterInformationProvider.class);
 
     private static final MapleMonsterInformationProvider instance = new MapleMonsterInformationProvider();
     private final Map<Integer, List<MonsterDropEntry>> drops = new HashMap<Integer, List<MonsterDropEntry>>();
@@ -76,7 +80,7 @@ public class MapleMonsterInformationProvider {
             rs.close();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Error retrieving drop" + e);
+            LOGGER.error("Error retrieving drop" + e);
         } finally {
             try {
                 if (ps != null) {

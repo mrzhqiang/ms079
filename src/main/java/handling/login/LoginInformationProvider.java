@@ -4,21 +4,27 @@ import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
+import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class LoginInformationProvider {
 
-    private final static LoginInformationProvider instance = new LoginInformationProvider();
-    protected final List<String> ForbiddenName = new ArrayList<>();
+    private static final LoginInformationProvider instance = new LoginInformationProvider();
+
+    private final List<String> ForbiddenName = Lists.newArrayList();
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void init() {
+        getInstance();
+    }
 
     public static LoginInformationProvider getInstance() {
         return instance;
     }
 
-    protected LoginInformationProvider() {
+    private LoginInformationProvider() {
         WzData.ETC.directory().findFile("ForbiddenName.img")
                 .map(WzFile::content)
                 .map(WzElement::childrenStream)
@@ -26,8 +32,8 @@ public class LoginInformationProvider {
                 .ifPresent(ForbiddenName::addAll);
     }
 
-    public final boolean isForbiddenName(final String in) {
-        for (final String name : ForbiddenName) {
+    public boolean isForbiddenName(String in) {
+        for (String name : ForbiddenName) {
             if (in.contains(name)) {
                 return true;
             }

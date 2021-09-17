@@ -35,10 +35,15 @@ import javax.script.ScriptEngineManager;
 
 import client.MapleClient;
 import java.io.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MaplePortal;
 import tools.FileoutputUtil;
 
 public class PortalScriptManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PortalScriptManager.class);
 
     private static final PortalScriptManager instance = new PortalScriptManager();
     private final Map<String, PortalScript> scripts = new HashMap<String, PortalScript>();
@@ -68,14 +73,14 @@ public class PortalScriptManager {
             CompiledScript compiled = ((Compilable) portal).compile(bf);
             compiled.eval();
         } catch (final Exception e) {
-            System.err.println("Error executing Portalscript: " + scriptName + ":" + e);
+            LOGGER.error("Error executing Portalscript: " + scriptName + ":" + e);
             FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Error executing Portal script. (" + scriptName + ") " + e);
         } finally {
             if (fr != null) {
                 try {
                     fr.close();
                 } catch (final IOException e) {
-                    System.err.println("ERROR CLOSING" + e);
+                    LOGGER.error("ERROR CLOSING" + e);
                 }
             }
         }
@@ -94,7 +99,7 @@ public class PortalScriptManager {
                     c.getPlayer().dropMessage(5, "[执行传送点]:名为:(" + portal.getScriptName() + ".js)的文件 在地图 " + c.getPlayer().getMapId() + " - " + c.getPlayer().getMap().getMapName());
                 }
             } catch (Exception e) {
-                //System.err.println("执行地图脚本过程中发生错误.请检查Portal为:( " + portal.getScriptName() + ".js)的文件." + e);
+                //LOGGER.error("执行地图脚本过程中发生错误.请检查Portal为:( " + portal.getScriptName() + ".js)的文件." + e);
                 FileoutputUtil.log("log\\Script_Except.log", "执行地图脚本过程中发生错误.请检查Portal为:( " + portal.getScriptName() + ".js)的文件.\r\n错误信息:" + e);
             }
         } else {

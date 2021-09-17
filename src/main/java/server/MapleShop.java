@@ -19,11 +19,15 @@ import client.MapleClient;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.life.MapleLifeFactory;
 import server.life.MapleNPC;
 import tools.MaplePacketCreator;
 
 public class MapleShop {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleShop.class);
 
     private static final Set<Integer> rechargeableItems = new LinkedHashSet<Integer>();
     private int id;
@@ -274,7 +278,7 @@ public class MapleShop {
             rs.close();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Could not load shop" + e);
+            LOGGER.error("Could not load shop" + e);
         }
         return ret;
     }

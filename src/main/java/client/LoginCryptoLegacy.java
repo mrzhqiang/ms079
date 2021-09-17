@@ -20,6 +20,9 @@
  */
 package client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Random;
 
 import java.io.UnsupportedEncodingException;
@@ -37,6 +40,8 @@ import java.security.NoSuchAlgorithmException;
  * @version 0.1
  */
 public class LoginCryptoLegacy {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginCryptoLegacy.class);
 
     /**
      * Map of 6 bit nibbles to base64 characters.
@@ -130,9 +135,9 @@ public class LoginCryptoLegacy {
             out = seed.substring(0, 12);
             out += encode64(sha1Hash);
         } catch (NoSuchAlgorithmException Ex) {
-            System.err.println("Error hashing password." + Ex);
+            LOGGER.error("Error hashing password." + Ex);
         } catch (UnsupportedEncodingException Ex) {
-            System.err.println("Error hashing password." + Ex);
+            LOGGER.error("Error hashing password." + Ex);
         }
         if (out == null) {
             throw new RuntimeException("Error hashing password - out = null");

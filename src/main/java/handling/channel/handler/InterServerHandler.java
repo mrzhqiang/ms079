@@ -1,33 +1,13 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import client.*;
-import constants.GameConstants;
+
 import java.util.List;
 
+import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
-import handling.login.LoginServer;
 import handling.world.CharacterTransfer;
 import handling.world.MapleMessenger;
 import handling.world.MapleMessengerCharacter;
@@ -37,24 +17,22 @@ import handling.world.PartyOperation;
 import handling.world.PlayerBuffStorage;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
+
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripting.NPCScriptManager;
-import server.MapleTrade;
-import server.ServerProperties;
+import com.github.mrzhqiang.maplestory.config.ServerConfiguration;
 import server.maps.FieldLimitType;
-import server.shops.IMaplePlayerShop;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
-import tools.Triple;
 import tools.packet.FamilyPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class InterServerHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InterServerHandler.class);
 
     public static final void EnterCS(final MapleClient c, final MapleCharacter chr, final boolean mts) {
         if (c.getPlayer().getBuffedValue(MapleBuffStat.SUMMON) != null) {
@@ -145,7 +123,7 @@ public class InterServerHandler {
     }
 
     public static void Loggedin(final int playerid, final MapleClient c) {
-       // if (!GameConstants.绑定IP.equals(ServerProperties.getProperty("ZlhssMS.IP"))) {
+       // if (!GameConstants.绑定IP.equals(ServerProperties.getProperty("randall.IP"))) {
        // }
 
         final ChannelServer channelServer = c.getChannelServer();
@@ -181,7 +159,7 @@ public class InterServerHandler {
             //System.out.print("自动断开连接2");
             c.setPlayer(null);
             c.getSession().close(true);
-            System.out.println(msg);
+            LOGGER.debug(msg);
             //channelServer.getPlayerStorage().deregisterPlayer(player);//不是登录状态，注销玩家
             return;
         }
@@ -332,10 +310,10 @@ public class InterServerHandler {
             player.dropMessage(5, "您装备了精灵吊坠！打猎时可以额外获得30%的道具佩戴经验奖励！");
         }
         if (player.haveItem(2022336)) {//背包里是否有神秘箱子-新手礼包
-            player.dropMessage(5, "欢迎来到" + ServerProperties.getProperty("ZlhssMS.ServerName") + "冒险岛,请按“I”键，打开背包，双击使用神秘箱子，领取新人礼包");
+            player.dropMessage(5, "欢迎来到" + ServerConstants.properties.getName() + "冒险岛,请按“I”键，打开背包，双击使用神秘箱子，领取新人礼包");
             return;
         }
-        System.out.println("[冒险岛][名字:" + c.getPlayer().getName() + "][等级:" + c.getPlayer().getLevel() + "][IP:" + c.getSessionIPAddress() + "]登录.");
+        LOGGER.debug("[冒险岛][名字:" + c.getPlayer().getName() + "][等级:" + c.getPlayer().getLevel() + "][IP:" + c.getSessionIPAddress() + "]登录.");
 
         c.getSession().write(MaplePacketCreator.weirdStatUpdate());
     }

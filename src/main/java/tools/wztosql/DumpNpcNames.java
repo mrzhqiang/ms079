@@ -7,6 +7,8 @@ import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.google.common.base.Strings;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,14 +21,16 @@ import java.util.Map;
  */
 public class DumpNpcNames {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DumpNpcNames.class);
+
     private final Connection con = DatabaseConnection.getConnection();
     private static final Map<Integer, String> npcNames = new HashMap<>();
 
     public static void main(String[] args) throws SQLException {
-        System.out.println("Dumping npc name data.");
+        LOGGER.debug("Dumping npc name data.");
         DumpNpcNames dump = new DumpNpcNames();
         dump.dumpNpcNameData();
-        System.out.println("Dump complete.");
+        LOGGER.debug("Dump complete.");
     }
 
     public void dumpNpcNameData() throws SQLException {
@@ -60,9 +64,9 @@ public class DumpNpcNames {
                     ps.setString(2, npcNames.get(key));
                     ps.execute();
                 }
-                System.out.println("key: " + key + " name: " + npcNames.get(key));
+                LOGGER.debug("key: " + key + " name: " + npcNames.get(key));
             } catch (Exception ex) {
-                System.out.println("Failed to save key " + key);
+                LOGGER.debug("Failed to save key " + key);
             }
         }
     }

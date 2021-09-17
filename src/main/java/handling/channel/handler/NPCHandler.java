@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import client.inventory.Equip;
@@ -33,6 +13,9 @@ import handling.SendPacketOpcode;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.AutobanManager;
 import server.MapleShop;
 import server.MapleInventoryManipulator;
@@ -50,6 +33,8 @@ import tools.data.input.SeekableLittleEndianAccessor;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class NPCHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NPCHandler.class);
 
     public static final void NPCAnimation(final SeekableLittleEndianAccessor slea, final MapleClient c) {
 //        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
@@ -403,7 +388,7 @@ public class NPCHandler {
                 break;
             }
             default:
-                System.out.println("Unhandled Storage mode : " + mode);
+                LOGGER.debug("Unhandled Storage mode : " + mode);
                 break;
         }
     }

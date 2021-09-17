@@ -23,6 +23,11 @@ public final class MapleCarnivalFactory {
         initialize();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void init() {
+        getInstance();
+    }
+
     public static MapleCarnivalFactory getInstance() {
         return instance;
     }

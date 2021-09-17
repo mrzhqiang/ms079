@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -14,12 +16,13 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * 基础的 wz 元素。
  */
 public abstract class BaseWzElement<T> implements WzElement<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseWzElement.class);
 
     /**
      * 名字属性的键。
@@ -92,7 +95,7 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
      */
     protected WzElement<?> convertChildren(Element element) {
         // fixme 此处代码是为了发现遗漏的元素
-        System.out.println("遗漏的元素：" + element.parent());
+        LOGGER.debug("遗漏的元素：" + element.parent());
         return null;
     }
 

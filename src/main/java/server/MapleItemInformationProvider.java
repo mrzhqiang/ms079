@@ -7,7 +7,7 @@ import client.inventory.IItem;
 import client.inventory.ItemFlag;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.helper.math.Numbers;
-import com.github.mrzhqiang.maplestory.skill.Effects;
+import com.github.mrzhqiang.maplestory.util.Effects;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -15,6 +15,8 @@ import com.github.mrzhqiang.maplestory.wz.element.*;
 import com.google.common.collect.Maps;
 import constants.GameConstants;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 import tools.Triple;
 
@@ -29,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class MapleItemInformationProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleItemInformationProvider.class);
 
     private final static MapleItemInformationProvider instance = new MapleItemInformationProvider();
     protected Map<Integer, Boolean> onEquipUntradableCache = new HashMap<>();
@@ -76,7 +80,7 @@ public class MapleItemInformationProvider {
     protected final Map<Integer, Triple<Integer, List<Integer>, List<Integer>>> monsterBookSets = new HashMap<>();
 
     protected MapleItemInformationProvider() {
-        // System.out.println("加载 物品信息 :::");
+        // LOGGER.debug("加载 物品信息 :::");
     }
 
     /* public final void load() {
@@ -204,9 +208,9 @@ public class MapleItemInformationProvider {
                 }
             }
         } catch (SQLException ex) {
-            System.err.println("加载道具数据出错" + ex);
+            LOGGER.error("加载道具数据出错" + ex);
         }
-        System.out.println("共加载" + dataCache.size() + " 个道具信息");
+        LOGGER.debug("共加载" + dataCache.size() + " 个道具信息");
     }
 
     public void finalizeEquipData(ItemInformation item) {
@@ -326,7 +330,7 @@ public class MapleItemInformationProvider {
         final int itemID = sqlRewardData.getInt("itemid");
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                System.out.println("[initItemRewardData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemRewardData] Tried to load an item while this is not in the cache: " + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);
@@ -351,7 +355,7 @@ public class MapleItemInformationProvider {
         final int itemID = sqlAddData.getInt("itemid");
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                System.out.println("[initItemAddData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemAddData] Tried to load an item while this is not in the cache: " + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);
@@ -372,7 +376,7 @@ public class MapleItemInformationProvider {
         final int itemID = sqlEquipData.getInt("itemid");
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                System.out.println("[initItemEquipData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemEquipData] Tried to load an item while this is not in the cache: " + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import static client.BuddyList.BuddyOperation.ADDED;
@@ -38,10 +18,14 @@ import client.BuddyList.BuddyOperation;
 import database.DatabaseConnection;
 import handling.channel.ChannelServer;
 import handling.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class BuddyListHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BuddyListHandler.class);
 
     private static final class CharacterIdNameBuddyCapacity extends CharacterNameAndId {
 
@@ -178,7 +162,7 @@ public class BuddyListHandler {
                         c.getSession().write(MaplePacketCreator.buddylistMessage((byte) 15));
                     }
                 } catch (SQLException e) {
-                    System.err.println("SQL THROW" + e);
+                    LOGGER.error("SQL THROW" + e);
                 }
             }
             nextPendingRequest(c);
@@ -213,7 +197,7 @@ public class BuddyListHandler {
                         notifyRemoteChannel(c, channel, otherCid, "ㄤ", ADDED);
                     }
                 } catch (SQLException e) {
-                    System.err.println("SQL THROW" + e);
+                    LOGGER.error("SQL THROW" + e);
                 }
             } else {
                 c.getSession().write(MaplePacketCreator.buddylistMessage((byte) 11));
@@ -229,7 +213,7 @@ public class BuddyListHandler {
             c.getSession().write(MaplePacketCreator.updateBuddylist(c.getPlayer().getBuddylist().getBuddies()));
             nextPendingRequest(c);
         } else {
-            System.out.println("Unknown buddylist: " + slea.toString());
+            LOGGER.debug("Unknown buddylist: " + slea.toString());
         }
     }
 

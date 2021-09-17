@@ -1,130 +1,120 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.login;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import database.DatabaseConnection;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import handling.MapleServerHandler;
 import handling.mina.MapleCodecFactory;
-import java.rmi.NotBoundException;
-import java.util.HashSet;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
-import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.service.IoAcceptor;
-import org.apache.mina.core.session.IoSession;
-
-
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
-import server.ServerProperties;
+import org.apache.mina.util.ConcurrentHashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Triple;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Singleton
 public class LoginServer {
 
-    public static int PORT = 8484;
-    private static InetSocketAddress InetSocketadd;
-    private static IoAcceptor acceptor;
-    private static Map<Integer, Integer> load = new HashMap<Integer, Integer>();
-    private static String serverName, eventMessage;
-    private static byte flag;
-    private static int maxCharacters, userLimit, usersOn = 0;
-    private static boolean finishedShutdown = true, adminOnly = false;
-    private static final HashMap<Integer, Triple<String, String, Integer>> loginAuth = new HashMap();
-    private static final HashSet<String> loginIPAuth = new HashSet();
-    private static LoginServer instance = new LoginServer();
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginServer.class);
 
-    public static LoginServer getInstance() {
-        return instance;
+    private static final Set<String> LOGIN_IP_AUTH = new ConcurrentHashSet<>();
+    private static final Map<Integer, Triple<String, String, Integer>> LOGIN_AUTH = new ConcurrentHashMap<>();
+
+    private Map<Integer, Integer> load = new HashMap<>();
+
+    private final int port;
+    private final int maxCharacters;
+    private final String serverName;
+    private final boolean adminOnly;
+
+    private final MapleCodecFactory factory;
+    private final MapleServerHandler serverHandler;
+
+    private static int flag;
+    private static int userLimit;
+    private static String eventMessage;
+    private boolean finishedShutdown = true;
+    private int usersOn = 0;
+    private IoAcceptor acceptor;
+
+    @Inject
+    public LoginServer(ServerProperties properties, MapleCodecFactory factory) {
+        LoginServer.flag = properties.getFlag();
+        this.port = properties.getLoginPort();
+        LoginServer.userLimit = properties.getOnlineLimit();
+        this.maxCharacters = properties.getCharactersLimit();
+        this.serverName = properties.getName();
+        LoginServer.eventMessage = properties.getLoginEventMessage();
+        this.adminOnly = properties.isAdminLogin();
+        this.factory = factory;
+        this.serverHandler = new MapleServerHandler();
+        // fixme 循环依赖
+        this.serverHandler.setLoginServer(this);
     }
 
     public static void putLoginAuth(int chrid, String ip, String tempIp, int channel) {
-        loginAuth.put(Integer.valueOf(chrid), new Triple(ip, tempIp, Integer.valueOf(channel)));
-        loginIPAuth.add(ip);
+        LOGIN_AUTH.put(chrid, new Triple<>(ip, tempIp, channel));
+        LOGIN_IP_AUTH.add(ip);
     }
 
     public static Triple<String, String, Integer> getLoginAuth(int chrid) {
-        return (Triple) loginAuth.remove(Integer.valueOf(chrid));
+        return LOGIN_AUTH.remove(chrid);
     }
 
     public static boolean containsIPAuth(String ip) {
-        return loginIPAuth.contains(ip);
+        return LOGIN_IP_AUTH.contains(ip);
     }
 
     public static void removeIPAuth(String ip) {
-        loginIPAuth.remove(ip);
+        LOGIN_IP_AUTH.remove(ip);
     }
 
     public static void addIPAuth(String ip) {
-        loginIPAuth.add(ip);
+        LOGIN_IP_AUTH.add(ip);
     }
 
-    public static final void addChannel(final int channel) {
+    public void addChannel(final int channel) {
         load.put(channel, 0);
     }
 
-    public static final void removeChannel(final int channel) {
+    public void removeChannel(final int channel) {
         load.remove(channel);
     }
 
-    public static final void run_startup_configurations() {
-        userLimit = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.UserLimit"));
-        serverName = ServerProperties.getProperty("ZlhssMS.ServerName");
-        eventMessage = ServerProperties.getProperty("ZlhssMS.EventMessage");
-        flag = Byte.parseByte(ServerProperties.getProperty("ZlhssMS.Flag"));
-        PORT = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.LPort"));
-        adminOnly = Boolean.parseBoolean(ServerProperties.getProperty("ZlhssMS.Admin", "false"));
-        maxCharacters = Integer.parseInt(ServerProperties.getProperty("ZlhssMS.MaxCharacters"));
-
+    public void run_startup_configurations() {
         IoBuffer.setUseDirectBuffer(false);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
         acceptor = new NioSocketAcceptor();
-        acceptor.getFilterChain().addLast("codec", (IoFilter) new ProtocolCodecFilter(new MapleCodecFactory()));
-
-        acceptor.setHandler(new MapleServerHandler(-1, false));
+        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(factory));
+        acceptor.setHandler(serverHandler);
         //acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 30);
         ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
 
         try {
-            acceptor.bind(new InetSocketAddress(PORT));
-            System.out.println("登录器服务器绑定端口：" + PORT);
+            acceptor.bind(new InetSocketAddress(port));
+            LOGGER.info("登录器服务器绑定端口：" + port);
         } catch (IOException e) {
-            System.err.println("Binding to port " + PORT + " failed" + e);
+            LOGGER.error("绑定到端口 " + port + " 失败！", e);
         }
     }
 
-    public static final void shutdown() {
+    public void shutdown() {
         if (finishedShutdown) {
             return;
         }
-        System.out.println("正在关闭登录伺服器...");
- //       acceptor.setCloseOnDeactivation(true);
+        LOGGER.info("正在关闭登录服务器...");
+        //       acceptor.setCloseOnDeactivation(true);
 //        for (IoSession ss : acceptor.getManagedSessions().values()) {
 //            ss.close(true);
 //        }
@@ -132,65 +122,65 @@ public class LoginServer {
         finishedShutdown = true; //nothing. lol
     }
 
-    public static final String getServerName() {
+    public String getServerName() {
         return serverName;
     }
 
-    public static final String getEventMessage() {
+    public static String getEventMessage() {
         return eventMessage;
     }
 
-    public static final byte getFlag() {
+    public static int getFlag() {
         return flag;
     }
 
-    public static final int getMaxCharacters() {
+    public int getMaxCharacters() {
         return maxCharacters;
     }
 
-    public static final Map<Integer, Integer> getLoad() {
+    public Map<Integer, Integer> getLoad() {
         return load;
     }
 
-    public static void setLoad(final Map<Integer, Integer> load_, final int usersOn_) {
+    public void setLoad(final Map<Integer, Integer> load_, final int usersOn_) {
         load = load_;
         usersOn = usersOn_;
     }
 
-    public static final void setEventMessage(final String newMessage) {
+    public void setEventMessage(final String newMessage) {
         eventMessage = newMessage;
     }
 
-    public static final void setFlag(final byte newflag) {
+    public void setFlag(int newflag) {
         flag = newflag;
     }
 
-    public static final int getUserLimit() {
+    public static int getUserLimit() {
         return userLimit;
-        //  return Integer.parseInt(ServerProperties.getProperty("ZlhssMS.UserLimit"));
+        //  return Integer.parseInt(ServerProperties.getProperty("randall.UserLimit"));
     }
 
-    public static final int getUsersOn() {
+    public int getUsersOn() {
         return usersOn;
     }
 
-    public static final void setUserLimit(final int newLimit) {
+    public static void setUserLimit(final int newLimit) {
         userLimit = newLimit;
     }
 
-    public static final int getNumberOfSessions() {
+    public int getNumberOfSessions() {
         return acceptor.getManagedSessions().size();
     }
 
-    public static final boolean isAdminOnly() {
+    public boolean isAdminOnly() {
         return adminOnly;
     }
 
-    public static final boolean isShutdown() {
+    public boolean isShutdown() {
         return finishedShutdown;
     }
 
-    public static final void setOn() {
+    public void setOn() {
         finishedShutdown = false;
     }
 }

@@ -1,6 +1,8 @@
 package handling.channel.handler;
 
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.maps.AnimatedMapleMapObject;
 import server.movement.*;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -9,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MovementParse {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MovementParse.class);
 
     //1 = player, 2 = mob, 3 = pet, 4 = summon, 5 = dragon
     public static final List<LifeMovementFragment> parseMovement(final SeekableLittleEndianAccessor lea, int kind) {
@@ -166,12 +170,12 @@ public class MovementParse {
                 case 18:
                 case 19:
                 default:
-                    System.out.println("移动类型: " + kind + ", 剩下的 : " + (numCommands - res.size()) + " 新的移动类型 ID : " + command + ", 封包 : " + lea.toString(true));
+                    LOGGER.debug("移动类型: " + kind + ", 剩下的 : " + (numCommands - res.size()) + " 新的移动类型 ID : " + command + ", 封包 : " + lea.toString(true));
                     return null;
             }
         }
         if (numCommands != res.size()) {
-            System.out.println("error in movement");
+            LOGGER.debug("error in movement");
             return null; // Probably hack
         }
         return res;

@@ -1,35 +1,21 @@
 package client;
 
-import com.github.mrzhqiang.maplestory.skill.Jobs;
-import com.github.mrzhqiang.maplestory.skill.Skills;
+import com.github.mrzhqiang.maplestory.util.Jobs;
+import com.github.mrzhqiang.maplestory.util.Skills;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
-import com.google.common.base.Stopwatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public final class SkillFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SkillFactory.class);
-
     private static final Map<Integer, ISkill> SKILL_CACHE = new HashMap<>();
     private static final Map<Integer, List<Integer>> SKILL_JOB_CACHE = new HashMap<>();
     private static final Map<Integer, SummonSkillEntry> SUMMON_SKILL_INFORMATION = new HashMap<>();
 
-    public static ISkill getSkill(Integer id) {
-        if (id == null) {
-            return null;
-        }
-
-        if (!SKILL_CACHE.isEmpty()) {
-            return SKILL_CACHE.get(id);
-        }
-
-        Stopwatch started = Stopwatch.createStarted();
+    public static void init() {
         WzData.SKILL.directory().fileStream()
                 .filter(it -> it.name().length() <= 12)
                 .map(WzFile::content)
@@ -52,7 +38,13 @@ public final class SkillFactory {
                                 SUMMON_SKILL_INFORMATION.put(skillId, sse);
                             });
                 }));
-        LOGGER.info("Skill cache 用时：{}", started.stop());
+    }
+
+    public static ISkill getSkill(Integer id) {
+        if (id == null) {
+            return null;
+        }
+
         return SKILL_CACHE.get(id);
     }
 
@@ -75,11 +67,11 @@ public final class SkillFactory {
         }
     }
 
-    public static final List<Integer> getSkillsByJob(final int jobId) {
+    public static List<Integer> getSkillsByJob(Integer jobId) {
         return SKILL_JOB_CACHE.get(jobId);
     }
 
-    public static final String getSkillName(final int id) {
+    public static String getSkillName(Integer id) {
         ISkill skil = getSkill(id);
         if (skil != null) {
             return skil.getName();
@@ -87,11 +79,11 @@ public final class SkillFactory {
         return null;
     }
 
-    public static final SummonSkillEntry getSummonData(final int skillid) {
+    public static SummonSkillEntry getSummonData(Integer skillid) {
         return SUMMON_SKILL_INFORMATION.get(skillid);
     }
 
-    public static final Collection<ISkill> getAllSkills() {
+    public static Collection<ISkill> getAllSkills() {
         return SKILL_CACHE.values();
     }
 }

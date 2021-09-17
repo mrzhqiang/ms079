@@ -4,6 +4,8 @@ import client.*;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.Randomizer;
@@ -18,8 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class MapleQuestAction
-        implements Serializable {
+public class MapleQuestAction implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleQuestAction.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
     private MapleQuestActionType type;
@@ -190,7 +193,7 @@ public class MapleQuestAction
                         try {
                             MapleInventoryManipulator.removeById(c.getClient(), GameConstants.getInventoryType(id), id, count * -1, true, false);
                         } catch (InventoryException ie) {
-                            System.err.println("[h4x] Completing a quest without meeting the requirements" + ie);
+                            LOGGER.error("[h4x] Completing a quest without meeting the requirements" + ie);
                         }
                         c.getClient().getSession().write(MaplePacketCreator.getShowItemGain(id, count, true));
                     } else {
@@ -788,7 +791,7 @@ public class MapleQuestAction implements Serializable {
                             MapleInventoryManipulator.removeById(c.getClient(), GameConstants.getInventoryType(id), id, (count * -1), true, false);
                         } catch (InventoryException ie) {
                             // it's better to catch this here so we'll atleast try to remove the other items
-                            System.err.println("[h4x] Completing a quest without meeting the requirements" + ie);
+                            LOGGER.error("[h4x] Completing a quest without meeting the requirements" + ie);
                         }
                         c.getClient().getSession().write(MaplePacketCreator.getShowItemGain(id, count, true));
                     } else { // add items
@@ -865,7 +868,7 @@ public class MapleQuestAction implements Serializable {
                 MapleItemInformationProvider.getInstance().getItemEffect(tobuff).applyTo(c);
                 break;
             case infoNumber: {
-//		System.out.println("quest : "+MapleDataTool.getInt(data, 0)+"");
+//		LOGGER.debug("quest : "+MapleDataTool.getInt(data, 0)+"");
 //		MapleQuest.getInstance(MapleDataTool.getInt(data, 0)).forceComplete(c, 0);
                 break;
             }
@@ -1103,7 +1106,7 @@ public class MapleQuestAction implements Serializable {
                 break;
             }
             case infoNumber: {
-//		System.out.println("quest : "+MapleDataTool.getInt(data, 0)+"");
+//		LOGGER.debug("quest : "+MapleDataTool.getInt(data, 0)+"");
 //		MapleQuest.getInstance(MapleDataTool.getInt(data, 0)).forceComplete(c, 0);
                 break;
             }

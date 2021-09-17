@@ -3,12 +3,16 @@ package tools.wztosql;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Collections;
 import java.util.Optional;
 
 public class WzStringDumper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WzStringDumper.class);
 
     public static void main(String[] args)
             throws FileNotFoundException, IOException {
@@ -54,7 +58,7 @@ public class WzStringDumper {
         skillTxt.createNewFile();
         npcTxt.createNewFile();
 
-        System.out.println("提取 Cash.img 數據...");
+        LOGGER.debug("提取 Cash.img 數據...");
         PrintWriter writer = new PrintWriter(new FileOutputStream(cashTxt));
         for (WzElement<?> child : cash.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -71,9 +75,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Cash.img 提取完成.");
+        LOGGER.debug("Cash.img 提取完成.");
 
-        System.out.println("提取 Consume.img 數據...");
+        LOGGER.debug("提取 Consume.img 數據...");
         writer = new PrintWriter(new FileOutputStream(useTxt));
         for (WzElement<?> child : consume.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -90,14 +94,14 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Consume.img 提取完成.");
+        LOGGER.debug("Consume.img 提取完成.");
 
-        System.out.println("提取 Eqp.img 數據...");
+        LOGGER.debug("提取 Eqp.img 數據...");
         /*
          * 9800
          */
         for (WzElement<?> child : eqp.map(WzElement::children).orElse(Collections.emptyList())) {
-            System.out.println("提取 " + child.name() + " 數據...");
+            LOGGER.debug("提取 " + child.name() + " 數據...");
             File eqpFile = new File(output + "\\Equip\\" + child.name() + ".txt");
             eqpFile.createNewFile();
             PrintWriter eqpWriter = new PrintWriter(new FileOutputStream(eqpFile));
@@ -116,11 +120,11 @@ public class WzStringDumper {
             }
             eqpWriter.flush();
             eqpWriter.close();
-            System.out.println(child.name() + " 提取完成.");
+            LOGGER.debug(child.name() + " 提取完成.");
         }
-        System.out.println("Eqp.img 提取完成.");
+        LOGGER.debug("Eqp.img 提取完成.");
 
-        System.out.println("提取 Etc.img 數據...");
+        LOGGER.debug("提取 Etc.img 數據...");
         writer = new PrintWriter(new FileOutputStream(etcTxt));
         for (WzElement<?> child : etc.map(WzElement::children).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -137,9 +141,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Etc.img 提取完成.");
+        LOGGER.debug("Etc.img 提取完成.");
 
-        System.out.println("提取 Ins.img 數據...");
+        LOGGER.debug("提取 Ins.img 數據...");
         writer = new PrintWriter(new FileOutputStream(insTxt));
         for (WzElement<?> child : ins.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -156,9 +160,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Ins.img 提取完成.");
+        LOGGER.debug("Ins.img 提取完成.");
 
-        System.out.println("提取 Pet.img 數據...");
+        LOGGER.debug("提取 Pet.img 數據...");
         writer = new PrintWriter(new FileOutputStream(petTxt));
         for (WzElement<?> child : pet.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -175,9 +179,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Pet.img 提取完成.");
+        LOGGER.debug("Pet.img 提取完成.");
 
-        System.out.println("提取 Map.img 數據...");
+        LOGGER.debug("提取 Map.img 數據...");
         writer = new PrintWriter(new FileOutputStream(mapTxt));
         for (WzElement<?> child : map.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             writer.println(child.name());
@@ -199,9 +203,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Map.img 提取完成.");
+        LOGGER.debug("Map.img 提取完成.");
 
-        System.out.println("提取 Mob.img 數據...");
+        LOGGER.debug("提取 Mob.img 數據...");
         writer = new PrintWriter(new FileOutputStream(mobTxt));
         for (WzElement<?> child : mob.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -213,9 +217,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Mob.img 提取完成.");
+        LOGGER.debug("Mob.img 提取完成.");
 
-        System.out.println("提取 Skill.img 數據...");
+        LOGGER.debug("提取 Skill.img 數據...");
         writer = new PrintWriter(new FileOutputStream(skillTxt));
         for (WzElement<?> child : skill.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -235,9 +239,9 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Skill.img 提取完成.");
+        LOGGER.debug("Skill.img 提取完成.");
 
-        System.out.println("提取 Npc.img 數據...");
+        LOGGER.debug("提取 Npc.img 數據...");
         writer = new PrintWriter(new FileOutputStream(npcTxt));
         for (WzElement<?> child : npc.map(WzFile::contentChildren).orElse(Collections.emptyList())) {
             WzElement<?> nameData = child.find("name");
@@ -249,6 +253,6 @@ public class WzStringDumper {
         }
         writer.flush();
         writer.close();
-        System.out.println("Npc.img 提取完成.");
+        LOGGER.debug("Npc.img 提取完成.");
     }
 }

@@ -6,6 +6,8 @@ import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.quest.MapleQuestActionType;
 import server.quest.MapleQuestRequirementType;
 import tools.Pair;
@@ -20,6 +22,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DumpQuests {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DumpQuests.class);
 
     protected boolean update;
     protected int id = 0;
@@ -40,7 +44,7 @@ public class DumpQuests {
         try {
             dumpQuests(psai, psas, psaq, ps, psr, psq, psa);
         } catch (Exception e) {
-            System.out.println(id + " quest.");
+            LOGGER.debug(id + " quest.");
             e.printStackTrace();
         } finally {
             psai.executeBatch();
@@ -85,9 +89,9 @@ public class DumpQuests {
             delete("DELETE FROM wz_questactquestdata");
             delete("DELETE FROM wz_questreqdata");
             delete("DELETE FROM wz_questpartydata");
-            System.out.println("Deleted wz_questdata successfully.");
+            LOGGER.debug("Deleted wz_questdata successfully.");
         }
-        System.out.println("Adding into wz_questdata.....");
+        LOGGER.debug("Adding into wz_questdata.....");
         AtomicInteger uniqueid = new AtomicInteger();
         WzData.QUEST.directory().findFile("Check.img")
                 .map(WzFile::content)
@@ -338,11 +342,11 @@ public class DumpQuests {
 
                                             }));
                                 });
-                        System.out.println("Added quest: " + id);
+                        LOGGER.debug("Added quest: " + id);
                     } catch (Exception ignore) {
                     }
                 }));
-        System.out.println("任务数据提取完成!");
+        LOGGER.debug("任务数据提取完成!");
     }
 
     public int currentId() {
@@ -361,14 +365,14 @@ public class DumpQuests {
         int currentQuest = 0;
         try {
             final DumpQuests dq = new DumpQuests(update);
-            System.out.println("Dumping quests");
+            LOGGER.debug("Dumping quests");
             dq.dumpQuests();
 //            hadError |= dq.isHadError();
             currentQuest = dq.currentId();
         } catch (Exception e) {
             hadError = true;
             e.printStackTrace();
-            System.out.println(currentQuest + " quest.");
+            LOGGER.debug(currentQuest + " quest.");
         }
         long endTime = System.currentTimeMillis();
         double elapsedSeconds = (endTime - startTime) / 1000.0;
@@ -379,6 +383,6 @@ public class DumpQuests {
         if (hadError) {
             withErrors = " with errors";
         }
-        System.out.println("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
+        LOGGER.debug("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
     }
 }

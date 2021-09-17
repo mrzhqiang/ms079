@@ -7,6 +7,8 @@ import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import database.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DumpMobSkills {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DumpMobSkills.class);
 
     protected boolean hadError = false;
     protected boolean update;
@@ -35,8 +39,7 @@ public class DumpMobSkills {
             try {
                 dumpMobSkills(ps);
             } catch (Exception e) {
-                System.out.println(id + " skill.");
-                System.out.println(e);
+                LOGGER.debug(id + " skill.", e);
                 hadError = true;
             } finally {
                 ps.executeBatch();
@@ -64,9 +67,9 @@ public class DumpMobSkills {
     public void dumpMobSkills(PreparedStatement ps) throws Exception {
         if (!update) {
             delete("DELETE FROM wz_mobskilldata");
-            System.out.println("Deleted wz_mobskilldata successfully.");
+            LOGGER.debug("Deleted wz_mobskilldata successfully.");
         }
-        System.out.println("Adding into wz_mobskilldata.....");
+        LOGGER.debug("Adding into wz_mobskilldata.....");
         WzData.SKILL.directory().findFile("MobSkill.img")
                 .map(WzFile::content)
                 .map(WzElement::childrenStream)
@@ -124,13 +127,13 @@ public class DumpMobSkills {
                                         ps.setInt(16, 0);
                                     }
                                     ps.setByte(17, (byte) (Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0));
-                                    System.out.println("Added skill: " + id + " level " + lvl);
+                                    LOGGER.debug("Added skill: " + id + " level " + lvl);
                                     ps.addBatch();
                                 } catch (Exception ignore) {
                                 }
                             }));
                 }));
-        System.out.println("Done wz_mobskilldata...");
+        LOGGER.debug("Done wz_mobskilldata...");
     }
 
     public int currentId() {
@@ -149,14 +152,13 @@ public class DumpMobSkills {
         int currentQuest = 0;
         try {
             final DumpMobSkills dq = new DumpMobSkills(update);
-            System.out.println("Dumping mobskills");
+            LOGGER.debug("Dumping mobskills");
             dq.dumpMobSkills();
             hadError |= dq.isHadError();
             currentQuest = dq.currentId();
         } catch (Exception e) {
             hadError = true;
-            System.out.println(e);
-            System.out.println(currentQuest + " skill.");
+            LOGGER.debug(currentQuest + " skill.", e);
         }
         long endTime = System.currentTimeMillis();
         double elapsedSeconds = (endTime - startTime) / 1000.0;
@@ -167,6 +169,6 @@ public class DumpMobSkills {
         if (hadError) {
             withErrors = " with errors";
         }
-        System.out.println("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
+        LOGGER.debug("Finished" + withErrors + " in " + elapsedMinutes + " minutes " + elapsedSecs + " seconds");
     }
 }
