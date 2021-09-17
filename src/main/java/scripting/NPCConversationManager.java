@@ -38,6 +38,8 @@ import client.inventory.ItemFlag;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import client.inventory.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleCarnivalParty;
 import server.Randomizer;
 import server.MapleInventoryManipulator;
@@ -75,6 +77,8 @@ import server.maps.*;
 import tools.StringUtil;
 
 public class NPCConversationManager extends AbstractPlayerInteraction {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NPCConversationManager.class);
 
     private MapleClient c;
     private int npc, questid;
@@ -951,7 +955,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             ps.close();
 
         } catch (SQLException ex) {
-            System.err.println("Error gaining mesos in hired merchant" + ex);
+            LOGGER.error("Error gaining mesos in hired merchant" + ex);
         }
         c.getPlayer().gainMeso((int) mesos, true);
     }
@@ -979,7 +983,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             rs.close();
             ps.close();
         } catch (SQLException ex) {
-            System.err.println("Error gaining mesos in hired merchant" + ex);
+            LOGGER.error("Error gaining mesos in hired merchant" + ex);
         }
         return mesos;
     }

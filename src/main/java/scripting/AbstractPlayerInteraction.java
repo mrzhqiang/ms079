@@ -25,6 +25,7 @@ import KinMS.db.CherryMScustomEventFactory;
 import java.awt.Point;
 import java.util.List;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.Timer.*;
 import client.inventory.Equip;
 import client.SkillFactory;
@@ -136,7 +137,7 @@ public abstract class AbstractPlayerInteraction {
     public final void warp(final int map, final int portal) {
         final MapleMap mapz = getWarpMap(map);
         if (portal != 0 && map == c.getPlayer().getMapId()) { //test
-            final Point portalPos = new Point(c.getPlayer().getMap().getPortal(portal).getPosition());
+            final Vector portalPos = Vector.of(c.getPlayer().getMap().getPortal(portal).getPosition());
             /*
              * if (portalPos.distanceSq(getPlayer().getPosition()) < 90000.0) {
              * //estimation
@@ -164,7 +165,7 @@ public abstract class AbstractPlayerInteraction {
             portal = mapz.getSnowballPortal();
         }
         if (map == c.getPlayer().getMapId()) { //test
-            final Point portalPos = new Point(c.getPlayer().getMap().getPortal(portal).getPosition());
+            final Vector portalPos = Vector.of(c.getPlayer().getMap().getPortal(portal).getPosition());
             /*
              * if (portalPos.distanceSq(getPlayer().getPosition()) < 90000.0) {
              * //estimation c.getPlayer().checkFollow();
@@ -246,38 +247,38 @@ public abstract class AbstractPlayerInteraction {
      * 普通刷怪
      */
     public void spawnMonster(final int id, final int qty) {
-        spawnMob(id, qty, new Point(c.getPlayer().getPosition()));
+        spawnMob(id, qty, Vector.of(c.getPlayer().getPosition()));
     }
 
     public final void spawnMobOnMap(final int id, final int qty, final int x, final int y, final int map) {
         for (int i = 0; i < qty; i++) {
-            getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), new Point(x, y));
+            getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), Vector.of(x, y));
         }
     }
 
     public final void spawnMobOnMap(final int id, final int qty, final int x, final int y, final int map, final int hp) {
         for (int i = 0; i < qty; i++) {
-            getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), new Point(x, y), hp);
+            getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), Vector.of(x, y), hp);
         }
     }
 
     public final void spawnMob(final int id, final int qty, final int x, final int y) {
-        spawnMob(id, qty, new Point(x, y));
+        spawnMob(id, qty, Vector.of(x, y));
     }
 
     public final void spawnMob_map(final int id, int mapid, final int x, final int y) {
-        spawnMob_map(id, mapid, new Point(x, y));
+        spawnMob_map(id, mapid, Vector.of(x, y));
     }
 
-    public final void spawnMob_map(final int id, final int mapid, final Point pos) {
+    public final void spawnMob_map(final int id, final int mapid, final Vector pos) {
         c.getChannelServer().getMapFactory().getMap(mapid).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), pos);
     }
 
     public final void spawnMob(final int id, final int x, final int y) {
-        spawnMob(id, 1, new Point(x, y));
+        spawnMob(id, 1, Vector.of(x, y));
     }
 
-    public final void spawnMob(final int id, final int qty, final Point pos) {
+    public final void spawnMob(final int id, final int qty, final Vector pos) {
         for (int i = 0; i < qty; i++) {
             c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), pos);
         }
@@ -458,10 +459,10 @@ public abstract class AbstractPlayerInteraction {
     }
 
     public final void spawnNpc(final int npcId, final int x, final int y) {
-        c.getPlayer().getMap().spawnNpc(npcId, new Point(x, y));
+        c.getPlayer().getMap().spawnNpc(npcId, Vector.of(x, y));
     }
 
-    public final void spawnNpc(final int npcId, final Point pos) {
+    public final void spawnNpc(final int npcId, final Vector pos) {
         c.getPlayer().getMap().spawnNpc(npcId, pos);
     }
 
@@ -1343,21 +1344,21 @@ public abstract class AbstractPlayerInteraction {
     }
 
     public void spawnMonster(int id) {
-        spawnMonster(id, 1, new Point(getPlayer().getPosition()));
+        spawnMonster(id, 1, Vector.of(getPlayer().getPosition()));
     }
 
     // summon one monster, remote location
     public void spawnMonster(int id, int x, int y) {
-        spawnMonster(id, 1, new Point(x, y));
+        spawnMonster(id, 1, Vector.of(x, y));
     }
 
     // multiple monsters, remote location
     public void spawnMonster(int id, int qty, int x, int y) {
-        spawnMonster(id, qty, new Point(x, y));
+        spawnMonster(id, qty, Vector.of(x, y));
     }
 
     // handler for all spawnMonster
-    public void spawnMonster(int id, int qty, Point pos) {
+    public void spawnMonster(int id, int qty, Vector pos) {
         for (int i = 0; i < qty; i++) {
             getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), pos);
         }
@@ -1516,10 +1517,10 @@ public abstract class AbstractPlayerInteraction {
     }
 
     public void spawnMobLevel(int mobId, int quantity, int level, int x, int y) {
-        spawnMobLevel(mobId, quantity, level, new Point(x, y));
+        spawnMobLevel(mobId, quantity, level, Vector.of(x, y));
     }
 
-    public void spawnMobLevel(int mobId, int quantity, int level, Point pos) {
+    public void spawnMobLevel(int mobId, int quantity, int level, Vector pos) {
         for (int i = 0; i < quantity; i++) {
             MapleMonster mob = MapleLifeFactory.getMonster(mobId);
             if (mob == null || !mob.getStats().isChangeable()) {
@@ -1545,10 +1546,10 @@ public abstract class AbstractPlayerInteraction {
     }
 
     public void spawnMobStats(int mobId, int quantity, long newhp, int newExp, int x, int y) {
-        spawnMobStats(mobId, quantity, newhp, newExp, new Point(x, y));
+        spawnMobStats(mobId, quantity, newhp, newExp, Vector.of(x, y));
     }
 
-    public void spawnMobStats(int mobId, int quantity, long newhp, int newExp, Point pos) {
+    public void spawnMobStats(int mobId, int quantity, long newhp, int newExp, Vector pos) {
         for (int i = 0; i < quantity; i++) {
             MapleMonster mob = MapleLifeFactory.getMonster(mobId);
             if (mob == null) {
@@ -1575,10 +1576,10 @@ public abstract class AbstractPlayerInteraction {
     }
 
     public void spawnMobMultipler(int mobId, int quantity, int multipler, int x, int y) {
-        spawnMobMultipler(mobId, quantity, multipler, new Point(x, y));
+        spawnMobMultipler(mobId, quantity, multipler, Vector.of(x, y));
     }
 
-    public void spawnMobMultipler(int mobId, int quantity, int multipler, Point pos) {
+    public void spawnMobMultipler(int mobId, int quantity, int multipler, Vector pos) {
         for (int i = 0; i < quantity; i++) {
             MapleMonster mob = MapleLifeFactory.getMonster(mobId);
             if (mob == null) {

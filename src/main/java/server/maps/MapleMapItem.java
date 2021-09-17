@@ -1,32 +1,13 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.maps;
 
-import java.awt.Point;
-import client.inventory.IItem;
 import client.MapleCharacter;
 import client.MapleClient;
+import client.inventory.IItem;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import tools.MaplePacketCreator;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import tools.MaplePacketCreator;
 
 public class MapleMapItem extends AbstractMapleMapObject {
 
@@ -38,7 +19,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
     protected long nextExpiry = 0, nextFFA = 0;
     private ReentrantLock lock = new ReentrantLock();
 
-    public MapleMapItem(IItem item, Point position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop) {
+    public MapleMapItem(IItem item, Vector position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop) {
         setPosition(position);
         this.item = item;
         this.dropper = dropper;
@@ -47,7 +28,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
         this.playerDrop = playerDrop;
     }
 
-    public MapleMapItem(IItem item, Point position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop, int questid) {
+    public MapleMapItem(IItem item, Vector position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop, int questid) {
         setPosition(position);
         this.item = item;
         this.dropper = dropper;
@@ -57,7 +38,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
         this.questid = questid;
     }
 
-    public MapleMapItem(int meso, Point position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop) {
+    public MapleMapItem(int meso, Vector position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop) {
         setPosition(position);
         this.item = null;
         this.dropper = dropper;
@@ -67,7 +48,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
         this.playerDrop = playerDrop;
     }
 
-    public MapleMapItem(Point position, IItem item) {
+    public MapleMapItem(Vector position, IItem item) {
         setPosition(position);
         this.item = item;
         this.character_ownerid = 0;

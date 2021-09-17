@@ -1,1 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><imgdir name="Swindle.img"><imgdir name="0"><imgdir name="word"></imgdir><imgdir name="warn"></imgdir></imgdir></imgdir>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<imgdir name="Swindle.img">
+    <imgdir name="0">
+        <imgdir name="word"></imgdir>
+        <imgdir name="warn"></imgdir>
+    </imgdir>
+</imgdir>

@@ -1,56 +1,41 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.maps;
 
-import java.awt.Point;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MapleFootholdTree {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleFootholdTree.class);
+
     private MapleFootholdTree nw = null;
     private MapleFootholdTree ne = null;
     private MapleFootholdTree sw = null;
     private MapleFootholdTree se = null;
-    private List<MapleFoothold> footholds = new LinkedList<MapleFoothold>();
-    private Point p1;
-    private Point p2;
-    private Point center;
+    private List<MapleFoothold> footholds = new LinkedList<>();
+    private Vector p1;
+    private Vector p2;
+    private Vector center;
     private int depth = 0;
     private static final byte maxDepth = 8;
     private int maxDropX;
     private int minDropX;
 
-    public MapleFootholdTree(final Point p1, final Point p2) {
+    public MapleFootholdTree(final Vector p1, final Vector p2) {
         this.p1 = p1;
         this.p2 = p2;
-        center = new Point((p2.x - p1.x) / 2, (p2.y - p1.y) / 2);
+        center = Vector.of((p2.x - p1.x) / 2, (p2.y - p1.y) / 2);
     }
 
-    public MapleFootholdTree(final Point p1, final Point p2, final int depth) {
+    public MapleFootholdTree(final Vector p1, final Vector p2, final int depth) {
         this.p1 = p1;
         this.p2 = p2;
         this.depth = depth;
-        center = new Point((p2.x - p1.x) / 2, (p2.y - p1.y) / 2);
+        center = Vector.of((p2.x - p1.x) / 2, (p2.y - p1.y) / 2);
     }
 
     public final void insert(final MapleFoothold f) {
@@ -73,8 +58,8 @@ public class MapleFootholdTree {
         } else {
             if (nw == null) {
                 nw = new MapleFootholdTree(p1, center, depth + 1);
-                ne = new MapleFootholdTree(new Point(center.x, p1.y), new Point(p2.x, center.y), depth + 1);
-                sw = new MapleFootholdTree(new Point(p1.x, center.y), new Point(center.x, p2.y), depth + 1);
+                ne = new MapleFootholdTree(Vector.of(center.x, p1.y), Vector.of(p2.x, center.y), depth + 1);
+                sw = new MapleFootholdTree(Vector.of(p1.x, center.y), Vector.of(center.x, p2.y), depth + 1);
                 se = new MapleFootholdTree(center, p2, depth + 1);
             }
             if (f.getX2() <= center.x && f.getY2() <= center.y) {
@@ -89,11 +74,11 @@ public class MapleFootholdTree {
         }
     }
 
-    private final List<MapleFoothold> getRelevants(final Point p) {
-        return getRelevants(p, new LinkedList<MapleFoothold>());
+    private List<MapleFoothold> getRelevants(Vector p) {
+        return getRelevants(p, new LinkedList<>());
     }
 
-    private final List<MapleFoothold> getRelevants(final Point p, final List<MapleFoothold> list) {
+    private List<MapleFoothold> getRelevants(Vector p, List<MapleFoothold> list) {
         list.addAll(footholds);
         if (nw != null) {
             if (p.x <= center.x && p.y <= center.y) {
@@ -109,10 +94,10 @@ public class MapleFootholdTree {
         return list;
     }
 
-    private final MapleFoothold findWallR(final Point p1, final Point p2) {
+    private final MapleFoothold findWallR(final Vector p1, final Vector p2) {
         MapleFoothold ret;
         for (final MapleFoothold f : footholds) {
-            //if (f.isWall()) System.out.println(f.getX1() + " " + f.getX2());
+            //if (f.isWall()) LOGGER.debug(f.getX1() + " " + f.getX2());
             if (f.isWall() && f.getX1() >= p1.x && f.getX1() <= p2.x && f.getY1() >= p1.y && f.getY2() <= p1.y) {
                 return f;
             }
@@ -146,7 +131,7 @@ public class MapleFootholdTree {
         return null;
     }
 
-    public final MapleFoothold findWall(final Point p1, final Point p2) {
+    public final MapleFoothold findWall(final Vector p1, final Vector p2) {
         if (p1.y != p2.y) {
             throw new IllegalArgumentException();
         }
@@ -165,7 +150,7 @@ public class MapleFootholdTree {
         for (final MapleFoothold fh2 : footholds) { // To
             if (fh2.getX1() <= tox && fh2.getX2() >= tox && fh2.getY1() <= toy && fh2.getY2() >= toy) { // monster pos is within
                 if (!(fhdata.getId() == fh2.getId() || fh2.getId() == fhdata.getNext() || fh2.getId() == fhdata.getPrev())) {
-                    System.out.println("Couldn't find the correct pos for next/prev");
+                    LOGGER.debug("Couldn't find the correct pos for next/prev");
                     return false;
                 }
                 return true;
@@ -174,11 +159,11 @@ public class MapleFootholdTree {
         return false;
     }
 
-    public final MapleFoothold findBelow(final Point p) {
-        final List<MapleFoothold> relevants = getRelevants(p);
+    public final MapleFoothold findBelow(final Vector p) {
+        List<MapleFoothold> relevants = getRelevants(p);
         // find fhs with matching x coordinates
-        final List<MapleFoothold> xMatches = new LinkedList<MapleFoothold>();
-        for (final MapleFoothold fh : relevants) {
+        List<MapleFoothold> xMatches = new LinkedList<>();
+        for (MapleFoothold fh : relevants) {
             if (fh.getX1() <= p.x && fh.getX2() >= p.x) {
                 if (fh.getX1() == fh.getX2()) {
                     continue;
@@ -187,15 +172,15 @@ public class MapleFootholdTree {
             }
         }
         Collections.sort(xMatches);//这句话报错了。怪物移动的
-        for (final MapleFoothold fh : xMatches) {
+        for (MapleFoothold fh : xMatches) {
             if (!fh.isWall() && fh.getY1() != fh.getY2()) {
                 int calcY;
-                final double s1 = Math.abs(fh.getY2() - fh.getY1());
-                final double s2 = Math.abs(fh.getX2() - fh.getX1());
-                final double s4 = Math.abs(p.x - fh.getX1());
-                final double alpha = Math.atan(s2 / s1);
-                final double beta = Math.atan(s1 / s2);
-                final double s5 = Math.cos(alpha) * (s4 / Math.cos(beta));
+                double s1 = Math.abs(fh.getY2() - fh.getY1());
+                double s2 = Math.abs(fh.getX2() - fh.getX1());
+                double s4 = Math.abs(p.x - fh.getX1());
+                double alpha = Math.atan(s2 / s1);
+                double beta = Math.atan(s1 / s2);
+                double s5 = Math.cos(alpha) * (s4 / Math.cos(beta));
                 if (fh.getY2() < fh.getY1()) {
                     calcY = fh.getY1() - (int) s5;
                 } else {

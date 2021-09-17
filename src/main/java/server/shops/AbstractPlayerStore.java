@@ -1,52 +1,36 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.shops;
 
-import constants.GameConstants;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.Connection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.lang.ref.WeakReference;
-import handling.world.World;
-import client.inventory.IItem;
-import client.inventory.ItemLoader;
 import client.MapleCharacter;
 import client.MapleClient;
+import client.inventory.IItem;
+import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
+import constants.GameConstants;
 import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.channel.ChannelServer;
-import java.sql.*;
-import java.util.ArrayList;
+import handling.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.maps.AbstractMapleMapObject;
 import server.maps.MapleMap;
 import server.maps.MapleMapObjectType;
 import tools.Pair;
 import tools.packet.PlayerShopPacket;
 
+import java.lang.ref.WeakReference;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class AbstractPlayerStore extends AbstractMapleMapObject implements IMaplePlayerShop {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPlayerStore.class);
 
     protected boolean open = false, available = false;
     protected String ownerName, des, pass;
@@ -156,7 +140,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
             if (!rs.next()) {
                 rs.close();
                 ps.close();
-                System.out.println("[SaveItems] 保存雇佣商店信息出错 - 1");
+                LOGGER.debug("[SaveItems] 保存雇佣商店信息出错 - 1");
                 //  log.error("[SaveItems] 保存雇佣商店信息出错 - 1");
                 throw new RuntimeException("保存雇佣商店信息出错.");
             }
@@ -177,7 +161,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
             ItemLoader.HIRED_MERCHANT.saveItems(iters, packageid, owneraccount, ownerId);
             return true;
         } catch (Exception se) {
-            System.out.println("[SaveItems] 保存雇佣商店信息出错 - 2 " + se);
+            LOGGER.debug("[SaveItems] 保存雇佣商店信息出错 - 2 " + se);
             //  log.error("[SaveItems] 保存雇佣商店信息出错 - 2 " + se);
         }
         return false;
@@ -300,7 +284,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
 
     @Override
     public void addItem(MaplePlayerShopItem item) {
-        //System.out.println("Adding item ... 2");
+        //LOGGER.debug("Adding item ... 2");
         items.add(item);
     }
 

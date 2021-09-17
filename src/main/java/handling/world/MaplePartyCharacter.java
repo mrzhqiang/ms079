@@ -25,6 +25,7 @@ import java.util.List;
 import java.io.Serializable;
 
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.maps.MapleDoor;
 
 public class MaplePartyCharacter implements Serializable {
@@ -39,7 +40,7 @@ public class MaplePartyCharacter implements Serializable {
     private int doorTown = 999999999;
     private int doorTarget = 999999999;
     private int doorSkill = 0;
-    private Point doorPosition = new Point(0, 0);
+    private Vector doorPosition = Vector.empty();
     private boolean online;
 
     public MaplePartyCharacter(MapleCharacter maplechar) {
@@ -60,7 +61,7 @@ public class MaplePartyCharacter implements Serializable {
             this.doorSkill = door.getSkill();
             this.doorPosition = door.getTargetPosition();
         } else {
-            this.doorPosition = new Point(maplechar.getPosition());
+            this.doorPosition = Vector.of(maplechar.getPosition());
         }
     }
 
@@ -113,7 +114,7 @@ public class MaplePartyCharacter implements Serializable {
         return doorSkill;
     }
 
-    public Point getDoorPosition() {
+    public Vector getDoorPosition() {
         return doorPosition;
     }
 

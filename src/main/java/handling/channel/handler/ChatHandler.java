@@ -28,10 +28,14 @@ import handling.channel.ChannelServer;
 import handling.world.MapleMessenger;
 import handling.world.MapleMessengerCharacter;
 import handling.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class ChatHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChatHandler.class);
 
     public static final void GeneralChat(final String text, final byte unk, final MapleClient c, final MapleCharacter chr) {
         if (chr != null) {
@@ -41,7 +45,7 @@ public class ChatHandler {
                     return;
                 }
             } catch (Throwable e) {
-                System.err.println(e);
+                LOGGER.error("", e);
             }
          
             //if (chr != null && !CommandProcessor.processCommand(c, text, CommandType.NORMAL)) {

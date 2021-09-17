@@ -25,12 +25,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Connection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 import java.util.regex.Pattern;
 
 import database.DatabaseConnection;
 
 public class MapleCharacterUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleCharacterUtil.class);
 
     private static final Pattern namePattern = Pattern.compile("[a-zA-Z0-9_-]{3,12}");
     private static final Pattern petPattern = Pattern.compile("[a-zA-Z0-9_-]{4,12}");
@@ -96,7 +101,7 @@ public class MapleCharacterUtil {
 
             return id;
         } catch (SQLException e) {
-            System.err.println("error 'getIdByName' " + e);
+            LOGGER.error("error 'getIdByName' " + e);
         }
         return -1;
     }
@@ -203,7 +208,7 @@ public class MapleCharacterUtil {
             ps.close();
             return -2;
         } catch (SQLException e) {
-            System.err.println("error 'getIdByName' " + e);
+            LOGGER.error("error 'getIdByName' " + e);
             return -2;
         }
     }
@@ -266,7 +271,7 @@ public class MapleCharacterUtil {
             ps.executeUpdate();
             ps.close();
         } catch (SQLException e) {
-            System.err.println("Unable to send note" + e);
+            LOGGER.error("Unable to send note" + e);
         }
     }
 

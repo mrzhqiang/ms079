@@ -140,8 +140,8 @@ public class MapleOxQuiz extends MapleEvent {
     }
 
     private boolean isCorrectAnswer(MapleCharacter chr, int answer) {
-        double x = chr.getPosition().getX();
-        double y = chr.getPosition().getY();
+        double x = chr.getPosition().x;
+        double y = chr.getPosition().y;
         if ((x > -234 && y > -26 && answer == 0) || (x < -234 && y > -26 && answer == 1)) {
             chr.dropMessage(6, "[OX答题活动] 恭喜答对!"); //i think this is its own packet
             return true;

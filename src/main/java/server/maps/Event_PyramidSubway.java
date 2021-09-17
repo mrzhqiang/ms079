@@ -22,6 +22,7 @@ package server.maps;
 
 import client.MapleCharacter;
 import client.MapleQuestStatus;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import java.awt.Point;
@@ -106,13 +107,13 @@ public class Event_PyramidSubway {
             fullUpdate(c, stage);
         }
         if (type != -1 && (stage == 4 || stage == 5)) { //yetis. temporary
-            final Point pos = c.getPosition();
+            final Vector pos = c.getPosition();
             final MapleMap map = c.getMap();
             yetiSchedule = MapTimer.getInstance().register(new Runnable() {
 
                 public void run() {
                     if (map.countMonsterById(9300021) <= (stage == 4 ? 1 : 2)) {
-                        map.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9300021), new Point(pos));
+                        map.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9300021), Vector.of(pos));
                     }
                 }
             }, 10000L);

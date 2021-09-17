@@ -1,40 +1,16 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
-import java.awt.Point;
-import java.util.List;
-
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
 import client.anticheat.CheatingOffense;
 import client.inventory.MapleInventoryType;
-import constants.GameConstants;
-import handling.world.World;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
-import server.maps.MapleMap;
 import server.life.MapleMonster;
 import server.life.MobSkill;
 import server.life.MobSkillFactory;
+import server.maps.MapleMap;
 import server.maps.MapleNodes.MapleNodeInfo;
 import server.movement.AbstractLifeMovement;
 import server.movement.LifeMovement;
@@ -42,38 +18,40 @@ import server.movement.LifeMovementFragment;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
-import tools.packet.MobPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.MobPacket;
+
+import java.util.List;
 
 public class MobHandler {
 
-    public static final void MoveMonster(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void MoveMonster(SeekableLittleEndianAccessor slea, MapleClient c, MapleCharacter chr) {
         if (chr == null || chr.getMap() == null) {
             return; //?
         }
-        final int oid = slea.readInt();
-        final MapleMonster monster = chr.getMap().getMonsterByOid(oid);
+        int oid = slea.readInt();
+        MapleMonster monster = chr.getMap().getMonsterByOid(oid);
 
         if (monster == null) { // movin something which is not a monster
             chr.addMoveMob(oid);
             return;
         }
-        final short moveid = slea.readShort();
-        final boolean useSkill = slea.readByte() > 0;
-        final byte skill = slea.readByte();
-        final int skill1 = slea.readByte() & 0xFF; // unsigned?
-        final int skill2 = slea.readByte();
-        final int skill3 = slea.readByte();
-        final int skill4 = slea.readByte();
+        short moveid = slea.readShort();
+        boolean useSkill = slea.readByte() > 0;
+        byte skill = slea.readByte();
+        int skill1 = slea.readByte() & 0xFF; // unsigned?
+        int skill2 = slea.readByte();
+        int skill3 = slea.readByte();
+        int skill4 = slea.readByte();
         int realskill = 0;
         int level = 0;
 
         if (useSkill) {// && (skill == -1 || skill == 0)) {
-            final byte size = monster.getNoSkills();
+            byte size = monster.getNoSkills();
             boolean used = false;
 
             if (size > 0) {
-                final Pair<Integer, Integer> skillToUse = monster.getSkills().get((byte) Randomizer.nextInt(size));
+                Pair<Integer, Integer> skillToUse = monster.getSkills().get((byte) Randomizer.nextInt(size));
                 realskill = skillToUse.getLeft();
                 level = skillToUse.getRight();
                 // Skill ID and Level
@@ -100,7 +78,7 @@ public class MobHandler {
             }
         }
         slea.read(13);
-        final Point startPos = slea.readPos();
+        final Vector startPos = slea.readPos();
         final List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 2);
 
         c.getSession().write(MobPacket.moveMonsterResponse(monster.getObjectId(), moveid, monster.getMp(), monster.isControllerHasAggro(), realskill, level));
@@ -117,7 +95,7 @@ public class MobHandler {
                 final MapleCharacter controller = monster.getController();
                 MapleMap map = chr.getMap();
 
-                Point endPos = null;
+                Vector endPos = null;
                 int reduce_x = 0;
                 int reduce_y = 0;
                 for (LifeMovementFragment move : res) {

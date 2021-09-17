@@ -23,6 +23,7 @@ package server.life;
 import java.awt.Point;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.Randomizer;
 import server.maps.MapleMap;
 import tools.MaplePacketCreator;
@@ -30,15 +31,15 @@ import tools.MaplePacketCreator;
 public class SpawnPointAreaBoss extends Spawns {
 
     private MapleMonster monster;
-    private Point pos1;
-    private Point pos2;
-    private Point pos3;
+    private Vector pos1;
+    private Vector pos2;
+    private Vector pos3;
     private long nextPossibleSpawn;
     private int mobTime;
     private AtomicBoolean spawned = new AtomicBoolean(false);
     private String msg;
 
-    public SpawnPointAreaBoss(final MapleMonster monster, final Point pos1, final Point pos2, final Point pos3, final int mobTime, final String msg) {
+    public SpawnPointAreaBoss(final MapleMonster monster, final Vector pos1, final Vector pos2, final Vector pos3, final int mobTime, final String msg) {
         this.monster = monster;
         this.pos1 = pos1;
         this.pos2 = pos2;
@@ -75,7 +76,7 @@ public class SpawnPointAreaBoss extends Spawns {
     }
 
     @Override
-    public final Point getPosition() {
+    public final Vector getPosition() {
         final int rand = Randomizer.nextInt(3);
         return rand == 0 ? pos1 : rand == 1 ? pos2 : pos3;
     }

@@ -29,6 +29,7 @@ import client.MapleClient;
 import client.MapleCharacter;
 import client.inventory.MapleInventoryType;
 import constants.OtherSettings;
+import constants.ServerConstants;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.MapleTrade;
@@ -92,7 +93,7 @@ public class PlayerInteractionHandler {
             SELECT_CARD = 0x43;
 
     public static final void PlayerInteraction(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
-        //System.out.println(slea.toString());
+        //LOGGER.debug(slea.toString());
         if (chr == null) {
             return;
         }
@@ -406,7 +407,7 @@ public class PlayerInteractionHandler {
                 break;
             }
             case SET_ITEMS: {
-                OtherSettings item_id = new OtherSettings();
+                OtherSettings item_id = new OtherSettings(ServerConstants.properties);
                 String itemgy_id[] = item_id.getItempb_id();
                 final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
                 final MapleInventoryType ivType = MapleInventoryType.getByType(slea.readByte());
@@ -620,7 +621,7 @@ public class PlayerInteractionHandler {
                         }
                     }
                     if (chr.getMeso() + imps.getMeso() < 0) {
-                        //    System.out.println(new StringBuilder().append("秸ノ竚: ").append(new java.lang.Throwable().getStackTrace()[0]).toString());
+                        //    LOGGER.debug(new StringBuilder().append("秸ノ竚: ").append(new java.lang.Throwable().getStackTrace()[0]).toString());
 
                         c.sendPacket(PlayerShopPacket.shopItemUpdate(imps));
                     } else {
@@ -946,7 +947,7 @@ public class PlayerInteractionHandler {
             }
             default: {
                 //some idiots try to send huge amounts of data to this (:
-                //System.out.println("Unhandled interaction action by " + chr.getName() + " : " + action + ", " + slea.toString());
+                //LOGGER.debug("Unhandled interaction action by " + chr.getName() + " : " + action + ", " + slea.toString());
                 //19 (0x13) - 00 OR 01 -> itemid(maple leaf) ? who knows what this is
                 break;
             }

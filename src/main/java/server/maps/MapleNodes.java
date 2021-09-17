@@ -1,34 +1,11 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.maps;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.Pair;
+
+import java.awt.*;
+import java.util.List;
+import java.util.*;
 
 public class MapleNodes {
 
@@ -38,7 +15,7 @@ public class MapleNodes {
     private List<MonsterPoint> monsterPoints;
     private List<Integer> skillIds;
     private List<Pair<Integer, Integer>> mobsToSpawn;
-    private List<Pair<Point, Integer>> guardiansToSpawn;
+    private List<Pair<Vector, Integer>> guardiansToSpawn;
     private int nodeStart = -1, nodeEnd = -1, mapid;
     private boolean firstHighest = true;
 
@@ -49,7 +26,7 @@ public class MapleNodes {
         skillIds = new ArrayList<Integer>();
         monsterPoints = new ArrayList<MonsterPoint>();
         mobsToSpawn = new ArrayList<Pair<Integer, Integer>>();
-        guardiansToSpawn = new ArrayList<Pair<Point, Integer>>();
+        guardiansToSpawn = new ArrayList<Pair<Vector, Integer>>();
         this.mapid = mapid;
     }
 
@@ -106,7 +83,7 @@ public class MapleNodes {
          for (int i : mni.edge) {
          b.append(i + ", ");
          }
-         System.out.println(b.toString());
+         LOGGER.debug(b.toString());
          FileoutputUtil.log(FileoutputUtil.PacketEx_Log, b.toString());*/
         // output part end
 
@@ -211,11 +188,11 @@ public class MapleNodes {
         return mobsToSpawn;
     }
 
-    public final void addGuardianSpawn(Point guardian, int team) {
-        this.guardiansToSpawn.add(new Pair<Point, Integer>(guardian, team));
+    public final void addGuardianSpawn(Vector guardian, int team) {
+        this.guardiansToSpawn.add(new Pair<Vector, Integer>(guardian, team));
     }
 
-    public final List<Pair<Point, Integer>> getGuardians() {
+    public final List<Pair<Vector, Integer>> getGuardians() {
         return guardiansToSpawn;
     }
 

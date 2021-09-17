@@ -144,7 +144,7 @@ public class CherryMSLotteryImpl
         a = ps.executeUpdate();
 
 
-        System.out.println(ps.executeUpdate());
+        LOGGER.debug(ps.executeUpdate());
         ps.close();
 
         return a;

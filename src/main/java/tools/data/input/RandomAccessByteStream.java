@@ -20,6 +20,9 @@
  */
 package tools.data.input;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -32,6 +35,8 @@ import java.io.RandomAccessFile;
  * @since Revision 323
  */
 public class RandomAccessByteStream implements SeekableInputStreamBytestream {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RandomAccessByteStream.class);
 
     private final RandomAccessFile raf;
     private long read = 0;
@@ -105,7 +110,7 @@ public class RandomAccessByteStream implements SeekableInputStreamBytestream {
         try {
             return raf.length() - raf.getFilePointer();
         } catch (IOException e) {
-            System.err.println("ERROR" + e);
+            LOGGER.error("ERROR" + e);
             return 0;
         }
     }

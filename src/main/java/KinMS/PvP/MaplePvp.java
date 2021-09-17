@@ -7,10 +7,14 @@ import client.MapleClient;
 import client.PlayerStats;
 import client.Skill;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.channel.handler.AttackInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleStatEffect;
 import server.Randomizer;
 import server.life.MapleLifeFactory;
@@ -19,6 +23,8 @@ import server.maps.MapleMap;
 import tools.MaplePacketCreator;
 
 public class MaplePvp {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaplePvp.class);
 
     private static PvpAttackInfo parsePvpAttack(AttackInfo attack, MapleCharacter player, MapleStatEffect effect) {
         PvpAttackInfo ret = new PvpAttackInfo();
@@ -32,49 +38,50 @@ public class MaplePvp {
         ret.attackCount = 1;
         int pvpRange = attack.isCloseRangeAttack ? 35 : 70;
         ret.facingLeft = (attack.animation < 0);
-        System.out.println("PVP伤害检查-A");
+        LOGGER.debug("PVP伤害检查-A");
         if ((skillId != 0) && (effect != null)) {
-            System.out.println("PVP伤害检查-C");
+            LOGGER.debug("PVP伤害检查-C");
             ret.skillDamage = (effect.getDamage());
             ret.mobCount = Math.max(1, effect.getMobCount());
             ret.attackCount = Math.max(effect.getBulletCount(), effect.getAttackCount());
             ret.box = effect.calculateBoundingBox(player.getTruePosition(), ret.facingLeft, pvpRange);
-            System.out.println("PVP伤害检查-D");
+            LOGGER.debug("PVP伤害检查-D");
         } else {
-            System.out.println("PVP伤害检查-E");
+            LOGGER.debug("PVP伤害检查-E");
             ret.box = calculateBoundingBox(player.getTruePosition(), ret.facingLeft, pvpRange);
-            System.out.println("PVP伤害检查-F");
+            LOGGER.debug("PVP伤害检查-F");
         }
-        System.out.println("PVP伤害检查-G");
+        LOGGER.debug("PVP伤害检查-G");
         boolean mirror = (player.getBuffedValue(MapleBuffStat.SHADOWPARTNER) != null);
         ret.attackCount *= (mirror ? 2 : 1);
         maxdamage *= ret.skillDamage / 100.0D;
         ret.maxDamage = (maxdamage * ret.attackCount);
-        System.out.println("PVP伤害检查-H");
+        LOGGER.debug("PVP伤害检查-H");
         if (player.isGM()) {
             player.dropMessage(6, "Pvp伤害解析 - 最大攻击: " + maxdamage + " 数量: " + ret.mobCount + " 次数: " + ret.attackCount + " 爆击: " + ret.critRate + " 无视: " + ret.ignoreDef + " 技能伤害: " + ret.skillDamage);
         }
         return ret;
     }
 
-    private static Rectangle calculateBoundingBox(Point posFrom, boolean facingLeft, int range) {
-        Point lt = new Point(-70, -30);
-        Point rb = new Point(-10, 0);
-        Point myrb;
-        Point mylt;
+    private static Rectangle calculateBoundingBox(Vector posFrom, boolean facingLeft, int range) {
+        Vector lt = Vector.of(-70, -30);
+        Vector rb = Vector.of(-10, 0);
+        Vector myrb;
+        Vector mylt;
         if (facingLeft) {
-            mylt = new Point(lt.x + posFrom.x - range, lt.y + posFrom.y);
-            myrb = new Point(rb.x + posFrom.x, rb.y + posFrom.y);
+            mylt = lt.plus(posFrom).minusX(range);
+            myrb = rb.plus(posFrom);
         } else {
-            myrb = new Point(lt.x * -1 + posFrom.x + range, rb.y + posFrom.y);
-            mylt = new Point(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
+            myrb = Vector.of(lt.x * -1 + posFrom.x + range, rb.y + posFrom.y);
+            mylt = Vector.of(rb.x * -1 + posFrom.x, lt.y + posFrom.y);
         }
         return new Rectangle(mylt.x, mylt.y, myrb.x - mylt.x, myrb.y - mylt.y);
     }
 
     public static boolean inArea(MapleCharacter chr) {
         for (Rectangle rect : chr.getMap().getAreas()) {
-            if (rect.contains(chr.getTruePosition())) {
+            Vector position = chr.getTruePosition();
+            if (rect.contains(position.x, position.y)) {
                 return true;
             }
         }
@@ -82,11 +89,11 @@ public class MaplePvp {
     }
 
     private static void monsterBomb(MapleCharacter player, MapleCharacter attacked, MapleMap map, PvpAttackInfo attack) {
-        System.out.println("PVP伤害检查-L");
+        LOGGER.debug("PVP伤害检查-L");
         if ((player == null) || (attacked == null) || (map == null)) {
             return;
         }
-        System.out.println("PVP伤害检查-M");
+        LOGGER.debug("PVP伤害检查-M");
         double maxDamage = attack.maxDamage;
         boolean isCritDamage = false;
 
@@ -104,12 +111,12 @@ public class MaplePvp {
             maxDamage /= 1.15D;
         }
 
-        System.out.println("PVP伤害检查-N");
+        LOGGER.debug("PVP伤害检查-N");
         if (Randomizer.nextInt(100) < attack.critRate) {
             maxDamage *= 1.5D;
             isCritDamage = true;
         }
-        System.out.println("PVP伤害检查-O");
+        LOGGER.debug("PVP伤害检查-O");
         int attackedDamage = (int) Math.floor(Math.random() * ((int) maxDamage * 0.35D) + (int) maxDamage * 0.65D);
         int MAX_PVP_DAMAGE = (int) (player.getStat().getLimitBreak(player) / 100.0D);
         int MIN_PVP_DAMAGE = 100;
@@ -119,14 +126,14 @@ public class MaplePvp {
         if (attackedDamage < MIN_PVP_DAMAGE) {
             attackedDamage = MIN_PVP_DAMAGE;
         }
-        System.out.println("PVP伤害检查-P");
+        LOGGER.debug("PVP伤害检查-P");
         int hploss = attackedDamage;
         int mploss = 0;
-        System.out.println("PVP伤害检查-Q:" + attackedDamage);
+        LOGGER.debug("PVP伤害检查-Q:" + attackedDamage);
         if (attackedDamage > 0) {
-            System.out.println("PVP伤害检查-R");
+            LOGGER.debug("PVP伤害检查-R");
             if (attacked.getBuffedValue(MapleBuffStat.MAGIC_GUARD) != null) {
-                System.out.println("PVP伤害检查-S");
+                LOGGER.debug("PVP伤害检查-S");
                 mploss = (int) (attackedDamage * (attacked.getBuffedValue(MapleBuffStat.MAGIC_GUARD).doubleValue() / 100.0D));
                 hploss -= mploss;
                 if (attacked.getBuffedValue(MapleBuffStat.INFINITY) != null) {
@@ -136,18 +143,18 @@ public class MaplePvp {
                     hploss -= mploss;
                 }
                 attacked.addMPHP(-hploss, -mploss);
-                System.out.println("PVP伤害检查-T");
+                LOGGER.debug("PVP伤害检查-T");
             } else {
-                System.out.println("PVP伤害检查-U");
+                LOGGER.debug("PVP伤害检查-U");
                 attacked.addHP(-hploss);
-                System.out.println("PVP伤害检查-V");
+                LOGGER.debug("PVP伤害检查-V");
             }
         }
-        System.out.println("PVP伤害检查-W");
+        LOGGER.debug("PVP伤害检查-W");
         MapleMonster pvpMob = MapleLifeFactory.getMonster(9400711);
         map.spawnMonsterOnGroundBelow(pvpMob, attacked.getPosition());
         map.broadcastMessage(MaplePacketCreator.PVPdamagePlayer(attacked.getId(), 2, pvpMob.getId(), hploss));
-        System.out.println("PVP伤害检查-X");
+        LOGGER.debug("PVP伤害检查-X");
         if (isCritDamage) {
             player.dropMessage(6, "你对玩家 " + attacked.getName() + " 造成了 " + hploss + " 点爆击伤害! 对方血量: " + attacked.getStat().getHp() + "/" + attacked.getStat().getCurrentMaxHp());
             attacked.dropMessage(6, "玩家 " + player.getName() + " 对你造成了 " + hploss + " 点爆击伤害!");
@@ -155,10 +162,10 @@ public class MaplePvp {
             player.dropTopMsg("你对玩家 " + attacked.getName() + " 造成了 " + hploss + " 点伤害! 对方血量: " + attacked.getStat().getHp() + "/" + attacked.getStat().getCurrentMaxHp());
             attacked.dropTopMsg("玩家 " + player.getName() + " 对你造成了 " + hploss + " 点伤害!");
         }
-        System.out.println("PVP伤害检查-Y");
+        LOGGER.debug("PVP伤害检查-Y");
         map.killMonster(pvpMob, player, false, false, (byte) 1);
 
-        System.out.println("PVP伤害检查-Z");
+        LOGGER.debug("PVP伤害检查-Z");
         if ((attacked.getStat().getHp() <= 0) && (!attacked.isAlive())) {
             int expReward = attacked.getLevel() * 10 * (attacked.getLevel() / player.getLevel());
             int gpReward = (int) Math.floor(Math.random() * 10.0D + 10.0D);
@@ -178,15 +185,15 @@ public class MaplePvp {
     }
 
     public static synchronized void doPvP(MapleCharacter player, MapleMap map, AttackInfo attack, MapleStatEffect effect) {
-        System.out.println("PVP伤害检查");
+        LOGGER.debug("PVP伤害检查");
         PvpAttackInfo pvpAttack = parsePvpAttack(attack, player, effect);
-        System.out.println("PVP伤害检查-I");
+        LOGGER.debug("PVP伤害检查-I");
         int mobCount = 0;
         for (MapleCharacter attacked : player.getMap().getCharactersIntersect(pvpAttack.box)) {
-            System.out.println("PVP伤害检查-J");
+            LOGGER.debug("PVP伤害检查-J");
             if ((attacked.getId() != player.getId()) && (attacked.isAlive()) && (!attacked.isHidden()) && (mobCount < pvpAttack.mobCount)) {
                 mobCount++;
-                System.out.println("PVP伤害检查-K");
+                LOGGER.debug("PVP伤害检查-K");
                 monsterBomb(player, attacked, map, pvpAttack);
             }
         }

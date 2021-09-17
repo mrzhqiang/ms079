@@ -340,7 +340,7 @@ public class StatsHandling {
        /* chr.updateTick(slea.readInt());
         slea.skip(4);
         if (slea.available() < 16) {
-            System.out.println("AutoAssignAP : \n" + slea.toString(true));
+            LOGGER.debug("AutoAssignAP : \n" + slea.toString(true));
             FileoutputUtil.log(FileoutputUtil.PacketEx_Log, "AutoAssignAP : \n" + slea.toString(true));
             return;
         }

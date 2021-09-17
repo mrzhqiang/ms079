@@ -1,24 +1,3 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server;
 
 import constants.GameConstants;
@@ -40,10 +19,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.Pair;
 import tools.packet.MTSCSPacket;
 
 public class MTSStorage {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MTSStorage.class);
     //stores all carts all mts items, updates every hour
 
     private static final long serialVersionUID = 231541893513228L;
@@ -59,7 +43,7 @@ public class MTSStorage {
     //mts_items is id/packageid, tab(byte), price, characterid, seller, expiration
 
     public MTSStorage() {
-        System.out.println("Loading MTSStorage :::");
+        LOGGER.debug("Loading MTSStorage :::");
         idToCart = new LinkedHashMap<Integer, MTSCart>();
         buyNow = new LinkedHashMap<Integer, MTSItemInfo>();
         packageId = new AtomicInteger(1);
@@ -176,7 +160,7 @@ public class MTSStorage {
         }
         this.end = isShutDown;
         if (isShutDown) {
-            System.out.println("Saving MTS...");
+            LOGGER.debug("Saving MTS...");
         }
         final Map<Integer, ArrayList<IItem>> expire = new HashMap<Integer, ArrayList<IItem>>();
         final List<Integer> toRemove = new ArrayList<Integer>();
@@ -221,7 +205,7 @@ public class MTSStorage {
             mutex.writeLock().unlock();
         }
         if (isShutDown) {
-            System.out.println("Saving MTS items...");
+            LOGGER.debug("Saving MTS items...");
         }
         try {
             for (Entry<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> ite : items.entrySet()) {
@@ -231,7 +215,7 @@ public class MTSStorage {
             e.printStackTrace();
         }
         if (isShutDown) {
-            System.out.println("Saving MTS carts...");
+            LOGGER.debug("Saving MTS carts...");
         }
         cart_mutex.writeLock().lock();
         try {

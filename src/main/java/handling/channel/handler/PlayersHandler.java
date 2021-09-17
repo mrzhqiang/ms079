@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import client.inventory.IItem;
@@ -26,7 +6,10 @@ import client.MapleClient;
 import client.inventory.MapleInventoryType;
 import client.MapleStat;
 import client.anticheat.CheatingOffense;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripting.NPCScriptManager;
 import scripting.ReactorScriptManager;
 import server.events.MapleCoconut;
@@ -42,7 +25,11 @@ import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
+import java.awt.*;
+
 public class PlayersHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlayersHandler.class);
 
     public static void Note(final SeekableLittleEndianAccessor slea, final MapleCharacter chr) {
         final byte type = slea.readByte();
@@ -74,7 +61,7 @@ public class PlayersHandler {
                 }
                 break;
             default:
-                System.out.println("Unhandled note action, " + type + "");
+                LOGGER.debug("Unhandled note action, " + type + "");
         }
     }
 
@@ -195,7 +182,8 @@ public class PlayersHandler {
             if (reactor.getReactorType() == 100) {
                 int itemid = GameConstants.getCustomReactItem(reactor.getReactorId(), ((Integer) reactor.getReactItem().getLeft()).intValue());
                 if (c.getPlayer().haveItem(itemid, ((Integer) reactor.getReactItem().getRight()).intValue())) {
-                    if (reactor.getArea().contains(c.getPlayer().getTruePosition())) {
+                    Vector truePosition = c.getPlayer().getTruePosition();
+                    if (reactor.getArea().contains(new Point(truePosition.x, truePosition.y))) {
                         MapleInventoryManipulator.removeById(c, GameConstants.getInventoryType(itemid), itemid, ((Integer) reactor.getReactItem().getRight()).intValue(), true, false);
                         reactor.hitReactor(c);
                     } else {
@@ -225,7 +213,7 @@ public class PlayersHandler {
                 return;
             }
         }
-        //System.out.println("Coconut1");
+        //LOGGER.debug("Coconut1");
         MapleCoconuts nut = map.getCoconut(id);
         if (nut == null || !nut.isHittable()) {
             return;
@@ -233,9 +221,9 @@ public class PlayersHandler {
         if (System.currentTimeMillis() < nut.getHitTime()) {
             return;
         }
-        //System.out.println("Coconut2");
+        //LOGGER.debug("Coconut2");
         if (nut.getHits() > 2 && Math.random() < 0.4 && !nut.isStopped()) {
-            //System.out.println("Coconut3-1");
+            //LOGGER.debug("Coconut3-1");
             nut.setHittable(false);
             if (Math.random() < 0.01 && map.getStopped() > 0) {
                 nut.setStopped(true);
@@ -244,13 +232,13 @@ public class PlayersHandler {
                 return;
             }
             nut.resetHits(); // For next event (without restarts)
-            //System.out.println("Coconut4");
+            //LOGGER.debug("Coconut4");
             if (Math.random() < 0.05 && map.getBombings() > 0) {
-                //System.out.println("Coconut5-1");
+                //LOGGER.debug("Coconut5-1");
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.hitCoconut(false, id, 2));
                 map.bombCoconut();
             } else if (map.getFalling() > 0) {
-                //System.out.println("Coconut5-2");
+                //LOGGER.debug("Coconut5-2");
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.hitCoconut(false, id, 3));
                 map.fallCoconut();
                 if (c.getPlayer().getTeam() == 0) {
@@ -263,7 +251,7 @@ public class PlayersHandler {
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.coconutScore(map.getCoconutScore()));
             }
         } else {
-            //System.out.println("Coconut3-2");
+            //LOGGER.debug("Coconut3-2");
             nut.hit();
             c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.hitCoconut(false, id, 1));
         }
@@ -406,11 +394,11 @@ public class PlayersHandler {
         if (type == 0) { // 角色訊息
             String charmessage = slea.readMapleAsciiString();
             c.getPlayer().setcharmessage(charmessage);
-            //System.err.println("SetCharMessage");
+            //LOGGER.error("SetCharMessage");
         } else if (type == 1) { // 表情
             int expression = slea.readByte();
             c.getPlayer().setexpression(expression);
-            //System.err.println("Expression"+ expression);
+            //LOGGER.error("Expression"+ expression);
         } else if (type == 2) { // 生日及星座
             int blood = slea.readByte();
             int month = slea.readByte();
@@ -420,7 +408,7 @@ public class PlayersHandler {
             c.getPlayer().setmonth(month);
             c.getPlayer().setday(day);
             c.getPlayer().setconstellation(constellation);
-            //System.err.println("Constellation");
+            //LOGGER.error("Constellation");
         }
     }
 }

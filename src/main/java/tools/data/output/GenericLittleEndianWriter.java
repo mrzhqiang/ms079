@@ -1,26 +1,7 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.data.output;
 
-import java.awt.Point;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+
 import java.nio.charset.Charset;
 
 /**
@@ -33,7 +14,7 @@ import java.nio.charset.Charset;
 public class GenericLittleEndianWriter implements LittleEndianWriter {
 
     // See http://java.sun.com/j2se/1.4.2/docs/api/java/nio/charset/Charset.html
-    private static Charset ASCII = Charset.forName("GBK"); // ISO-8859-1, UTF-8
+    private static final Charset ASCII = Charset.forName("GBK"); // ISO-8859-1, UTF-8
     private ByteOutputStream bos;
 
 
@@ -65,7 +46,7 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
     /**
      * Write the number of zero bytes
      *
-     * @param b The bytes to write.
+     * @param i The bytes to write.
      */
     @Override
     public void writeZeroBytes(int i) {
@@ -81,8 +62,8 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
      */
     @Override
     public void write(byte[] b) {
-        for (int x = 0; x < b.length; x++) {
-            bos.writeByte(b[x]);
+        for (byte value : b) {
+            bos.writeByte(value);
         }
     }
 
@@ -166,10 +147,10 @@ public class GenericLittleEndianWriter implements LittleEndianWriter {
     /**
      * Writes a 2D 4 byte position information
      *
-     * @param s The Point position to write.
+     * @param s The Vector position to write.
      */
     @Override
-    public void writePos(Point s) {
+    public void writePos(Vector s) {
         writeShort(s.x);
         writeShort(s.y);
     }

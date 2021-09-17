@@ -1,0 +1,10 @@
+ebean:
+  test:
+    useDocker: false  ## DO NOT USE DOCKER
+    platform: h2 #, h2, postgres, mysql, oracle, sqlserver, hana, clickhouse, sqlite
+    ddlMode: dropCreate # none | dropCreate | migrations | create
+    dbName: ms079
+    h2:
+      username: sa
+      password:
+      url: jdbc:h2:mem:ms079

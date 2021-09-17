@@ -1,5 +1,7 @@
 package server.shops;
 
+import org.slf4j.LoggerFactory;
+
 import java.io.PrintStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,6 +9,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HiredMerchantSave {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(HiredMerchantSave.class);
 
     public static final int NumSavingThreads = 5;
     private static final TimingThread[] Threads = new TimingThread[5];
@@ -67,7 +71,7 @@ public class HiredMerchantSave {
                     this.TimeTaken += System.currentTimeMillis() - Start;
                     this.ShopsSaved += 1;
                 }
-                System.out.println("[保存雇佣商店数据 线程 " + this.ThreadID + "] 共保存: " + this.ShopsSaved + " | 耗时: " + this.TimeTaken + " 毫秒.");
+                LOGGER.debug("[保存雇佣商店数据 线程 " + this.ThreadID + "] 共保存: " + this.ShopsSaved + " | 耗时: " + this.TimeTaken + " 毫秒.");
                 synchronized (this.ToNotify) {
                     this.ToNotify.notify();
                 }

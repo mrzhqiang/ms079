@@ -22,23 +22,24 @@ package server.movement;
 
 import java.awt.Point;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 
 public class UnknownMovement extends AbstractLifeMovement {
 
-    private Point pixelsPerSecond;
+    private Vector pixelsPerSecond;
     private int unk;
     private int fh;
 
-    public UnknownMovement(int type, Point position, int duration, int newstate) {
+    public UnknownMovement(int type, Vector position, int duration, int newstate) {
         super(type, position, duration, newstate);
     }
 
-    public Point getPixelsPerSecond() {
+    public Vector getPixelsPerSecond() {
         return pixelsPerSecond;
     }
 
-    public void setPixelsPerSecond(Point wobble) {
+    public void setPixelsPerSecond(Vector wobble) {
         this.pixelsPerSecond = wobble;
     }
 

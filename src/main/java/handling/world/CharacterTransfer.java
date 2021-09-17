@@ -46,7 +46,8 @@ public class CharacterTransfer implements Externalizable {
     public long lastfametime, TranferTime, lastGainHM;
     public String tempIP;
     public String name, accountname, BlessOfFairy, chalkboard, charmessage;
-    public short level, fame, str, dex, int_, luk, maxhp, maxmp, hp, mp, remainingAp, hpApUsed, job;
+    public short level, fame, str, dex, int_, luk, maxhp, maxmp, hp, mp, remainingAp, hpApUsed;
+    public int job;
     public Object inventorys, skillmacro, storage, cs;
     public int[] savedlocation, wishlist, rocks, remainingSp, regrocks;
     public byte[] petStore;

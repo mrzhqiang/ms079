@@ -1,51 +1,28 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.world.family;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
 
 import client.MapleCharacter;
 import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.world.World;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.packet.FamilyPacket;
 
+import java.sql.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class MapleFamily implements java.io.Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleFamily.class);
 
     public static enum FCOp {
 
         NONE, DISBAND;
     }
+
     public static final long serialVersionUID = 6322150443228168192L;
     //does not need to be in order :) CID -> MFC
     private final Map<Integer, MapleFamilyCharacter> members = new ConcurrentHashMap<Integer, MapleFamilyCharacter>();
@@ -87,8 +64,8 @@ public class MapleFamily implements java.io.Serializable {
             ps.close();
 
             if (leadername == null || members.size() < 2) {
-                System.err.println("Leader " + leaderid + " isn't in family " + id + ".  Impossible... family is disbanding.");
-            //    writeToDB(true);
+                LOGGER.error("Leader " + leaderid + " isn't in family " + id + ".  Impossible... family is disbanding.");
+                //    writeToDB(true);
                 proper = false;
                 return;
             }
@@ -136,7 +113,7 @@ public class MapleFamily implements java.io.Serializable {
             resetDescendants(); //set
             resetGens(); //set
         } catch (SQLException se) {
-            System.err.println("unable to read family information from sql");
+            LOGGER.error("unable to read family information from sql");
             se.printStackTrace();
         }
     }
@@ -188,7 +165,7 @@ public class MapleFamily implements java.io.Serializable {
             rs.close();
             ps.close();
         } catch (SQLException se) {
-            System.err.println("unable to read family information from sql");
+            LOGGER.error("unable to read family information from sql");
             se.printStackTrace();
         }
         return ret;
@@ -220,7 +197,7 @@ public class MapleFamily implements java.io.Serializable {
                 ps.close();
             }
         } catch (SQLException se) {
-            System.err.println("Error saving family to SQL");
+            LOGGER.error("Error saving family to SQL");
             se.printStackTrace();
         }
     }
@@ -499,7 +476,7 @@ public class MapleFamily implements java.io.Serializable {
             ps.execute();
             ps.close();
         } catch (SQLException se) {
-            System.out.println("SQLException: " + se.getLocalizedMessage());
+            LOGGER.debug("SQLException: " + se.getLocalizedMessage());
             se.printStackTrace();
         }
     }

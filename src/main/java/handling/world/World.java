@@ -3,6 +3,7 @@ package handling.world;
 import client.*;
 import client.BuddyList.BuddyAddResult;
 import client.BuddyList.BuddyOperation;
+
 import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,14 +12,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.PetDataFactory;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.cashshop.CashShopServer;
@@ -31,7 +34,11 @@ import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildAlliance;
 import handling.world.guild.MapleGuildCharacter;
 import handling.world.guild.MapleGuildSummary;
+
 import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.Timer.WorldTimer;
 import server.maps.MapleMap;
 import server.maps.MapleMapItem;
@@ -41,17 +48,17 @@ import tools.packet.PetPacket;
 
 public class World {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(World.class);
+
     public static boolean isShutDown = false;
-    //Touch everything...
 
     public static void init() {
-        System.out.println("世界服务器加载完成");
-        World.Find.findChannel(0);
-        World.Guild.lock.toString();
-        World.Alliance.lock.toString();
-        World.Family.lock.toString();
-        World.Messenger.getMessenger(0);
-        World.Party.getParty(0);
+        World.Find.init();
+        World.Guild.init();
+        World.Alliance.init();
+        World.Family.init();
+        World.Messenger.init();
+        World.Party.init();
     }
 
     public static String getStatus() throws RemoteException {
@@ -159,17 +166,17 @@ public class World {
 
     public static class Party {
 
-        private static Map<Integer, MapleParty> parties = new HashMap<Integer, MapleParty>();
-        private static final AtomicInteger runningPartyId = new AtomicInteger();
+        private static final Map<Integer, MapleParty> PARTY_MAP = Maps.newConcurrentMap();
+        private static final AtomicInteger RUNNING_PARTY_ID = new AtomicInteger();
 
-        static {
+        public static void init() {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps;
             try {
                 ps = con.prepareStatement("SELECT MAX(party)+2 FROM characters");
                 ResultSet rs = ps.executeQuery();
                 rs.next();
-                runningPartyId.set(rs.getInt(1));
+                RUNNING_PARTY_ID.set(rs.getInt(1));
                 rs.close();
                 ps.close();
             } catch (SQLException e) {
@@ -275,18 +282,18 @@ public class World {
         }
 
         public static MapleParty createParty(MaplePartyCharacter chrfor) {
-            int partyid = runningPartyId.getAndIncrement();
+            int partyid = RUNNING_PARTY_ID.getAndIncrement();
             MapleParty party = new MapleParty(partyid, chrfor);
-            parties.put(party.getId(), party);
+            PARTY_MAP.put(party.getId(), party);
             return party;
         }
 
-        public static MapleParty getParty(int partyid) {
-            return parties.get(partyid);
+        public static MapleParty getParty(Integer partyid) {
+            return PARTY_MAP.get(partyid);
         }
 
         public static MapleParty disbandParty(int partyid) {
-            return parties.remove(partyid);
+            return PARTY_MAP.remove(partyid);
         }
     }
 
@@ -382,17 +389,17 @@ public class World {
 
     public static class Messenger {
 
-        private static Map<Integer, MapleMessenger> messengers = new HashMap<Integer, MapleMessenger>();
-        private static final AtomicInteger runningMessengerId = new AtomicInteger();
+        private static final Map<Integer, MapleMessenger> MESSENGERS = Maps.newConcurrentMap();
+        private static final AtomicInteger RUNNING_MESSENGER_ID = new AtomicInteger();
 
-        static {
-            runningMessengerId.set(1);
+        public static void init() {
+            RUNNING_MESSENGER_ID.set(1);
         }
 
         public static MapleMessenger createMessenger(MapleMessengerCharacter chrfor) {
-            int messengerid = runningMessengerId.getAndIncrement();
+            int messengerid = RUNNING_MESSENGER_ID.getAndIncrement();
             MapleMessenger messenger = new MapleMessenger(messengerid, chrfor);
-            messengers.put(messenger.getId(), messenger);
+            MESSENGERS.put(messenger.getId(), messenger);
             return messenger;
         }
 
@@ -411,7 +418,7 @@ public class World {
         }
 
         public static MapleMessenger getMessenger(int messengerid) {
-            return messengers.get(messengerid);
+            return MESSENGERS.get(messengerid);
         }
 
         public static void leaveMessenger(int messengerid, MapleMessengerCharacter target) {
@@ -549,60 +556,54 @@ public class World {
 
     public static class Guild {
 
-        private static final Map<Integer, MapleGuild> guilds = new LinkedHashMap<Integer, MapleGuild>();
-        private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private static final Map<Integer, MapleGuild> ID_GUILD_CACHED = Maps.newConcurrentMap();
+        private static final Map<String, MapleGuild> NAME_GUILD_CACHED = Maps.newConcurrentMap();
 
-        static {
-            System.out.println("====================================================-[ 加载家族系统 ]");
-            long jzxttime = System.currentTimeMillis();
+        public static void init() {
+            LOGGER.info(">>> 初始化 [家族系统]");
+            Stopwatch started = Stopwatch.createStarted();
             Collection<MapleGuild> allGuilds = MapleGuild.loadAll();
             for (MapleGuild g : allGuilds) {
                 if (g.isProper()) {
-                    guilds.put(g.getId(), g);
+                    ID_GUILD_CACHED.put(g.getId(), g);
+                    NAME_GUILD_CACHED.put(g.getName(), g);
                 }
             }
-            System.out.println("加载家族系统完成 耗时：" + (System.currentTimeMillis() - jzxttime) / 1000.0 + "秒");
+            LOGGER.info("<<< [家族系统] 初始化完毕，耗时：{}", started.stop());
         }
 
         public static int createGuild(int leaderId, String name) {
             return MapleGuild.createGuild(leaderId, name);
         }
 
-        public static MapleGuild getGuild(int id) {
-            MapleGuild ret = null;
-            lock.readLock().lock();
-            try {
-                ret = guilds.get(id);
-            } finally {
-                lock.readLock().unlock();
+        public static MapleGuild getGuild(Integer id) {
+            MapleGuild ret = ID_GUILD_CACHED.get(id);
+            if (ret != null) {
+                return ret;
             }
-            if (ret == null) {
-                lock.writeLock().lock();
-                try {
-                    ret = new MapleGuild(id);
-                    if (ret == null || ret.getId() <= 0 || !ret.isProper()) { //failed to load
-                        return null;
-                    }
-                    guilds.put(id, ret);
-                } finally {
-                    lock.writeLock().unlock();
-                }
+
+            ret = new MapleGuild(id);
+            if (ret.getId() <= 0 || !ret.isProper()) { //failed to load
+                return null;
             }
-            return ret; //Guild doesn't exist?
+            ID_GUILD_CACHED.put(id, ret);
+            NAME_GUILD_CACHED.put(ret.getName(), ret);
+            return ret;
         }
 
         public static MapleGuild getGuildByName(String guildName) {
-            lock.readLock().lock();
-            try {
-                for (MapleGuild g : guilds.values()) {
-                    if (g.getName().equalsIgnoreCase(guildName)) {
-                        return g;
-                    }
-                }
-                return null;
-            } finally {
-                lock.readLock().unlock();
+            MapleGuild guild = NAME_GUILD_CACHED.get(guildName);
+            if (guild != null) {
+                return guild;
             }
+
+            for (MapleGuild g : ID_GUILD_CACHED.values()) {
+                if (g.getName().equalsIgnoreCase(guildName)) {
+                    NAME_GUILD_CACHED.put(guildName, g);
+                    return g;
+                }
+            }
+            return null;
         }
 
         public static MapleGuild getGuild(MapleCharacter mc) {
@@ -689,14 +690,9 @@ public class World {
 
         public static void disbandGuild(int gid) {
             MapleGuild g = getGuild(gid);
-            lock.writeLock().lock();
-            try {
-                if (g != null) {
-                    g.disbandGuild();
-                    guilds.remove(gid);
-                }
-            } finally {
-                lock.writeLock().unlock();
+            if (g != null) {
+                g.disbandGuild();
+                ID_GUILD_CACHED.remove(gid);
             }
         }
 
@@ -765,14 +761,9 @@ public class World {
         }
 
         public static void save() {
-            System.out.println("Saving guilds...");
-            lock.writeLock().lock();
-            try {
-                for (MapleGuild a : guilds.values()) {
-                    a.writeToDB(false);
-                }
-            } finally {
-                lock.writeLock().unlock();
+            LOGGER.debug("Saving guilds...");
+            for (MapleGuild a : ID_GUILD_CACHED.values()) {
+                a.writeToDB(false);
             }
         }
 
@@ -792,28 +783,28 @@ public class World {
             return -1;
         }
 
-        public static final void editBBSThread(final int guildid, final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
+        public static void editBBSThread(final int guildid, final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.editBBSThread(localthreadid, title, text, icon, posterID, guildRank);
             }
         }
 
-        public static final void deleteBBSThread(final int guildid, final int localthreadid, final int posterID, final int guildRank) {
+        public static void deleteBBSThread(final int guildid, final int localthreadid, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.deleteBBSThread(localthreadid, posterID, guildRank);
             }
         }
 
-        public static final void addBBSReply(final int guildid, final int localthreadid, final String text, final int posterID) {
+        public static void addBBSReply(final int guildid, final int localthreadid, final String text, final int posterID) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.addBBSReply(localthreadid, text, posterID);
             }
         }
 
-        public static final void deleteBBSReply(final int guildid, final int localthreadid, final int replyid, final int posterID, final int guildRank) {
+        public static void deleteBBSReply(final int guildid, final int localthreadid, final int replyid, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.deleteBBSReply(localthreadid, replyid, posterID, guildRank);
@@ -822,13 +813,13 @@ public class World {
 
         public static void changeEmblem(int gid, int affectedPlayers, MapleGuildSummary mgs) {
             Broadcast.sendGuildPacket(affectedPlayers, MaplePacketCreator.guildEmblemChange(gid, mgs.getLogoBG(), mgs.getLogoBGColor(), mgs.getLogo(), mgs.getLogoColor()), -1, gid);
-            setGuildAndRank(affectedPlayers, -1, -1, -1);	//respawn player
+            setGuildAndRank(affectedPlayers, -1, -1, -1);    //respawn player
         }
 
         public static void setGuildAndRank(int cid, int guildid, int rank, int alliancerank) {
             int ch = Find.findChannel(cid);
             if (ch == -1) {
-                // System.out.println("ERROR: cannot find player in given channel");
+                // LOGGER.debug("ERROR: cannot find player in given channel");
                 return;
             }
             MapleCharacter mc = getStorage(ch).getCharacterById(cid);
@@ -926,223 +917,217 @@ public class World {
 
     public static class Find {
 
-        private static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        private static HashMap<Integer, Integer> idToChannel = new HashMap<Integer, Integer>();
-        private static HashMap<String, Integer> nameToChannel = new HashMap<String, Integer>();
+        private static final Map<Integer, Integer> ID_CHANNEL_CACHED = Maps.newConcurrentMap();
+        private static final Map<String, Integer> NAME_CHANNEL_CACHED = Maps.newConcurrentMap();
 
-        public static void register(int id, String name, int channel) {
-            lock.writeLock().lock();
-            try {
-                idToChannel.put(id, channel);
-                nameToChannel.put(name.toLowerCase(), channel);
-            } finally {
-                lock.writeLock().unlock();
-            }
+        public static void init() {
+            // 提前类加载，初始化上面两个缓存映射
         }
 
-        public static void forceDeregister(int id) {
-            lock.writeLock().lock();
-            try {
-                idToChannel.remove(id);
-            } finally {
-                lock.writeLock().unlock();
+        /**
+         * 注册用户及对应的频道。
+         * <p>
+         * todo 改为 用户数据（组合 account characters 之类的实体）映射频道实体
+         * <p>
+         * todo 或者是 用户 ID 映射频道实体
+         * <p>
+         * 目前只是登录的时候，以及进入商城的时候调用
+         */
+        public static void register(Integer id, String name, Integer channel) {
+            if (id == null || name == null) {
+                return;
             }
+            ID_CHANNEL_CACHED.put(id, channel);
+            NAME_CHANNEL_CACHED.put(name.toLowerCase(), channel);
         }
 
-        public static void forceDeregister(String id) {
-            lock.writeLock().lock();
-            try {
-                nameToChannel.remove(id.toLowerCase());
-            } finally {
-                lock.writeLock().unlock();
+        public static int findChannel(Integer id) {
+            if (id == null) {
+                return -1;
             }
+            Integer ret = ID_CHANNEL_CACHED.get(id);
+            if (ret == null) {
+                return -1;
+            }
+            // -10 CS -20 MTS 如果不是前面这两个频道，并且在频道服务中也无法找到此 ID 对应的频道，那么强制注销用户
+            if (ret != -10 && ret != -20 && ChannelServer.getInstance(ret) == null) { //wha
+                Find.forceDeregister(id);
+                return -1;
+            }
+            return ret;
         }
 
-        public static void forceDeregister(int id, String name) {
-            lock.writeLock().lock();
-            try {
-                idToChannel.remove(id);
-                nameToChannel.remove(name.toLowerCase());
-            } finally {
-                lock.writeLock().unlock();
+        public static int findChannel(String name) {
+            if (name == null) {
+                return -1;
             }
+            Integer ret = NAME_CHANNEL_CACHED.get(name.toLowerCase());
+            if (ret == null) {
+                return -1;
+            }
+            // -10 CS -20 MTS 如果不是前面这两个频道，并且在频道服务中也无法找到此 ID 对应的频道，那么强制注销用户
+            if (ret != -10 && ret != -20 && ChannelServer.getInstance(ret) == null) { //wha
+                Find.forceDeregister(name);
+                return -1;
+            }
+            return ret;
         }
 
-        public static int findChannel(int id) {
-            Integer ret;
-            lock.readLock().lock();
-            try {
-                ret = idToChannel.get(id);
-            } finally {
-                lock.readLock().unlock();
+        /**
+         * 通过用户 ID 强制注销。
+         *
+         * @param id 用户 ID，登录时会进行记录，绑定对应的频道 ID，其实可以作为真实的在线用户列表。
+         */
+        public static void forceDeregister(Integer id) {
+            if (id == null) {
+                return;
             }
-            if (ret != null) {
-                if (ret != -10 && ret != -20 && ChannelServer.getInstance(ret) == null) { //wha
-                    forceDeregister(id);
-                    return -1;
-                }
-                return ret;
-            }
-            return -1;
+            ID_CHANNEL_CACHED.remove(id);
         }
 
-        public static int findChannel(String st) {
-            Integer ret;
-            lock.readLock().lock();
-            try {
-                ret = nameToChannel.get(st.toLowerCase());
-            } finally {
-                lock.readLock().unlock();
+        public static void forceDeregister(String name) {
+            if (name == null) {
+                return;
             }
-            if (ret != null) {
-                if (ret != -10 && ret != -20 && ChannelServer.getInstance(ret) == null) { //wha
-                    forceDeregister(st);
-                    return -1;
-                }
-                return ret;
-            }
-            return -1;
+            NAME_CHANNEL_CACHED.remove(name.toLowerCase());
         }
 
-        public static CharacterIdChannelPair[] multiBuddyFind(int charIdFrom, Collection<Integer> characterIds) {
-            List<CharacterIdChannelPair> foundsChars = new ArrayList<CharacterIdChannelPair>(characterIds.size());
-            for (int i : characterIds) {
-                int channel = findChannel(i);
+        public static void forceDeregister(Integer id, String name) {
+            if (id == null || name == null) {
+                return;
+            }
+            ID_CHANNEL_CACHED.remove(id);
+            NAME_CHANNEL_CACHED.remove(name.toLowerCase());
+        }
+
+        public static CharacterIdChannelPair[] multiBuddyFind(Integer charIdFrom, Collection<Integer> characterIds) {
+            List<CharacterIdChannelPair> foundsChars = Lists.newArrayListWithCapacity(characterIds.size());
+            for (Integer id : characterIds) {
+                int channel = Find.findChannel(id);
                 if (channel > 0) {
-                    foundsChars.add(new CharacterIdChannelPair(i, channel));
+                    foundsChars.add(new CharacterIdChannelPair(id, channel));
                 }
             }
             Collections.sort(foundsChars);
-            return foundsChars.toArray(new CharacterIdChannelPair[foundsChars.size()]);
+            return foundsChars.toArray(new CharacterIdChannelPair[0]);
         }
     }
 
     public static class Alliance {
 
-        private static final Map<Integer, MapleGuildAlliance> alliances = new LinkedHashMap<Integer, MapleGuildAlliance>();
-        private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private static final Map<Integer, MapleGuildAlliance> ALLIANCES_CACHED = Maps.newConcurrentMap();
 
-        static {
-            System.out.println("====================================================-[ 家族联盟系统 ]");
-            long xyxttime = System.currentTimeMillis();
-            Collection<MapleGuildAlliance> allGuilds = MapleGuildAlliance.loadAll();
-            for (MapleGuildAlliance g : allGuilds) {
-                alliances.put(g.getId(), g);
+        public static void init() {
+            LOGGER.info(">>> 初始化 [家族联盟系统]");
+            Stopwatch started = Stopwatch.createStarted();
+            for (MapleGuildAlliance alliance : MapleGuildAlliance.loadAll()) {
+                ALLIANCES_CACHED.put(alliance.getId(), alliance);
             }
-            System.out.println("加载家族联盟系统完成 耗时：" + (System.currentTimeMillis() - xyxttime) / 1000.0 + "秒");
+            LOGGER.info("<<< [家族联盟系统] 初始化完毕，耗时：{}", started.stop());
         }
 
-        public static MapleGuildAlliance getAlliance(final int allianceid) {
-            MapleGuildAlliance ret = null;
-            lock.readLock().lock();
-            try {
-                ret = alliances.get(allianceid);
-            } finally {
-                lock.readLock().unlock();
+        public static MapleGuildAlliance getAlliance(Integer allianceId) {
+            MapleGuildAlliance ret = ALLIANCES_CACHED.get(allianceId);
+            if (ret != null) {
+                return ret;
             }
-            if (ret == null) {
-                lock.writeLock().lock();
-                try {
-                    ret = new MapleGuildAlliance(allianceid);
-                    if (ret == null || ret.getId() <= 0) { //failed to load
-                        return null;
-                    }
-                    alliances.put(allianceid, ret);
-                } finally {
-                    lock.writeLock().unlock();
-                }
+
+            ret = MapleGuildAlliance.findById(allianceId);
+            if (ret != null) {
+                ALLIANCES_CACHED.put(allianceId, ret);
+                return ret;
             }
-            return ret;
+            return null;
         }
 
-        public static int getAllianceLeader(final int allianceid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.getLeaderId();
+        public static int getAllianceLeader(int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.getLeaderId();
             }
             return 0;
         }
 
-        public static void updateAllianceRanks(final int allianceid, final String[] ranks) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                mga.setRank(ranks);
+        public static void updateAllianceRanks(int allianceid, String[] ranks) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                alliance.setRank(ranks);
             }
         }
 
-        public static void updateAllianceNotice(final int allianceid, final String notice) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                mga.setNotice(notice);
+        public static void updateAllianceNotice(int allianceid, String notice) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                alliance.setNotice(notice);
             }
         }
 
-        public static boolean canInvite(final int allianceid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.getCapacity() > mga.getNoGuilds();
-            }
-            return false;
-        }
-
-        public static boolean changeAllianceLeader(final int allianceid, final int cid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.setLeaderId(cid);
+        public static boolean canInvite(int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.getCapacity() > alliance.getNoGuilds();
             }
             return false;
         }
 
-        public static boolean changeAllianceRank(final int allianceid, final int cid, final int change) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.changeAllianceRank(cid, change);
+        public static boolean changeAllianceLeader(int allianceid, int cid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.setLeaderId(cid);
             }
             return false;
         }
 
-        public static boolean changeAllianceCapacity(final int allianceid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.setCapacity();
+        public static boolean changeAllianceRank(int allianceid, int cid, int change) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.changeAllianceRank(cid, change);
             }
             return false;
         }
 
-        public static boolean disbandAlliance(final int allianceid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.disband();
+        public static boolean changeAllianceCapacity(int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.setCapacity();
             }
             return false;
         }
 
-        public static boolean addGuildToAlliance(final int allianceid, final int gid) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.addGuild(gid);
+        public static boolean disbandAlliance(int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.disband();
             }
             return false;
         }
 
-        public static boolean removeGuildFromAlliance(final int allianceid, final int gid, final boolean expelled) {
-            final MapleGuildAlliance mga = getAlliance(allianceid);
-            if (mga != null) {
-                return mga.removeGuild(gid, expelled);
+        public static boolean addGuildToAlliance(int allianceid, int gid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.addGuild(gid);
             }
             return false;
         }
 
-        public static void sendGuild(final int allianceid) {
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
+        public static boolean removeGuildFromAlliance(int allianceid, int gid, boolean expelled) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            if (alliance != null) {
+                return alliance.removeGuild(gid, expelled);
+            }
+            return false;
+        }
+
+        public static void sendGuild(int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
             if (alliance != null) {
                 sendGuild(MaplePacketCreator.getAllianceUpdate(alliance), -1, allianceid);
                 sendGuild(MaplePacketCreator.getGuildAlliance(alliance), -1, allianceid);
             }
         }
 
-        public static void sendGuild(final MaplePacket packet, final int exceptionId, final int allianceid) {
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
+        public static void sendGuild(MaplePacket packet, int exceptionId, int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
             if (alliance != null) {
                 for (int i = 0; i < alliance.getNoGuilds(); i++) {
                     int gid = alliance.getGuildId(i);
@@ -1153,44 +1138,44 @@ public class World {
             }
         }
 
-        public static boolean createAlliance(final String alliancename, final int cid, final int cid2, final int gid, final int gid2) {
-            final int allianceid = MapleGuildAlliance.createToDb(cid, alliancename, gid, gid2);
-            if (allianceid <= 0) {
+        public static boolean createAlliance(String alliancename, int cid, int cid2, int gid, int gid2) {
+            MapleGuildAlliance alliance = MapleGuildAlliance.createAndSave(cid, alliancename, gid, gid2);
+            if (alliance == null) {
                 return false;
             }
-            final MapleGuild g = Guild.getGuild(gid), g_ = Guild.getGuild(gid2);
-            g.setAllianceId(allianceid);
-            g_.setAllianceId(allianceid);
-            g.changeARank(true);
-            g_.changeARank(false);
 
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
+            MapleGuild guild = Guild.getGuild(gid);
+            MapleGuild guild2 = Guild.getGuild(gid2);
+            guild.setAllianceId(alliance.getId());
+            guild2.setAllianceId(alliance.getId());
+            guild.changeARank(true);
+            guild2.changeARank(false);
 
-            sendGuild(MaplePacketCreator.createGuildAlliance(alliance), -1, allianceid);
-            sendGuild(MaplePacketCreator.getAllianceInfo(alliance), -1, allianceid);
-            sendGuild(MaplePacketCreator.getGuildAlliance(alliance), -1, allianceid);
-            sendGuild(MaplePacketCreator.changeAlliance(alliance, true), -1, allianceid);
+            sendGuild(MaplePacketCreator.createGuildAlliance(alliance), -1, alliance.getId());
+            sendGuild(MaplePacketCreator.getAllianceInfo(alliance), -1, alliance.getId());
+            sendGuild(MaplePacketCreator.getGuildAlliance(alliance), -1, alliance.getId());
+            sendGuild(MaplePacketCreator.changeAlliance(alliance, true), -1, alliance.getId());
             return true;
         }
 
-        public static void allianceChat(final int gid, final String name, final int cid, final String msg) {
-            final MapleGuild g = Guild.getGuild(gid);
-            if (g != null) {
-                final MapleGuildAlliance ga = getAlliance(g.getAllianceId());
-                if (ga != null) {
-                    for (int i = 0; i < ga.getNoGuilds(); i++) {
-                        final MapleGuild g_ = Guild.getGuild(ga.getGuildId(i));
-                        if (g_ != null) {
-                            g_.allianceChat(name, cid, msg);
+        public static void allianceChat(int gid, String name, int cid, String msg) {
+            MapleGuild guild = Guild.getGuild(gid);
+            if (guild != null) {
+                MapleGuildAlliance alliance = getAlliance(guild.getAllianceId());
+                if (alliance != null) {
+                    for (int i = 0; i < alliance.getNoGuilds(); i++) {
+                        MapleGuild mapleGuild = Guild.getGuild(alliance.getGuildId(i));
+                        if (mapleGuild != null) {
+                            mapleGuild.allianceChat(name, cid, msg);
                         }
                     }
                 }
             }
         }
 
-        public static void setNewAlliance(final int gid, final int allianceid) {
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
-            final MapleGuild guild = Guild.getGuild(gid);
+        public static void setNewAlliance(int gid, int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            MapleGuild guild = Guild.getGuild(gid);
             if (alliance != null && guild != null) {
                 for (int i = 0; i < alliance.getNoGuilds(); i++) {
                     if (gid == alliance.getGuildId(i)) {
@@ -1201,7 +1186,7 @@ public class World {
                         guild.changeARank();
                         guild.writeToDB(false);
                     } else {
-                        final MapleGuild g_ = Guild.getGuild(alliance.getGuildId(i));
+                        MapleGuild g_ = Guild.getGuild(alliance.getGuildId(i));
                         if (g_ != null) {
                             g_.broadcast(MaplePacketCreator.addGuildToAlliance(alliance, guild));
                             g_.broadcast(MaplePacketCreator.changeGuildInAlliance(alliance, guild, true));
@@ -1211,12 +1196,12 @@ public class World {
             }
         }
 
-        public static void setOldAlliance(final int gid, final boolean expelled, final int allianceid) {
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
-            final MapleGuild g_ = Guild.getGuild(gid);
+        public static void setOldAlliance(int gid, boolean expelled, int allianceid) {
+            MapleGuildAlliance alliance = getAlliance(allianceid);
+            MapleGuild g_ = Guild.getGuild(gid);
             if (alliance != null) {
                 for (int i = 0; i < alliance.getNoGuilds(); i++) {
-                    final MapleGuild guild = Guild.getGuild(alliance.getGuildId(i));
+                    MapleGuild guild = Guild.getGuild(alliance.getGuildId(i));
                     if (guild == null) {
                         if (gid != alliance.getGuildId(i)) {
                             alliance.removeGuild(gid, false);
@@ -1237,18 +1222,13 @@ public class World {
             }
 
             if (gid == -1) {
-                lock.writeLock().lock();
-                try {
-                    alliances.remove(allianceid);
-                } finally {
-                    lock.writeLock().unlock();
-                }
+                ALLIANCES_CACHED.remove(allianceid);
             }
         }
 
-        public static List<MaplePacket> getAllianceInfo(final int allianceid, final boolean start) {
-            List<MaplePacket> ret = new ArrayList<MaplePacket>();
-            final MapleGuildAlliance alliance = getAlliance(allianceid);
+        public static List<MaplePacket> getAllianceInfo(int allianceid, boolean start) {
+            List<MaplePacket> ret = new ArrayList<>();
+            MapleGuildAlliance alliance = getAlliance(allianceid);
             if (alliance != null) {
                 if (start) {
                     ret.add(MaplePacketCreator.getAllianceInfo(alliance));
@@ -1260,54 +1240,37 @@ public class World {
         }
 
         public static void save() {
-            System.out.println("Saving alliances...");
-            lock.writeLock().lock();
-            try {
-                for (MapleGuildAlliance a : alliances.values()) {
-                    a.saveToDb();
-                }
-            } finally {
-                lock.writeLock().unlock();
+            LOGGER.debug("Saving alliances...");
+            for (MapleGuildAlliance a : ALLIANCES_CACHED.values()) {
+                a.saveToDb();
             }
         }
     }
 
     public static class Family {
 
-        private static final Map<Integer, MapleFamily> families = new LinkedHashMap<Integer, MapleFamily>();
-        private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private static final Map<Integer, MapleFamily> FAMILY_CACHED = Maps.newConcurrentMap();
 
-        static {
-            System.out.println("====================================================-[ 加载学院系统 ]");
-            long xyxttime = System.currentTimeMillis();
+        public static void init() {
+            LOGGER.info(">>> 初始化 [学院系统]");
+            Stopwatch started = Stopwatch.createStarted();
             Collection<MapleFamily> allGuilds = MapleFamily.loadAll();
             for (MapleFamily g : allGuilds) {
                 if (g.isProper()) {
-                    families.put(g.getId(), g);
+                    FAMILY_CACHED.put(g.getId(), g);
                 }
             }
-            System.out.println("加载学院系统完成 耗时：" + (System.currentTimeMillis() - xyxttime) / 1000.0 + "秒");
+            LOGGER.info("<<< [学院系统]初始化完毕，耗时：{}", started.stop());
         }
 
-        public static MapleFamily getFamily(int id) {
-            MapleFamily ret = null;
-            lock.readLock().lock();
-            try {
-                ret = families.get(id);
-            } finally {
-                lock.readLock().unlock();
-            }
+        public static MapleFamily getFamily(Integer id) {
+            MapleFamily ret = FAMILY_CACHED.get(id);
             if (ret == null) {
-                lock.writeLock().lock();
-                try {
-                    ret = new MapleFamily(id);
-                    if (ret == null || ret.getId() <= 0 || !ret.isProper()) { //failed to load
-                        return null;
-                    }
-                    families.put(id, ret);
-                } finally {
-                    lock.writeLock().unlock();
+                ret = new MapleFamily(id);
+                if (ret.getId() <= 0 || !ret.isProper()) { //failed to load
+                    return null;
                 }
+                FAMILY_CACHED.put(id, ret);
             }
             return ret;
         }
@@ -1335,21 +1298,16 @@ public class World {
         }
 
         public static void save() {
-            System.out.println("Saving families...");
-            lock.writeLock().lock();
-            try {
-                for (MapleFamily a : families.values()) {
-                    a.writeToDB(false);
-                }
-            } finally {
-                lock.writeLock().unlock();
+            LOGGER.debug("Saving families...");
+            for (MapleFamily a : FAMILY_CACHED.values()) {
+                a.writeToDB(false);
             }
         }
 
         public static void setFamily(int familyid, int seniorid, int junior1, int junior2, int currentrep, int totalrep, int cid) {
             int ch = Find.findChannel(cid);
             if (ch == -1) {
-                // System.out.println("ERROR: cannot find player in given channel");
+                // LOGGER.debug("ERROR: cannot find player in given channel");
                 return;
             }
             MapleCharacter mc = getStorage(ch).getCharacterById(cid);
@@ -1374,14 +1332,9 @@ public class World {
 
         public static void disbandFamily(int gid) {
             MapleFamily g = getFamily(gid);
-            lock.writeLock().lock();
-            try {
-                if (g != null) {
-                    g.disbandFamily();
-                    families.remove(gid);
-                }
-            } finally {
-                lock.writeLock().unlock();
+            if (g != null) {
+                g.disbandFamily();
+                FAMILY_CACHED.remove(gid);
             }
         }
     }

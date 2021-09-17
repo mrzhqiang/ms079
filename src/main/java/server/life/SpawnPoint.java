@@ -23,6 +23,7 @@ package server.life;
 import java.awt.Point;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.MapleCarnivalFactory;
 import server.MapleCarnivalFactory.MCSkill;
 import server.maps.MapleMap;
@@ -32,7 +33,7 @@ import tools.MaplePacketCreator;
 public class SpawnPoint extends Spawns {
 
     private MapleMonster monster;
-    private Point pos;
+    private Vector pos;
     private long nextPossibleSpawn;
     private int mobTime, carnival = -1, level = -1;
     private AtomicInteger spawnedMonsters = new AtomicInteger(0);
@@ -40,7 +41,7 @@ public class SpawnPoint extends Spawns {
     private String msg;
     private byte carnivalTeam;
 
-    public SpawnPoint(final MapleMonster monster, final Point pos, final int mobTime, final byte carnivalTeam, final String msg) {
+    public SpawnPoint(final MapleMonster monster, final Vector pos, final int mobTime, final byte carnivalTeam, final String msg) {
         this.monster = monster;
         this.pos = pos;
         this.mobTime = (mobTime < 0 ? -1 : (mobTime * 1000));
@@ -59,7 +60,7 @@ public class SpawnPoint extends Spawns {
     }
 
     @Override
-    public final Point getPosition() {
+    public final Vector getPosition() {
         return pos;
     }
 

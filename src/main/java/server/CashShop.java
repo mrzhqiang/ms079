@@ -206,7 +206,7 @@ public class CashShop implements Serializable {
             if (cItem.getId() == 5211047 || cItem.getId() == 5360014) {
                 item.setExpiration((long) (System.currentTimeMillis() + (long) (3 * 60 * 60 * 1000)));
             }
-            //  System.out.println(new Date(System.currentTimeMillis() + (long) (3 * 60 * 60 * 1000)));
+            //  LOGGER.debug(new Date(System.currentTimeMillis() + (long) (3 * 60 * 60 * 1000)));
             //item.setExpiration((long) (System.currentTimeMillis() + (long) (period * 24 * 60 * 60 * 1000)));
             item.setGiftFrom(gift);
             if (GameConstants.isPet(cItem.getId())) {

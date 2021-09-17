@@ -25,6 +25,7 @@ import java.awt.Point;
 import client.MapleClient;
 import client.MapleQuestStatus;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import scripting.EventManager;
 import scripting.NPCScriptManager;
 import server.Randomizer;
@@ -41,7 +42,7 @@ import tools.packet.UIPacket;
 public class MapScriptMethods {
 
     private MapleClient c;
-    private static final Point witchTowerPos = new Point(-60, 184);
+    private static final Vector witchTowerPos = Vector.of(-60, 184);
     private static final String[] mulungEffects = {
         "我一直在等你！如果你有一丝的勇气，你会走在那个门的右边!",
         "如何勇敢的你采取的道场训练塔!",
@@ -193,7 +194,7 @@ public class MapScriptMethods {
                     oms.setOHp(mob.getMobMaxHp());
                     oms.setOMp(mob.getMobMaxMp());
                     mob.setOverrideStats(oms);
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(mob, new Point(358, -68));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(mob, Vector.of(358, -68));
                     if (rand == 0) {
                         c.sendPacket(MaplePacketCreator.showEffect("pepeKing/pepe/pepeB"));
                     } else if (rand == 1) {
@@ -220,7 +221,7 @@ public class MapScriptMethods {
                     oms.setOHp(mob.getMobMaxHp());
                     oms.setOMp(mob.getMobMaxMp());
                     mob.setOverrideStats(oms);
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(mob, new Point(358, -68));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(mob, Vector.of(358, -68));
                     if (rand == 0) {
                         c.sendPacket(MaplePacketCreator.showEffect("pepeKing/pepe/pepeB"));
                     } else if (rand == 1) {
@@ -402,13 +403,13 @@ public class MapScriptMethods {
                     if (c.getPlayer().getEventInstance() != null) {
                         c.getPlayer().getEventInstance().registerMonster(shammos);
                     }
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(shammos, new Point(411, 236));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(shammos, Vector.of(411, 236));
                 }
                 break;
             }
             case astaroth_summon: {
                 c.getPlayer().getMap().resetFully();
-                c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9400633), new Point(600, -26)); //rough estimate
+                c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9400633), Vector.of(600, -26)); //rough estimate
                 break;
             }
             case boss_Ravana: { //event handles this so nothing for now until i find out something to do with it
@@ -425,48 +426,48 @@ public class MapScriptMethods {
                 c.getPlayer().getMap().resetFully();
                 c.getSession().write(MaplePacketCreator.showEffect("killing/bonus/bonus"));
                 c.getSession().write(MaplePacketCreator.showEffect("killing/bonus/stage"));
-                Point pos1 = null, pos2 = null, pos3 = null;
+                Vector pos1 = null, pos2 = null, pos3 = null;
                 int spawnPer = 0;
                 int mobId = 0;
                 //9700019, 9700029
                 //9700021 = one thats invincible
                 if (c.getPlayer().getMapId() >= 910320010 && c.getPlayer().getMapId() <= 910320029) {
-                    pos1 = new Point(121, 218);
-                    pos2 = new Point(396, 43);
-                    pos3 = new Point(-63, 43);
+                    pos1 = Vector.of(121, 218);
+                    pos2 = Vector.of(396, 43);
+                    pos3 = Vector.of(-63, 43);
                     mobId = 9700020;
                     spawnPer = 10;
                 } else if (c.getPlayer().getMapId() >= 926010010 && c.getPlayer().getMapId() <= 926010029) {
-                    pos1 = new Point(0, 88);
-                    pos2 = new Point(-326, -115);
-                    pos3 = new Point(361, -115);
+                    pos1 = Vector.of(0, 88);
+                    pos2 = Vector.of(-326, -115);
+                    pos3 = Vector.of(361, -115);
                     mobId = 9700019;
                     spawnPer = 10;
                 } else if (c.getPlayer().getMapId() >= 926010030 && c.getPlayer().getMapId() <= 926010049) {
-                    pos1 = new Point(0, 88);
-                    pos2 = new Point(-326, -115);
-                    pos3 = new Point(361, -115);
+                    pos1 = Vector.of(0, 88);
+                    pos2 = Vector.of(-326, -115);
+                    pos3 = Vector.of(361, -115);
                     mobId = 9700019;
                     spawnPer = 15;
                 } else if (c.getPlayer().getMapId() >= 926010050 && c.getPlayer().getMapId() <= 926010069) {
-                    pos1 = new Point(0, 88);
-                    pos2 = new Point(-326, -115);
-                    pos3 = new Point(361, -115);
+                    pos1 = Vector.of(0, 88);
+                    pos2 = Vector.of(-326, -115);
+                    pos3 = Vector.of(361, -115);
                     mobId = 9700019;
                     spawnPer = 20;
                 } else if (c.getPlayer().getMapId() >= 926010070 && c.getPlayer().getMapId() <= 926010089) {
-                    pos1 = new Point(0, 88);
-                    pos2 = new Point(-326, -115);
-                    pos3 = new Point(361, -115);
+                    pos1 = Vector.of(0, 88);
+                    pos2 = Vector.of(-326, -115);
+                    pos3 = Vector.of(361, -115);
                     mobId = 9700029;
                     spawnPer = 20;
                 } else {
                     break;
                 }
                 for (int i = 0; i < spawnPer; i++) {
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), new Point(pos1));
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), new Point(pos2));
-                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), new Point(pos3));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), Vector.of(pos1));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), Vector.of(pos2));
+                    c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mobId), Vector.of(pos3));
                 }
                 c.getPlayer().startMapTimeLimitTask(120, c.getPlayer().getMap().getReturnMap());
                 break;
@@ -482,7 +483,7 @@ public class MapScriptMethods {
                             c.getPlayer().getEventInstance().setProperty("HP", "50000");
                         }
                     }
-                    c.getPlayer().getMap().spawnMonsterWithEffectBelow(shammos, new Point(c.getPlayer().getMap().getPortal(0).getPosition()), 12);
+                    c.getPlayer().getMap().spawnMonsterWithEffectBelow(shammos, Vector.of(c.getPlayer().getMap().getPortal(0).getPosition()), 12);
                     shammos.switchController(c.getPlayer(), false);
                     // c.getSession().write(MaplePacketCreator.getNodeProperties(shammos, c.getPlayer().getMap()));
 
@@ -525,7 +526,7 @@ public class MapScriptMethods {
                 break;
             }
             default: {
-                //  System.out.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
+                //  LOGGER.debug("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 //    FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 break;
             }
@@ -913,7 +914,7 @@ public class MapScriptMethods {
                 break;
             }
             default: {
-                //  System.out.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
+                //  LOGGER.debug("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 //  FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地圖ID " + c.getPlayer().getMapId());
                 break;
             }
@@ -980,7 +981,7 @@ public class MapScriptMethods {
         map.resetFully();
 
         if (!map.containsNPC(2141000)) {
-            map.spawnNpc(2141000, new Point(-190, -42));
+            map.spawnNpc(2141000, Vector.of(-190, -42));
         }
     }
 

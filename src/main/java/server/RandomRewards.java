@@ -1,87 +1,48 @@
 package server;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-
+import com.google.common.collect.Lists;
 import constants.GameConstants;
+
+import java.util.Collections;
+import java.util.List;
 
 public class RandomRewards {
 
-    private final static RandomRewards instance = new RandomRewards();
+    private static final RandomRewards instance = new RandomRewards();
 
-    private List<Integer> compiledGold = null;
-    private List<Integer> compiledSilver = null;
-    private List<Integer> compiledFishing = null;
-    private List<Integer> compiledEvent = null;
-    private List<Integer> compiledEventC = null;
-    private List<Integer> compiledEventB = null;
-    private List<Integer> compiledEventA = null;
-    private static List<Integer> tenPercent = null;
+    private final List<Integer> compiledGold = Lists.newArrayList();
+    private final List<Integer> compiledSilver = Lists.newArrayList();
+    private final List<Integer> compiledFishing = Lists.newArrayList();
+    private final List<Integer> compiledEvent = Lists.newArrayList();
+    private final List<Integer> compiledEventC = Lists.newArrayList();
+    private final List<Integer> compiledEventB = Lists.newArrayList();
+    private final List<Integer> compiledEventA = Lists.newArrayList();
 
-    public static List<Integer> getTenPercent() {
-        return tenPercent;
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void init() {
+        getInstance();
     }
 
     public static RandomRewards getInstance() {
         return instance;
     }
 
-    protected RandomRewards() {
-        //System.out.println("加载 随机奖励 :::");
-        // Gold Box
-        List<Integer> returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.goldrewards);
-
-        compiledGold = returnArray;
-
-        // Silver Box
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.silverrewards);
-
-        compiledSilver = returnArray;
-
-        // Fishing Rewards
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.fishingReward);
-
-        compiledFishing = returnArray;
-
-        // Event Rewards
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.eventCommonReward);
-
-        compiledEventC = returnArray;
-
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.eventUncommonReward);
-
-        compiledEventB = returnArray;
-
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.eventRareReward);
-
-        compiledEventA = returnArray;
-
-        returnArray = new ArrayList<Integer>();
-
-        processRewards(returnArray, GameConstants.eventSuperReward);
-
-        compiledEvent = returnArray;
+    private RandomRewards() {
+        processRewards(compiledGold, GameConstants.goldrewards);
+        processRewards(compiledSilver, GameConstants.silverrewards);
+        processRewards(compiledFishing, GameConstants.fishingReward);
+        processRewards(compiledEventC, GameConstants.eventCommonReward);
+        processRewards(compiledEventB, GameConstants.eventUncommonReward);
+        processRewards(compiledEventA, GameConstants.eventRareReward);
+        processRewards(compiledEvent, GameConstants.eventSuperReward);
     }
 
-    private final void processRewards(final List<Integer> returnArray, final int[] list) {
+    private static void processRewards(List<Integer> returnArray, int[] list) {
         int lastitem = 0;
         for (int i = 0; i < list.length; i++) {
-            if (i % 2 == 0) { // Even
+            if (i % 2 == 0) { // 偶数==物品id
                 lastitem = list[i];
-            } else { // Odd
+            } else { // 奇数==物品数量
                 for (int j = 0; j < list[i]; j++) {
                     returnArray.add(lastitem);
                 }
@@ -90,19 +51,19 @@ public class RandomRewards {
         Collections.shuffle(returnArray);
     }
 
-    public final int getGoldBoxReward() {
+    public int getGoldBoxReward() {
         return compiledGold.get(Randomizer.nextInt(compiledGold.size()));
     }
 
-    public final int getSilverBoxReward() {
+    public int getSilverBoxReward() {
         return compiledSilver.get(Randomizer.nextInt(compiledSilver.size()));
     }
 
-    public final int getFishingReward() {
+    public int getFishingReward() {
         return compiledFishing.get(Randomizer.nextInt(compiledFishing.size()));
     }
 
-    public final int getEventReward() {
+    public int getEventReward() {
         final int chance = Randomizer.nextInt(100);
         if (chance < 50) {
             return compiledEventC.get(Randomizer.nextInt(compiledEventC.size()));

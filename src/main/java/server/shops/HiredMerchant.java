@@ -1,38 +1,16 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.shops;
 
-import client.inventory.IItem;
-import client.inventory.ItemFlag;
-import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleClient;
-import server.MapleItemInformationProvider;
+import client.inventory.IItem;
+import client.inventory.ItemFlag;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import handling.channel.ChannelServer;
-import java.awt.Point;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ScheduledFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
 import server.Timer.EtcTimer;
 import server.maps.MapleMap;
 import server.maps.MapleMapObject;
@@ -40,7 +18,14 @@ import server.maps.MapleMapObjectType;
 import tools.MaplePacketCreator;
 import tools.packet.PlayerShopPacket;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+
 public class HiredMerchant extends AbstractPlayerStore {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiredMerchant.class);
 
     public ScheduledFuture<?> schedule;
     private List<String> blacklist;
@@ -175,7 +160,7 @@ public class HiredMerchant extends AbstractPlayerStore {
                     chr.dropMessage(-5, new StringBuilder().append("您雇佣商店里面的道具: ").append(itemText).toString());
                 }
 
-                System.out.println(new StringBuilder().append("[雇佣] ").append(chr != null ? chr.getName() : getOwnerName()).append(" 雇佣商店卖出: ").append(newItem.getItemId()).append(" - ").append(itemText).append(" 价格: ").append(theQuantity).toString());
+                LOGGER.debug(new StringBuilder().append("[雇佣] ").append(chr != null ? chr.getName() : getOwnerName()).append(" 雇佣商店卖出: ").append(newItem.getItemId()).append(" - ").append(itemText).append(" 价格: ").append(theQuantity).toString());
             } else {
                 c.getPlayer().dropMessage(1, "金币不足.");
                 c.getSession().write(MaplePacketCreator.enableActions());
@@ -209,7 +194,7 @@ public class HiredMerchant extends AbstractPlayerStore {
                 for (int i = 910000001; i <= 910000022; i++) {
                     map = ch.getMapFactory().getMap(i);
                     if (map != null) {
-                        List<MapleMapObject> HMS = map.getMapObjectsInRange(new Point(0, 0), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT));
+                        List<MapleMapObject> HMS = map.getMapObjectsInRange(Vector.of(0, 0), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.HIRED_MERCHANT));
                         for (MapleMapObject HM : HMS) {
                             HiredMerchant HMM = (HiredMerchant) HM;
                             if (HMM.getOwnerId() == getOwnerId()) {

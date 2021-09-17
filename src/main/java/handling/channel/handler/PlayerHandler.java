@@ -1,67 +1,36 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
-import java.awt.Point;
-import java.util.List;
-
-import client.inventory.IItem;
-import client.ISkill;
-import client.SkillFactory;
-import client.SkillMacro;
-import constants.GameConstants;
-import client.inventory.MapleInventoryType;
-import client.MapleBuffStat;
-import client.MapleClient;
-import client.MapleCharacter;
-import client.PlayerStats;
+import client.*;
 import client.anticheat.CheatingOffense;
+import client.inventory.IItem;
+import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import constants.MapConstants;
 import handling.channel.ChannelServer;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import server.AutobanManager;
-import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
-import server.MapleStatEffect;
-import server.MaplePortal;
-import server.Randomizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import server.*;
 import server.Timer.CloneTimer;
 import server.events.MapleSnowball.MapleSnowballs;
-import server.life.MapleMonster;
-import server.life.MobAttackInfo;
-import server.life.MobAttackInfoFactory;
-import server.life.MobSkill;
-import server.life.MobSkillFactory;
-import server.maps.MapleMap;
+import server.life.*;
 import server.maps.FieldLimitType;
+import server.maps.MapleMap;
 import server.maps.MapleMapObjectType;
 import server.movement.LifeMovementFragment;
 import server.quest.MapleQuest;
 import tools.MaplePacketCreator;
-import tools.packet.MobPacket;
-import tools.packet.MTSCSPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.MTSCSPacket;
+import tools.packet.MobPacket;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlayerHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerHandler.class);
 
     private static boolean isFinisher(final int skillid) {
         switch (skillid) {
@@ -227,7 +196,7 @@ public class PlayerHandler {
     }
 
     public static final void TakeDamage(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
-        //System.out.println(slea.toString());
+        //LOGGER.debug(slea.toString());
         chr.updateTick(slea.readInt());
         final byte type = slea.readByte(); //-4 is mist, -3 and -2 are map damage.
         slea.skip(1); // Element - 0x00 = elementless, 0x01 = ice, 0x02 = fire, 0x03 = lightning
@@ -490,10 +459,10 @@ public class PlayerHandler {
     }
 
     public static final void UseItemEffect(SeekableLittleEndianAccessor slea, MapleClient c, MapleCharacter chr) {
-        System.out.println("啊啊啊啊AA");
+        LOGGER.debug("啊啊啊啊AA");
         int itemId = slea.readInt();
         if (itemId == 4270000) {
-            System.out.println("ss");
+            LOGGER.debug("ss");
         }
         IItem toUse;
         if ((itemId == 4290001) || (itemId == 4290000)) //倒霉鸡  金鸡  效果
@@ -631,7 +600,7 @@ public class PlayerHandler {
                 c.getSession().write(MaplePacketCreator.enableActions());
                 break;
             default:
-                Point pos = null;
+                Vector pos = null;
                 if (slea.available() == 7 || skill.getId() == 3111002 || skill.getId() == 3211002) {
                     pos = slea.readPos();
                 }
@@ -733,7 +702,7 @@ public class PlayerHandler {
                 case 512: {
                     //   chr.handleEnergyCharge(5110001, 100);
                     chr.handleEnergyCharge(5110001, attack.targets * attack.hits);
-                    //System.out.println("获取能量A："+ attack.targets * attack.hits);
+                    //LOGGER.debug("获取能量A："+ attack.targets * attack.hits);
                     //chr.handleEnergyChargeGain();
                     break;
                 }
@@ -1094,7 +1063,7 @@ public class PlayerHandler {
         if (chr == null) {
             return;
         }
-        final Point Original_Pos = chr.getPosition(); // 4 bytes Added on v.80 MSEA
+        final Vector Original_Pos = chr.getPosition(); // 4 bytes Added on v.80 MSEA
         slea.skip(33);
 
         /**
@@ -1117,13 +1086,13 @@ public class PlayerHandler {
         try {
             res = MovementParse.parseMovement(slea, 1);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("AIOBE Type1:\n" + slea.toString(true));
+            LOGGER.debug("AIOBE Type1:\n" + slea.toString(true));
             return;
         }
 
         if (res != null && c.getPlayer().getMap() != null) { // TODO more validation of input data
             if (slea.available() < 13 || slea.available() > 26) {
-                System.out.println("slea.available != 13-26 (movement parsing error)\n" + slea.toString(true));
+                LOGGER.debug("slea.available != 13-26 (movement parsing error)\n" + slea.toString(true));
                 return;
             }
             final List<LifeMovementFragment> res2 = new ArrayList<LifeMovementFragment>(res);
@@ -1142,12 +1111,12 @@ public class PlayerHandler {
 //		map.broadcastMessage(chr, MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
 //	    }
             MovementParse.updatePosition(res, chr, 0);
-            final Point pos = chr.getPosition();
+            final Vector pos = chr.getPosition();
             map.movePlayer(chr, pos);
             if (chr.getFollowId() > 0 && chr.isFollowOn() && chr.isFollowInitiator()) {
                 final MapleCharacter fol = map.getCharacterById(chr.getFollowId());
                 if (fol != null) {
-                    final Point original_pos = fol.getPosition();
+                    final Vector original_pos = fol.getPosition();
                     // fol.getClient().getSession().write(MaplePacketCreator.moveFollow(Original_Pos, original_pos, pos, res));
                     MovementParse.updatePosition(res, fol, 0);
                     // map.broadcastMessage(fol, MaplePacketCreator.movePlayer(fol.getId(), res, original_pos), false);
@@ -1194,7 +1163,7 @@ public class PlayerHandler {
                 }
             } catch (Exception e) {
             }
-            c.getPlayer().setOldPosition(new Point(c.getPlayer().getPosition()));
+            c.getPlayer().setOldPosition(Vector.of(c.getPlayer().getPosition()));
         }
     }
 
@@ -1384,7 +1353,7 @@ public class PlayerHandler {
             return;
         }
         final MaplePortal portal = chr.getMap().getPortal(slea.readMapleAsciiString());
-        final Point Original_Pos = chr.getPosition();
+        final Vector Original_Pos = chr.getPosition();
         final int toX = slea.readShort();
         final int toY = slea.readShort();
 //	slea.readShort(); // Original X pos
@@ -1395,7 +1364,7 @@ public class PlayerHandler {
         } else if (portal.getPosition().distanceSq(chr.getPosition()) > 22500) {
             chr.getCheatTracker().registerOffense(CheatingOffense.使用过远传送点);
         }
-        chr.getMap().movePlayer(chr, new Point(toX, toY));
+        chr.getMap().movePlayer(chr, Vector.of(toX, toY));
         chr.checkFollow();
     }
 
@@ -1436,16 +1405,16 @@ public class PlayerHandler {
     //c.getPlayer().setcharmessage(charmessage);
     //MapleCharacter.UpdateCharMessageZone();
     //chr.UpdateCharMessageZone();
-    //System.err.println("SetCharMessage");
+    //LOGGER.error("SetCharMessage");
     /*
      * } else if (type == 1) { // 表情 int expression = slea.readByte();
      * c.getPlayer().setexpression(expression);
-     * System.err.println("Expression"); } else if (type == 2) { // 生日及星座 int
+     * LOGGER.error("Expression"); } else if (type == 2) { // 生日及星座 int
      * blood = slea.readByte(); int month = slea.readByte(); int day =
      * slea.readByte(); int constellation = slea.readByte();
      * c.getPlayer().setblood(blood); c.getPlayer().setmonth(month);
      * c.getPlayer().setday(day); c.getPlayer().setconstellation(constellation);
-     * System.err.println("Constellation"); }
+     * LOGGER.error("Constellation"); }
      */
     //}
     /*

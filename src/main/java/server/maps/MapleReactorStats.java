@@ -23,13 +23,15 @@ package server.maps;
 import java.awt.Point;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.Pair;
 
 public class MapleReactorStats {
 
     private byte facingDirection;
-    private Point tl;
-    private Point br;
+    private Vector tl;
+    private Vector br;
     private Map<Byte, StateData> stateInfo = new HashMap<Byte, StateData>();
 
     public final void setFacingDirection(final byte facingDirection) {
@@ -40,19 +42,19 @@ public class MapleReactorStats {
         return facingDirection;
     }
 
-    public void setTL(Point tl) {
+    public void setTL(Vector tl) {
         this.tl = tl;
     }
 
-    public void setBR(Point br) {
+    public void setBR(Vector br) {
         this.br = br;
     }
 
-    public Point getTL() {
+    public Vector getTL() {
         return tl;
     }
 
-    public Point getBR() {
+    public Vector getBR() {
         return br;
     }
 

@@ -1,39 +1,23 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.packet;
 
 import client.MapleCharacter;
 import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleCarnivalParty;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class MonsterCarnivalPacket {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonsterCarnivalPacket.class);
+
     public static MaplePacket startMonsterCarnival(final MapleCharacter chr, final int enemyavailable, final int enemytotal) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("startMonsterCarnival--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("startMonsterCarnival--------------------");
         }
         mplew.writeShort(SendPacketOpcode.MONSTER_CARNIVAL_START.getValue());
         final MapleCarnivalParty friendly = chr.getCarnivalParty();
@@ -53,8 +37,8 @@ public class MonsterCarnivalPacket {
     public static MaplePacket playerDiedMessage(String name, int lostCP, int team) { //CPQ
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("playerDiedMessage--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("playerDiedMessage--------------------");
         }
         mplew.writeShort(SendPacketOpcode.MONSTER_CARNIVAL_DIED.getValue());
         mplew.write(team); //team
@@ -66,8 +50,8 @@ public class MonsterCarnivalPacket {
 
     public static MaplePacket CPUpdate(boolean party, int curCP, int totalCP, int team) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        if (ServerConstants.调试输出封包) {
-            System.out.println("CPUpdate--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("CPUpdate--------------------");
         }
         if (!party) {
             mplew.writeShort(SendPacketOpcode.MONSTER_CARNIVAL_OBTAINED_CP.getValue());
@@ -84,8 +68,8 @@ public class MonsterCarnivalPacket {
     public static MaplePacket playerSummoned(String name, int tab, int number) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("playerSummoned--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("playerSummoned--------------------");
         }
         mplew.writeShort(SendPacketOpcode.MONSTER_CARNIVAL_SUMMON.getValue());
         mplew.write(tab);
@@ -97,8 +81,8 @@ public class MonsterCarnivalPacket {
     public static MaplePacket playerSummoned1(String name, int tab, int number) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
-        if (ServerConstants.调试输出封包) {
-            System.out.println("playerSummoned--------------------");
+        if (ServerConstants.properties.isPacketDebugLogger()) {
+            LOGGER.debug("playerSummoned--------------------");
         }
         mplew.writeShort(SendPacketOpcode.MONSTER_CARNIVAL_SUMMON1.getValue());
         mplew.write(tab);

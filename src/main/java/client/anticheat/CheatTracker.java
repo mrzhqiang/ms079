@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
@@ -60,7 +61,7 @@ public class CheatTracker {
     private int numSequentialSummonAttack = 0;
     private long summonSummonTime = 0;
     private int numSameDamage = 0;
-    private Point lastMonsterMove;
+    private Vector lastMonsterMove;
     private int monsterMoveCount;
     private int attacksWithoutHit = 0;
     private byte dropsPerSecond = 0;
@@ -93,7 +94,7 @@ public class CheatTracker {
         // For lagging, it isn't an issue since TIME is running simotaniously, client
         // will be sending values of older time
 
-//	System.out.println("Delay [" + skillId + "] = " + (tickcount - lastAttackTickCount) + ", " + (Server_ClientAtkTickDiff - STime_TC));
+//	LOGGER.debug("Delay [" + skillId + "] = " + (tickcount - lastAttackTickCount) + ", " + (Server_ClientAtkTickDiff - STime_TC));
         Attack_tickResetCount++; // Without this, the difference will always be at 100
         if (Attack_tickResetCount >= (AtkDelay <= 200 ? 2 : 4)) {
             Attack_tickResetCount = 0;
@@ -107,9 +108,9 @@ public class CheatTracker {
         numSequentialDamage++;
         lastDamageTakenTime = System.currentTimeMillis();
 
-        // System.out.println("tb" + timeBetweenDamage);
-        // System.out.println("ns" + numSequentialDamage);
-        // System.out.println(timeBetweenDamage / 1500 + "(" + timeBetweenDamage / numSequentialDamage + ")");
+        // LOGGER.debug("tb" + timeBetweenDamage);
+        // LOGGER.debug("ns" + numSequentialDamage);
+        // LOGGER.debug(timeBetweenDamage / 1500 + "(" + timeBetweenDamage / numSequentialDamage + ")");
         if (lastDamageTakenTime - takingDamageSince / 500 < numSequentialDamage) {
             registerOffense(CheatingOffense.怪物碰撞过快);
         }
@@ -146,7 +147,7 @@ public class CheatTracker {
         }
     }
 
-    public final void checkMoveMonster(final Point pos, MapleCharacter chr) {
+    public final void checkMoveMonster(final Vector pos, MapleCharacter chr) {
 
         //double dis = Math.abs(pos.distance(lastMonsterMove));
         if (pos.equals(this.lastMonsterMove)) {
@@ -179,7 +180,7 @@ public class CheatTracker {
     public final boolean checkSummonAttack() {
         numSequentialSummonAttack++;
         //estimated
-        // System.out.println(numMPRegens + "/" + allowedRegens);
+        // LOGGER.debug(numMPRegens + "/" + allowedRegens);
         if ((System.currentTimeMillis() - summonSummonTime) / (2000 + 1) < numSequentialSummonAttack) {
             registerOffense(CheatingOffense.召唤兽快速攻击);
             return false;
@@ -327,7 +328,7 @@ public class CheatTracker {
                 }
                 if (gm_message == 0) {
 
-                    // System.out.println(MapleCharacterUtil.makeMapleReadable(chrhardref.getName()) + "怀疑使用外挂");
+                    // LOGGER.debug(MapleCharacterUtil.makeMapleReadable(chrhardref.getName()) + "怀疑使用外挂");
                     // World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[管理員訊息] 开挂玩家[" + MapleCharacterUtil.makeMapleReadable(chrhardref.getName()) + "] 地图ID[" + chrhardref.getMapId() + "] suspected of hacking! " + StringUtil.makeEnumHumanReadable(offense.name()) + (param == null ? "" : (" - " + param))).getBytes());
                     /*
                      * String note = "时间：" +

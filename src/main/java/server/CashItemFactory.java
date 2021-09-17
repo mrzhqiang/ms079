@@ -1,104 +1,57 @@
 package server;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
+import com.github.mrzhqiang.maplestory.domain.DCashShopModifiedItem;
+import com.github.mrzhqiang.maplestory.domain.query.QDCashShopModifiedItem;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import database.DatabaseConnection;
-import handling.cashshop.CashShopServer;
-import java.io.File;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.CashItemInfo.CashModInfo;
-import tools.wztosql.AddCashItemToDB;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CashItemFactory {
-    
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CashItemFactory.class);
+
     private final static CashItemFactory instance = new CashItemFactory();
-    private final static int[] bestItems = new int[]{50100010, 50100010, 50100010, 50100010, 50100010};
+    private final static int[] BEST_ITEMS = new int[]{50100010, 50100010, 50100010, 50100010, 50100010};
+
+    private static final Map<Integer, List<CashItemInfo>> CASH_PACKAGES = new HashMap<>();
+
     private boolean initialized = false;
-    private final Map<Integer, CashItemInfo> itemStats = new HashMap<Integer, CashItemInfo>();
-    private final Map<Integer, List<CashItemInfo>> itemPackage = new HashMap<Integer, List<CashItemInfo>>();
-    private final Map<Integer, CashModInfo> itemMods = new HashMap<Integer, CashModInfo>();
-    private final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
-    //是这个目录把，嗯
-    private final MapleDataProvider itemStringInfo = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/String.wz"));
-    private Map<Integer, Integer> idLookup = new HashMap();
-        private static Map<Integer, List<CashItemInfo>> cashPackages = new HashMap();
-    public static final CashItemFactory getInstance() {
+
+    private final Map<Integer, CashItemInfo> itemStats = new HashMap<>();
+    private final Map<Integer, List<CashItemInfo>> itemPackage = new HashMap<>();
+    private final Map<Integer, CashModInfo> itemMods = new HashMap<>();
+    private final Map<Integer, Integer> idLookup = new HashMap<>();
+
+    public static CashItemFactory getInstance() {
         return instance;
     }
-    
+
     protected CashItemFactory() {
     }
-    
+
     public void initialize() {
-        //System.out.println("商城 :::");
-        final List<Integer> itemids = new ArrayList<Integer>();
-        for (MapleData field : data.getData("Commodity.img").getChildren()) {
-            final int SN = MapleDataTool.getIntConvert("SN", field, 0);
-            final int itemId = MapleDataTool.getIntConvert("ItemId", field, 0);
-            final CashItemInfo stats = new CashItemInfo(itemId,
-                    MapleDataTool.getIntConvert("Count", field, 1),
-                    MapleDataTool.getIntConvert("Price", field, 0), SN,
-                    MapleDataTool.getIntConvert("Period", field, 0),
-                    MapleDataTool.getIntConvert("Gender", field, 2),
-                    MapleDataTool.getIntConvert("OnSale", field, 0) > 0);
-            
-         /*   String name = "";
-            MapleData nameData = null;
-            int id = 0;
-            for (MapleData Eqp : itemStringInfo.getData("Eqp.img").getChildByPath("Eqp").getChildren()) {
-                nameData = Eqp.getChildByPath("name");
-                id = Integer.parseInt(Eqp.getName().substring(0, Eqp.getName().length() - 4));
-            }
-            for (MapleData Cash : itemStringInfo.getData("Cash.img").getChildren()) {
-                 nameData = Cash.getChildByPath("name");
-                 id = Integer.parseInt(Cash.getName());
-            }
-            for (MapleData Item : itemStringInfo.getData("Item.img").getChildren()) {
-                 nameData = Item.getChildByPath("name");
-                 id = Integer.parseInt(Item.getName());
-            }
-            for (MapleData Pet : itemStringInfo.getData("Pet.img").getChildren()) {
-                 nameData = Pet.getChildByPath("name");
-                 id = Integer.parseInt(Pet.getName());
-            }
-            for (MapleData Ins : itemStringInfo.getData("Ins.img").getChildren()) {
-                 nameData = Ins.getChildByPath("name");
-                 id = Integer.parseInt(Ins.getName());
-            }
-            for (MapleData Etc : itemStringInfo.getData("Etc.img").getChildByPath("Etc").getChildren()) {
-                 nameData = Etc.getChildByPath("name");
-                 id = Integer.parseInt(Etc.getName());
-            }
-            for (MapleData Consume : itemStringInfo.getData("Consume.img").getChildren()) {
-                 nameData = Consume.getChildByPath("name");
-                 id = Integer.parseInt(Consume.getName());
-            }
-            if (itemId == id && id != 0) {
-                if (nameData != null) {
-                    name = (String) nameData.getData();
-                }
-            }*/
-            /*try {
-                AddCashItemToDB.addItem(stats.getId(), stats.getCount(), stats.getPrice(), stats.getSN(), stats.getExpire(), stats.getGender(), stats.getOnSale());
-            } catch (Exception ex) {
-                Logger.getLogger(CashItemFactory.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
-            if (SN > 0) {
-                itemStats.put(SN, stats);
-                idLookup.put(itemId, SN);
-            }
-            
-            if (itemId > 0) {
-                itemids.add(itemId);
-            }
-        }
+        List<Integer> itemids = WzData.ETC.directory()
+                .findFile("Commodity.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .map(stream -> stream.map(this::cashItemInfoOf)
+                        .peek(this::handleCashItemInfo)
+                        .map(CashItemInfo::getId)
+                        .filter(integer -> integer > 0)
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
+
         for (int i : itemids) {
             getPackageItems(i);
         }
@@ -108,7 +61,27 @@ public class CashItemFactory {
         }
         initialized = true;
     }
-    
+
+    private void handleCashItemInfo(CashItemInfo info) {
+        int sn = info.getSN();
+        int id = info.getId();
+        if (sn > 0) {
+            itemStats.put(sn, info);
+            idLookup.put(id, sn);
+        }
+    }
+
+    private CashItemInfo cashItemInfoOf(WzElement<?> element) {
+        int snValue = Elements.findInt(element, "SN");
+        int itemIdValue = Elements.findInt(element, "ItemId", 1);
+        int countValue = Elements.findInt(element, "Count");
+        int priceValue = Elements.findInt(element, "Price");
+        int periodValue = Elements.findInt(element, "Period");
+        int genderValue = Elements.findInt(element, "Gender", 2);
+        int onsaleValue = Elements.findInt(element, "OnSale");
+        return new CashItemInfo(itemIdValue, countValue, priceValue, snValue, periodValue, genderValue, onsaleValue > 0);
+    }
+
     public final CashItemInfo getItem(int sn) {
         final CashItemInfo stats = itemStats.get(sn);
         // final CashItemInfo stats = itemStats.get(Integer.valueOf(sn));
@@ -122,89 +95,67 @@ public class CashItemFactory {
         //hmm
         return stats;
     }
-    
-   /* public final List<CashItemInfo> getPackageItems(int itemId) {
-        return itemPackage.get(itemId);
-    }*/
-        public static List<CashItemInfo> getPackageItems(int itemId) {
-        if (cashPackages.containsKey(itemId)) {
-            return cashPackages.get(itemId);
+
+    /* public final List<CashItemInfo> getPackageItems(int itemId) {
+         return itemPackage.get(itemId);
+     }*/
+    public static List<CashItemInfo> getPackageItems(int itemId) {
+        List<CashItemInfo> list = CASH_PACKAGES.get(itemId);
+        if (list != null) {
+            return list;
         }
-        List<CashItemInfo> packageItems = new ArrayList<CashItemInfo>();
-        MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/" + "Etc.wz"));
-        MapleData a = dataProvider.getData("CashPackage.img");
-        for (MapleData b : a.getChildren()) {
-            if (itemId == Integer.parseInt(b.getName())) {
-                for (MapleData c : b.getChildren()) {
-                    for (MapleData d : c.getChildren()) {
-                        int SN = MapleDataTool.getIntConvert("" + Integer.parseInt(d.getName()), c);
-                        //packageItems.add(getItem(SN));
-                        cashPackages.put(itemId, packageItems);
-                    }
-                }
-                break;
-            }
-        }
-        cashPackages.put(itemId, packageItems);
+
+        List<CashItemInfo> packageItems = new ArrayList<>();
+        WzData.ETC.directory()
+                .findFile("CashPackage.img")
+                .map(WzFile::content)
+                .map(it -> it.find(String.valueOf(itemId)))
+                .map(WzElement::childrenStream)
+                .map(stream -> stream.flatMap(WzElement::childrenStream))
+                .ifPresent(stream -> stream.forEach(element -> {
+                    // fixme 这一段代码有问题，需要看看要不要删除
+//                    Integer sn = ((IntElement) element).value();
+                    // packageItems.add(getItem(sn));
+                    CASH_PACKAGES.put(itemId, packageItems);
+                }));
+        CASH_PACKAGES.put(itemId, packageItems);
         return packageItems;
     }
-   /* public final List<CashItemInfo> getPackageItems(int itemId) {
-        if (itemPackage.get(itemId) != null) {
-            return itemPackage.get(itemId);
-        }
-        final List<CashItemInfo> packageItems = new ArrayList<CashItemInfo>();
-        
-        final MapleData b = data.getData("CashPackage.img");
 
-        if (b == null || b.getChildByPath(itemId + "/SN") == null) {
-            return null;
-        }
-        for (MapleData d : b.getChildByPath(itemId + "/SN").getChildren()) {
-            packageItems.add(itemStats.get(Integer.valueOf(MapleDataTool.getIntConvert(d))));
-        }
-        itemPackage.put(itemId, packageItems);
-        return packageItems;
-    }*/
-    
     public final CashModInfo getModInfo(int sn) {
         CashModInfo ret = itemMods.get(sn);
-      //  System.out.println(itemMods.toString());
+        //  LOGGER.debug(itemMods.toString());
         if (ret == null) {
             if (initialized) {
                 return null;
             }
-            try {
-                Connection con = DatabaseConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial = ?");
-                ps.setInt(1, sn);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    ret = new CashModInfo(sn, rs.getInt("discount_price"), rs.getInt("mark"), rs.getInt("showup") > 0, rs.getInt("itemid"), rs.getInt("priority"), rs.getInt("package") > 0, rs.getInt("period"), rs.getInt("gender"), rs.getInt("count"), rs.getInt("meso"), rs.getInt("unk_1"), rs.getInt("unk_2"), rs.getInt("unk_3"), rs.getInt("extra_flags"));
-                    itemMods.put(sn, ret);
-                }
-                rs.close();
-                ps.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            ret = new QDCashShopModifiedItem()
+                    .serial.eq(sn)
+                    .findOneOrEmpty()
+                    .map(item -> new CashModInfo(sn, item.discountPrice, item.mark, item.showup,
+                            item.itemid, item.priority, item.packageField, item.period, item.gender, item.count,
+                            item.meso, item.unk1, item.unk2, item.unk3, item.extraFlags))
+                    .orElse(null);
+            itemMods.put(sn, ret);
         }
         return ret;
     }
-    
+
     public final Collection<CashModInfo> getAllModInfo() {
         if (!initialized) {
             initialize();
         }
         return itemMods.values();
     }
-    
+
     public final int[] getBestItems() {
-        return bestItems;
+        return BEST_ITEMS;
     }
-    
+
     public int getSnFromId(int itemId) {
         return idLookup.get(itemId);
     }
+
     public final void clearCashShop() {
         itemStats.clear();
         itemPackage.clear();

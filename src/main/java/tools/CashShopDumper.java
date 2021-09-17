@@ -6,40 +6,32 @@
 package tools;
 
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
+import com.github.mrzhqiang.maplestory.wz.WzFile;
+import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import database.DatabaseConnection;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.CashItemFactory;
 import server.CashItemInfo.CashModInfo;
 import server.MapleItemInformationProvider;
 
+import java.io.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
 /**
- *
  * @author Flower
  */
 public class CashShopDumper {
 
-    private static final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(MapleDataProviderFactory.wzPath + "/Etc.wz"));
+    private static final Logger LOGGER = LoggerFactory.getLogger(CashShopDumper.class);
 
-    public static final CashModInfo getModInfo(int sn) {
+    public static CashModInfo getModInfo(int sn) {
         CashModInfo ret = null;
 
         Connection con = DatabaseConnection.getConnection();
@@ -65,102 +57,100 @@ public class CashShopDumper {
         Collection<CashModInfo> list = CashItemFactory.getInstance().getAllModInfo();
         Connection con = DatabaseConnection.getConnection();
 
-        final List<Integer> itemids = new ArrayList<Integer>();
-        List<Integer> qq = new ArrayList<Integer>();
+        final List<Integer> itemids = new ArrayList<>();
+        List<Integer> qq = new ArrayList<>();
 
         Map<Integer, List<String>> dics = new HashMap<>();
 
-        for (MapleData field : data.getData("Commodity.img").getChildren()) {
-            try {
-                final int itemId = MapleDataTool.getIntConvert("ItemId", field, 0);
-                final int sn = MapleDataTool.getIntConvert("SN", field, 0);
-                final int count = MapleDataTool.getIntConvert("Count", field, 0);
-                final int price = MapleDataTool.getIntConvert("Price", field, 0);
-                final int priority = MapleDataTool.getIntConvert("Priority", field, 0);
-                final int period = MapleDataTool.getIntConvert("Period", field, 0);
-                final int gender = MapleDataTool.getIntConvert("Gender", field, -1);
-                final int meso = MapleDataTool.getIntConvert("Meso", field, 0);
-                //if(qq.contains(itemId))
-                //    continue;
-                if (itemId == 0) {
-                    continue;
-                }
+        WzData.ETC.directory().findFile("Commodity.img")
+                .map(WzFile::content)
+                .map(WzElement::childrenStream)
+                .map(stream -> stream.flatMap(WzElement::childrenStream))
+                .ifPresent(stream -> stream.forEach(element -> {
+                    try {
+                        int itemId = Elements.findInt(element, "ItemId");
+                        if (itemId == 0) {
+                            return;
+                        }
+                        int sn = Elements.findInt(element, "SN");
+                        int count = Elements.findInt(element, "Count");
+                        int price = Elements.findInt(element, "Price");
+                        int priority = Elements.findInt(element, "Priority");
+                        int period = Elements.findInt(element, "Period");
+                        int gender = Elements.findInt(element, "Gender");
+                        int meso = Elements.findInt(element, "Meso");
 
-                int cat = itemId / 10000;
-                if (dics.get(cat) == null) {
-                    dics.put(cat, new ArrayList());
-                }
-                boolean check = false;
-                if (meso > 0) {
-                    check = true;
-                }
-                if (MapleItemInformationProvider.getInstance().getInventoryType(itemId) == MapleInventoryType.EQUIP) {
-                    if (!MapleItemInformationProvider.getInstance().isCashItem(itemId)) {
-                        check = true;
+                        int cat = itemId / 10000;
+                        dics.computeIfAbsent(cat, k -> new ArrayList<>());
+                        boolean check = false;
+                        if (meso > 0) {
+                            check = true;
+                        }
+                        if (MapleItemInformationProvider.getInstance().getInventoryType(itemId) == MapleInventoryType.EQUIP) {
+                            if (!MapleItemInformationProvider.getInstance().isCashItem(itemId)) {
+                                check = true;
+                            }
+                        }
+                        if (MapleItemInformationProvider.getInstance().getInventoryType(itemId) == MapleInventoryType.EQUIP) {
+                            if (period > 0) {
+                                check = true;
+                            }
+                        }
+
+                        if (check) {
+                            LOGGER.info("MapleItemInformationProvider.getInstance().getName: {}", MapleItemInformationProvider.getInstance().getName(itemId));
+                            return;
+                        }
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO cashshop_modified_items (serial, showup,itemid,priority,period,gender,count,meso,discount_price,mark, unk_1, unk_2, unk_3,name  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        ps.setInt(1, sn);
+                        ps.setInt(2, 1);
+                        ps.setInt(3, 0);
+                        ps.setInt(4, 0);
+                        ps.setInt(5, period);
+                        ps.setInt(6, gender);
+                        ps.setInt(7, count > 1 ? count : 0);
+                        ps.setInt(8, meso);
+                        if ((1000000 <= itemId || itemId <= 1003091) && sn >= 20000000) {
+                            ps.setInt(9, price);
+                        } else {
+                            ps.setInt(9, 0);
+                        }
+                        qq.add(itemId);
+                        ps.setInt(10, 0);
+                        ps.setInt(11, 0);
+                        ps.setInt(12, 0);
+                        ps.setInt(13, 0);
+                        ps.setString(14, MapleItemInformationProvider.getInstance().getName(itemId));
+
+                        String sql = ps.toString().split(":")[1].trim() + ";";
+                        ps.executeUpdate();
+                        dics.get(cat).add("-- " + MapleItemInformationProvider.getInstance().getName(itemId) + "\n" + sql);
+                        ps.close();
+
+                    } catch (SQLException ex) {
+                        FilePrinter.printError("CashShopDumper.txt", ex);
                     }
-                }
-                if (MapleItemInformationProvider.getInstance().getInventoryType(itemId) == MapleInventoryType.EQUIP) {
-                    if (period > 0) {
-                        check = true;
-                    }
-                }
 
-                if (check) {
-                    System.out.println(MapleItemInformationProvider.getInstance().getName(itemId));
-                    continue;
-                }
-                PreparedStatement ps = con.prepareStatement("INSERT INTO cashshop_modified_items (serial, showup,itemid,priority,period,gender,count,meso,discount_price,mark, unk_1, unk_2, unk_3,name  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                ps.setInt(1, sn);
-                ps.setInt(2, 1);
-                ps.setInt(3, 0);
-                ps.setInt(4, 0);
-                ps.setInt(5, period);
-                ps.setInt(6, gender);
-                ps.setInt(7, count > 1 ? count : 0);
-                ps.setInt(8, meso);
-                if ((1000000 <= itemId || itemId <= 1003091) && sn >= 20000000) {
-                    ps.setInt(9, price);
-                } else {
-                    ps.setInt(9, 0);
-                }
-                qq.add(itemId);
-                ps.setInt(10, 0);
-                ps.setInt(11, 0);
-                ps.setInt(12, 0);
-                ps.setInt(13, 0);
-                ps.setString(14, MapleItemInformationProvider.getInstance().getName(itemId));
-
-                String sql = ps.toString().split(":")[1].trim() + ";";
-                ps.executeUpdate();
-                dics.get(cat).add("-- " + MapleItemInformationProvider.getInstance().getName(itemId) + "\n" + sql);
-                ps.close();
-
-            } catch (SQLException ex) {
-                FilePrinter.printError("CashShopDumper.txt", ex);
-            }
-
-        }
+                }));
 
         for (Integer key : dics.keySet()) {
-
             File fout = new File("cashshopItems/" + key.toString() + ".sql");
             List<String> l = dics.get(key);
             FileOutputStream fos = null;
             try {
                 if (!fout.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
                     fout.createNewFile();
                 }
                 fos = new FileOutputStream(fout);
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                for (int i = 0; i < l.size(); i++) {
-                    bw.write(l.get(i));
+                for (String s : l) {
+                    bw.write(s);
                     bw.newLine();
                 }
 
                 bw.close();
 
-            } catch (FileNotFoundException ex) {
-                FilePrinter.printError("CashShopDumper.txt", ex);
             } catch (IOException ex) {
                 FilePrinter.printError("CashShopDumper.txt", ex);
             } finally {

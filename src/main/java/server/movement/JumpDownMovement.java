@@ -22,32 +22,33 @@ package server.movement;
 
 import java.awt.Point;
 
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 
 public class JumpDownMovement extends AbstractLifeMovement {
 
-    private Point pixelsPerSecond;
-    private Point offset;
+    private Vector pixelsPerSecond;
+    private Vector offset;
     private int unk;
     private int fh;
 
-    public JumpDownMovement(int type, Point position, int duration, int newstate) {
+    public JumpDownMovement(int type, Vector position, int duration, int newstate) {
         super(type, position, duration, newstate);
     }
 
-    public Point getPixelsPerSecond() {
+    public Vector getPixelsPerSecond() {
         return pixelsPerSecond;
     }
 
-    public void setPixelsPerSecond(Point wobble) {
+    public void setPixelsPerSecond(Vector wobble) {
         this.pixelsPerSecond = wobble;
     }
 
-    public Point getOffset() {
+    public Vector getOffset() {
         return offset;
     }
 
-    public void setOffset(Point wobble) {
+    public void setOffset(Vector wobble) {
         this.offset = wobble;
     }
 

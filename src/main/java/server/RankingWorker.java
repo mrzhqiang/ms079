@@ -60,7 +60,7 @@ public class RankingWorker {
     }
 
     public final void run() {
-        System.out.println("加载 排名服务器 :::");
+        LOGGER.debug("加载 排名服务器 :::");
         loadJobCommands();
 
         WorldTimer.getInstance().register(new Runnable() {
@@ -70,15 +70,15 @@ public class RankingWorker {
 
                     con = DatabaseConnection.getConnection();
                     updateRanking();
-                    System.out.println("Ranking update");
+                    LOGGER.debug("Ranking update");
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    System.err.println("Could not update rankings");
+                    LOGGER.error("Could not update rankings");
                 }
             }
         }, 1 * 30 * 1000, 1 * 30 * 1000);
 
-        //System.out.println("排行啟動完成 :::"); //keep
+        //LOGGER.debug("排行啟動完成 :::"); //keep
     }
 
     private void updateRanking() throws Exception {

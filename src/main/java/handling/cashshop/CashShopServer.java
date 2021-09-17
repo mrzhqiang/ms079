@@ -1,94 +1,90 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.cashshop;
 
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import handling.MapleServerHandler;
 import handling.channel.PlayerStorage;
 import handling.mina.MapleCodecFactory;
-import java.net.InetSocketAddress;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
-import org.apache.mina.core.filterchain.IoFilter;
-
 import org.apache.mina.core.service.IoAcceptor;
-
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import server.ServerProperties;
+import java.net.InetSocketAddress;
 
+@Singleton
 public class CashShopServer {
 
-    private static String ip;
-    private final static int PORT = 8600;//商城端口读取配置里面的端口
-    private static IoAcceptor acceptor;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CashShopServer.class);
+
+    private static String IP;
+
+    private final ServerProperties properties;
+    private final MapleCodecFactory factory;
+    private final MapleServerHandler serverHandler;
+
     private static PlayerStorage players, playersMTS;
     private static boolean finishedShutdown = false;
 
-    public static void run_startup_configurations() {
-        ip = ServerProperties.getProperty("ZlhssMS.IP") + ":" + PORT;
+    @Inject
+    public CashShopServer(ServerProperties properties, MapleCodecFactory factory) {
+        this.properties = properties;
+        this.factory = factory;
+        this.serverHandler = new MapleServerHandler();
+        this.serverHandler.setCs(true);
+    }
+
+    public void start() {
+        String address = properties.getAddress();
+        int port = properties.getMallPort();
+        IP = address + ":" + port;
 
         IoBuffer.setUseDirectBuffer(false);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
-        acceptor = new NioSocketAcceptor();
-        acceptor.getFilterChain().addLast("codec", (IoFilter) new ProtocolCodecFilter(new MapleCodecFactory()));
+        // todo refactor as netty
+        IoAcceptor acceptor = new NioSocketAcceptor();
+        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(factory));
 
         ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
         players = new PlayerStorage(-10);
         playersMTS = new PlayerStorage(-20);
 
         try {
-            acceptor.setHandler(new MapleServerHandler(-1, true));
-            acceptor.bind(new InetSocketAddress(PORT));
-            System.out.println("商城服务器绑定端口: " + PORT);
-
-        } catch (final Exception e) {
-            System.err.println("Binding to port " + PORT + " failed");
-            e.printStackTrace();
+            acceptor.setHandler(serverHandler);
+            acceptor.bind(new InetSocketAddress(port));
+            LOGGER.info("商城服务器绑定端口: {}", port);
+        } catch (Exception e) {
+            LOGGER.error("Binding to port " + port + " failed", e);
             throw new RuntimeException("Binding failed.", e);
         }
     }
 
-    public static final String getIP() {
-        return ip;
+    public static String getIP() {
+        return IP;
     }
 
-    public static final PlayerStorage getPlayerStorage() {
+    public static PlayerStorage getPlayerStorage() {
         return players;
     }
 
-    public static final PlayerStorage getPlayerStorageMTS() {
+    public static PlayerStorage getPlayerStorageMTS() {
         return playersMTS;
     }
 
-    public static final void shutdown() {
+    public static void shutdown() {
         if (finishedShutdown) {
             return;
         }
-        System.out.println("正在断开商城内玩家...");
+        LOGGER.info("正在断开商城内玩家...");
         players.disconnectAll();
         //playersMTS.disconnectAll();
         // MTSStorage.getInstance().saveBuyNow(true);
-        System.out.println("正在关闭商城伺服器...");
+        LOGGER.info("正在关闭商城伺服器...");
         //acceptor.unbindAll();
         finishedShutdown = true;
     }

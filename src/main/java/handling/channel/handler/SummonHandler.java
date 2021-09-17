@@ -36,6 +36,8 @@ import client.anticheat.CheatingOffense;
 import client.status.MonsterStatus;
 import java.lang.ref.WeakReference;
 import java.util.Map;
+
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.MapleStatEffect;
 import server.AutobanManager;
 import server.Timer.CloneTimer;
@@ -57,7 +59,7 @@ public class SummonHandler {
         slea.skip(8); //POS
         final List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 5);
         if (chr != null && chr.getDragon() != null) {
-            final Point pos = chr.getDragon().getPosition();
+            final Vector pos = chr.getDragon().getPosition();
             MovementParse.updatePosition(res, chr.getDragon(), 0);
             if (!chr.isHidden()) {
                 chr.getMap().broadcastMessage(chr, MaplePacketCreator.moveDragon(chr.getDragon(), pos, res), chr.getPosition());
@@ -74,7 +76,7 @@ public class SummonHandler {
                         public void run() {
                             try {
                                 if (clone.getMap() == map && clone.getDragon() != null) {
-                                    final Point startPos = clone.getDragon().getPosition();
+                                    final Vector startPos = clone.getDragon().getPosition();
                                     MovementParse.updatePosition(res3, clone.getDragon(), 0);
 
                                     if (!clone.isHidden()) {
@@ -94,7 +96,7 @@ public class SummonHandler {
 
     public static final void MoveSummon(final SeekableLittleEndianAccessor slea, final MapleCharacter chr) {
         final int oid = slea.readInt();
-        Point startPos = new Point(slea.readShort(), slea.readShort());
+        Vector startPos = Vector.of(slea.readShort(), slea.readShort());
         List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 4);
 //        slea.skip(4); //startPOS
 //        final List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 4);
@@ -103,7 +105,7 @@ public class SummonHandler {
         }
         for (MapleSummon sum : chr.getSummons().values()) {
             if (sum.getObjectId() == oid && sum.getMovementType() != SummonMovementType.STATIONARY) {
-                final Point pos = sum.getPosition();
+                final Vector pos = sum.getPosition();
                 MovementParse.updatePosition(res, sum, 0);
                 if (!sum.isChangedMap()) {
                     chr.getMap().broadcastMessage(chr, MaplePacketCreator.moveSummon(chr.getId(), oid, startPos, res), sum.getPosition());

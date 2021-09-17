@@ -1,24 +1,3 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.channel.handler;
 
 import client.MapleCharacter;
@@ -27,10 +6,14 @@ import handling.MaplePacket;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildSummary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 public class AllianceHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AllianceHandler.class);
 
     public static final void HandleAlliance(final SeekableLittleEndianAccessor slea, final MapleClient c, boolean denied) {
         if (c.getPlayer().getGuildId() <= 0) {
@@ -42,7 +25,7 @@ public class AllianceHandler {
             c.getSession().write(MaplePacketCreator.enableActions());
             return;
         }
-        //System.out.println("Unhandled GuildAlliance \n" + slea.toString());
+        //LOGGER.debug("Unhandled GuildAlliance \n" + slea.toString());
         byte op = slea.readByte();
         if (c.getPlayer().getGuildRank() != 1 && op != 1) { //only updating doesn't need guild leader
             return;
@@ -146,7 +129,7 @@ public class AllianceHandler {
                 }
                 break;
             default:
-                System.out.println("Unhandled GuildAlliance op: " + op + ", \n" + slea.toString());
+                LOGGER.debug("Unhandled GuildAlliance op: " + op + ", \n" + slea.toString());
                 break;
         }
         //c.getSession().write(MaplePacketCreator.enableActions());

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.life;
 
 import client.inventory.Equip;
@@ -51,6 +31,9 @@ import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
 import java.awt.Point;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripting.EventInstanceManager;
 import server.MapleItemInformationProvider;
 import server.MapleStatEffect;
@@ -66,6 +49,8 @@ import tools.MaplePacketCreator;
 import tools.packet.MobPacket;
 
 public class MapleMonster extends AbstractLoadedMapleLife {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleMonster.class);
 
     private MapleMonsterStats stats;
     private OverrideMonsterStats ostats = null;
@@ -298,7 +283,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                             }
                             break;
                         default:
-                            System.out.println(stats.isBoss() + " " + stats.getHPDisplayType());
+                            LOGGER.debug(stats.isBoss() + " " + stats.getHPDisplayType());
                             break;
                     }
                 }

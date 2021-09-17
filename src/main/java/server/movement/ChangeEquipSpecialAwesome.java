@@ -21,6 +21,8 @@
 package server.movement;
 
 import java.awt.Point;
+
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 
 public class ChangeEquipSpecialAwesome implements LifeMovementFragment {
@@ -39,7 +41,7 @@ public class ChangeEquipSpecialAwesome implements LifeMovementFragment {
     }
 
     @Override
-    public Point getPosition() {
-        return new Point(0, 0);
+    public Vector getPosition() {
+        return Vector.of(0, 0);
     }
 }

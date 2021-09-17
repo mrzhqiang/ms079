@@ -19,7 +19,7 @@ public class MTSOperation {
 
     public static void MTSOperation(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         final MTSCart cart = MTSStorage.getInstance().getCart(c.getPlayer().getId());
-        //System.out.println(slea.toString());
+        //LOGGER.debug(slea.toString());
         if (slea.available() <= 0) {
             doMTSPackets(cart, c);
             return;
@@ -110,7 +110,7 @@ public class MTSOperation {
                 return;
             }
             final IItem item = cart.getInventory().get(id); //by index
-            //System.out.println("NumItems: " + cart.getInventory().size() + ", ID: " + id + ", ItemExists?: " + (item != null));
+            //LOGGER.debug("NumItems: " + cart.getInventory().size() + ", ID: " + id + ", ItemExists?: " + (item != null));
             if (item != null && item.getQuantity() > 0 && MapleInventoryManipulator.checkSpace(c, item.getItemId(), item.getQuantity(), item.getOwner())) {
                 IItem item_ = item.copy();
                 short pos = MapleInventoryManipulator.addbyItem(c, item_, true);
@@ -124,11 +124,11 @@ public class MTSOperation {
                     sendMTSPackets(cart, c, true);
                     return;
                 } else {
-                    //System.out.println("addByItem is less than 0");
+                    //LOGGER.debug("addByItem is less than 0");
                     c.getSession().write(MTSCSPacket.getMTSFailBuy());
                 }
             } else {
-                //System.out.println("CheckSpace return false");
+                //LOGGER.debug("CheckSpace return false");
                 c.getSession().write(MTSCSPacket.getMTSFailBuy());
             }
         } else if (op == 9) { //add to cart
@@ -166,7 +166,7 @@ public class MTSOperation {
                 c.getSession().write(MTSCSPacket.getMTSFailBuy());
             }
         } else if (c.getPlayer().isAdmin()) {
-            //System.out.println("New MTS Op " + op + ", \n" + slea.toString());
+            //LOGGER.debug("New MTS Op " + op + ", \n" + slea.toString());
         }
         doMTSPackets(cart, c);
     }

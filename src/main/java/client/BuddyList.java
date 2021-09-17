@@ -12,6 +12,8 @@ import java.util.Map;
 import java.io.Serializable;
 
 import database.DatabaseConnection;
+import io.ebean.DB;
+import io.ebean.SqlQuery;
 import tools.MaplePacketCreator;
 
 public class BuddyList implements Serializable {
@@ -23,9 +25,8 @@ public class BuddyList implements Serializable {
 
     /**
      * 好友名單操作
-     *
      */
-    public static enum BuddyOperation {
+    public enum BuddyOperation {
 
         ADDED, DELETED
     }
@@ -33,12 +34,12 @@ public class BuddyList implements Serializable {
     /**
      * 好友名單操作結果
      */
-    public static enum BuddyAddResult {
+    public enum BuddyAddResult {
 
         BUDDYLIST_FULL, ALREADY_ON_LIST, OK
     }
 
-  
+
     /**
      * 儲存的好友
      */
@@ -184,7 +185,6 @@ public class BuddyList implements Serializable {
     }
 
     /**
-     *
      * @param data
      */
     public void loadFromTransfer(final Map<BuddyEntry, Boolean> data) {
@@ -202,10 +202,9 @@ public class BuddyList implements Serializable {
     }
 
     /**
-     * 從資料庫讀取好友清單
+     * 从数据库读取好友列表。
      *
-     * @param characterId 要讀取的角色ID
-     * @throws SQLException
+     * @param characterId 目标角色 ID
      */
     public void loadFromDb(int characterId) throws SQLException {
 
@@ -242,12 +241,12 @@ public class BuddyList implements Serializable {
     /**
      * 新增好友請求
      *
-     * @param client 欲增加好友的角色客戶端
-     * @param buddyId 新增的好友ID
-     * @param buddyName 新增的好友名稱
+     * @param client       欲增加好友的角色客戶端
+     * @param buddyId      新增的好友ID
+     * @param buddyName    新增的好友名稱
      * @param buddyChannel 新增的好友頻道
-     * @param buddyLevel 新增的好友的等級
-     * @param buddyJob 新增的好友的職業
+     * @param buddyLevel   新增的好友的等級
+     * @param buddyJob     新增的好友的職業
      */
     public void addBuddyRequest(MapleClient client, int buddyId, String buddyName, int buddyChannel, int buddyLevel, int buddyJob) {
 

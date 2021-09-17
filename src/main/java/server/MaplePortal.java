@@ -3,17 +3,18 @@ package server;
 import java.awt.Point;
 
 import client.MapleClient;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 
 public interface MaplePortal {
 
-    public static final int MAP_PORTAL = 2;
-    public static final int DOOR_PORTAL = 6;
+    int MAP_PORTAL = 2;
+    int DOOR_PORTAL = 6;
 
     int getType();
 
     int getId();
 
-    Point getPosition();
+    Vector getPosition();
 
     String getName();
 

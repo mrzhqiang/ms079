@@ -1,27 +1,25 @@
 package server.quest;
 
-import constants.GameConstants;
-import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import client.MapleCharacter;
 import client.MapleQuestStatus;
+import constants.GameConstants;
 import database.DatabaseConnection;
-import database.DatabaseConnectionWZ;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scripting.NPCScriptManager;
+import tools.MaplePacketCreator;
+import tools.Pair;
+
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import scripting.NPCScriptManager;
-import provider.MapleData;
-import tools.MaplePacketCreator;
-import tools.Pair;
+import java.util.*;
 
 public class MapleQuest implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleQuest.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
     private static Map<Integer, MapleQuest> quests = new LinkedHashMap();
@@ -109,9 +107,13 @@ public class MapleQuest implements Serializable {
         rse = psp.executeQuery();
         while (rse.next()) {
             if (!ret.partyQuestInfo.containsKey(rse.getString("rank"))) {
-                ret.partyQuestInfo.put(rse.getString("rank"), new ArrayList());
+                ret.partyQuestInfo.put(rse.getString("rank"), new ArrayList<>());
             }
-            ((List) ret.partyQuestInfo.get(rse.getString("rank"))).add(new Pair(rse.getString("mode"), new Pair(rse.getString("property"), Integer.valueOf(rse.getInt("value")))));
+            String mode = rse.getString("mode");
+            String property = rse.getString("property");
+            int value = rse.getInt("value");
+            List<Pair<String, Pair<String, Integer>>> list = ret.partyQuestInfo.get(rse.getString("rank"));
+            list.add(new Pair<>(mode, new Pair<>(property, value)));
         }
         rse.close();
         return ret;
@@ -226,7 +228,7 @@ public class MapleQuest implements Serializable {
 
     public static void initQuests() {
         try {
-            Connection con = DatabaseConnectionWZ.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_questdata");
             PreparedStatement psr = con.prepareStatement("SELECT * FROM wz_questreqdata WHERE questid = ?");
             PreparedStatement psa = con.prepareStatement("SELECT * FROM wz_questactdata WHERE questid = ?");
@@ -247,9 +249,9 @@ public class MapleQuest implements Serializable {
             psi.close();
             psp.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("加载任务信息失败", e);
         }
-        System.out.println("共加载 " + quests.size() + " 个任务信息.");
+        LOGGER.info("共加载 {} 个任务信息.", quests.size());
     }
 
     /* public static void initQuests() {
@@ -286,7 +288,7 @@ public class MapleQuest implements Serializable {
                 ex.printStackTrace();
                 FileoutputUtil.outputFileError(FileoutputUtil.ScriptEx_Log, ex);
                 FileoutputUtil.log(FileoutputUtil.ScriptEx_Log, "Caused by questID " + id);
-                System.out.println("Caused by questID " + id);
+                LOGGER.debug("Caused by questID " + id);
                 return new MapleCustomQuest(id);
             }
         }

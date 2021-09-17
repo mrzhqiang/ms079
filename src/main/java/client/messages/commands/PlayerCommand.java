@@ -76,7 +76,7 @@ public class PlayerCommand {
 //                }
 //                c.getPlayer().getStat().setDex((short) 4);
 //                c.getPlayer().updateSingleStat(MapleStat.DEX, 4);
-                //   System.out.println(new Date(System.currentTimeMillis() + (long) (3 * 60 * 60 * 1000)));
+                //   LOGGER.debug(new Date(System.currentTimeMillis() + (long) (3 * 60 * 60 * 1000)));
                 //     c.getPlayer().getGuild().gainGP(50);  
                 //     c.getPlayer().saveToDB(false, false);
             }//      

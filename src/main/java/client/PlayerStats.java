@@ -37,6 +37,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.MapleStatEffect;
@@ -47,6 +50,8 @@ import tools.MaplePacketCreator;
 import tools.data.output.MaplePacketLittleEndianWriter;
 
 public class PlayerStats implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerStats.class);
 
     private static final long serialVersionUID = -679541993413738569L;
     private transient WeakReference<MapleCharacter> chr;
@@ -834,7 +839,7 @@ public class PlayerStats implements Serializable {
                     speedMod = 1.8f;
                     break;
                 default:
-                    System.err.println("Unhandeled monster riding level, Speedmod = " + speedMod + "");
+                    LOGGER.error("Unhandeled monster riding level, Speedmod = " + speedMod + "");
             }
         }
         hands = this.localdex + this.localint_ + this.localluk;

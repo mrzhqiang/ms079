@@ -196,7 +196,7 @@ public class MapleSnowball extends MapleEvent {
                         }
                     } else {
                         ball.setPositionX(ball.getPosition() + 1);
-                        //System.out.println("pos: " + chr.getPosition().x + ", ballpos: " + ball.getPosition().x + ", hittable: " + ball.isHittable() + ", startPoints: " + startPoints[0] + "," + startPoints[1] + ", damage: " + damage + ", snowmens: " + snowmens[0] + "," + snowmens[1] + ", extraDistances: " + extraDistances[0] + "," + extraDistances[1] + ", HP: " + ball.getHP());
+                        //LOGGER.debug("pos: " + chr.getPosition().x + ", ballpos: " + ball.getPosition().x + ", hittable: " + ball.isHittable() + ", startPoints: " + startPoints[0] + "," + startPoints[1] + ", damage: " + damage + ", snowmens: " + snowmens[0] + "," + snowmens[1] + ", extraDistances: " + extraDistances[0] + "," + extraDistances[1] + ", HP: " + ball.getHP());
                         if (ball.getPosition() == 255 || ball.getPosition() == 511 || ball.getPosition() == 767) { // Going to stage
                             ball.setStartPoint(chr.getMap());
                             chr.getMap().broadcastMessage(MaplePacketCreator.rollSnowball(4, sb.getSnowBall(0), sb.getSnowBall(1)));

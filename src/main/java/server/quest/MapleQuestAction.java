@@ -1,35 +1,28 @@
 package server.quest;
 
-import client.ISkill;
-import client.MapleCharacter;
-import client.MapleQuestStatus;
-import client.MapleStat;
-import client.Skill;
-import client.SkillFactory;
+import client.*;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import provider.MapleDataTool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
-import server.RandomRewards;
 import server.Randomizer;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.Triple;
 
-public class MapleQuestAction
-        implements Serializable {
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+public class MapleQuestAction implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapleQuestAction.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
     private MapleQuestActionType type;
@@ -191,8 +184,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -200,7 +193,7 @@ public class MapleQuestAction
                         try {
                             MapleInventoryManipulator.removeById(c.getClient(), GameConstants.getInventoryType(id), id, count * -1, true, false);
                         } catch (InventoryException ie) {
-                            System.err.println("[h4x] Completing a quest without meeting the requirements" + ie);
+                            LOGGER.error("[h4x] Completing a quest without meeting the requirements" + ie);
                         }
                         c.getClient().getSession().write(MaplePacketCreator.getShowItemGain(id, count, true));
                     } else {
@@ -243,7 +236,7 @@ public class MapleQuestAction
                     int masterLevel = ((Integer) skills.right).intValue();
                     ISkill skillObject = SkillFactory.getSkill(skillid);
                     boolean found = false;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int applicableJob = ((Integer) i$.next()).intValue();
                         if (c.getJob() == applicableJob) {
                             found = true;
@@ -286,7 +279,7 @@ public class MapleQuestAction
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int job_val = ((Integer) i$.next()).intValue();
                         if ((c.getJob() >= job_val) && (job_val > finalJob)) {
                             finalJob = job_val;
@@ -346,8 +339,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -447,8 +440,8 @@ public class MapleQuestAction
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                                    ? (extSelection != null) || (extSelection.intValue() != extNum++)
-                                    : id != selection)) {
+                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            : id != selection)) {
                         continue;
                     }
                     short count = (short) item.count;
@@ -516,7 +509,7 @@ public class MapleQuestAction
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext();) {
+                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
                         int job_val = ((Integer) i$.next()).intValue();
                         if ((c.getJob() >= job_val) && (job_val > finalJob)) {
                             finalJob = job_val;
@@ -798,7 +791,7 @@ public class MapleQuestAction implements Serializable {
                             MapleInventoryManipulator.removeById(c.getClient(), GameConstants.getInventoryType(id), id, (count * -1), true, false);
                         } catch (InventoryException ie) {
                             // it's better to catch this here so we'll atleast try to remove the other items
-                            System.err.println("[h4x] Completing a quest without meeting the requirements" + ie);
+                            LOGGER.error("[h4x] Completing a quest without meeting the requirements" + ie);
                         }
                         c.getClient().getSession().write(MaplePacketCreator.getShowItemGain(id, count, true));
                     } else { // add items
@@ -875,7 +868,7 @@ public class MapleQuestAction implements Serializable {
                 MapleItemInformationProvider.getInstance().getItemEffect(tobuff).applyTo(c);
                 break;
             case infoNumber: {
-//		System.out.println("quest : "+MapleDataTool.getInt(data, 0)+"");
+//		LOGGER.debug("quest : "+MapleDataTool.getInt(data, 0)+"");
 //		MapleQuest.getInstance(MapleDataTool.getInt(data, 0)).forceComplete(c, 0);
                 break;
             }
@@ -1113,7 +1106,7 @@ public class MapleQuestAction implements Serializable {
                 break;
             }
             case infoNumber: {
-//		System.out.println("quest : "+MapleDataTool.getInt(data, 0)+"");
+//		LOGGER.debug("quest : "+MapleDataTool.getInt(data, 0)+"");
 //		MapleQuest.getInstance(MapleDataTool.getInt(data, 0)).forceComplete(c, 0);
                 break;
             }
