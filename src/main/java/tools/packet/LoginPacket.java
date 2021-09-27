@@ -74,7 +74,7 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getLoginFailed(final int reason) {
+    public static MaplePacket getLoginFailed(final int reason) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(16);
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -139,7 +139,7 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getGenderNeeded(final MapleClient client) {
+    public static MaplePacket getGenderNeeded(final MapleClient client) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -151,7 +151,7 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getAuthSuccessRequest(final MapleClient client) {
+    public static MaplePacket getAuthSuccessRequest(final MapleClient client) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -206,7 +206,7 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getServerList(final int serverId, final String serverName, final Map<Integer, Integer> channelLoad) {
+    public static MaplePacket getServerList(final int serverId, final String serverName, final Map<Integer, Integer> channelLoad) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -255,7 +255,7 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getEndOfServerList() {
+    public static MaplePacket getEndOfServerList() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {

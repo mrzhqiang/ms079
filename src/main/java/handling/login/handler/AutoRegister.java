@@ -1,76 +1,62 @@
 package handling.login.handler;
 
 import client.LoginCrypto;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import constants.ServerConstants;
-import database.DatabaseConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.time.LocalDate;
 
-public class AutoRegister {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AutoRegister.class);
+public final class AutoRegister {
+    private AutoRegister() {
+        // no instance
+    }
 
     private static final int ACCOUNTS_PER_MAC = 1;
-    public static boolean autoRegister = ServerConstants.getAutoReg();
-    public static boolean success = false, mac = true;
+    private static final boolean autoRegister = ServerConstants.getAutoReg();
+    private static boolean success = false;
+    private static boolean mac = true;
+
+    public static boolean isAutoRegister() {
+        return autoRegister;
+    }
+
+    public static boolean isSuccess() {
+        return success;
+    }
+
+    public static void reset() {
+        AutoRegister.success = true;
+        AutoRegister.mac = true;
+    }
+
+    public static boolean isMac() {
+        return mac;
+    }
 
     public static boolean getAccountExists(String login) {
-        boolean accountExists = false;
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT name FROM accounts WHERE name = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            ps.setString(1, login);
-            ResultSet rs = ps.executeQuery();
-            if (rs.first()) {
-                accountExists = true;
-            }
-            rs.close();
-            ps.close();
-        } catch (SQLException ex) {
-            LOGGER.debug("执行 sql 出现问题", ex);
-        }
-        return accountExists;
+        return new QDAccount().name.eq(login).exists();
     }
 
     public static void createAccount(String login, String pwd, String eip, String macs) {
-        Connection con;
-
-        try {
-            con = DatabaseConnection.getConnection();
-        } catch (Exception ex) {
-            LOGGER.debug("创建账号异常", ex);
-            return;
+        int macCount = findCountByMac(macs);
+        if (macCount < ACCOUNTS_PER_MAC) {
+            DAccount account = new DAccount(login, LoginCrypto.hexSha1(pwd));
+            account.email = "autoregister@mail.com";
+            account.birthday = LocalDate.now();
+            account.mac = macs;
+            account.sessionIP = "/" + eip.substring(1, eip.lastIndexOf(':'));
+            account.save();
+            success = true;
         }
 
-        try {
-            ResultSet rs;
-            PreparedStatement ipc = con.prepareStatement("SELECT macs FROM accounts WHERE macs = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            ipc.setString(1, macs);
-            rs = ipc.executeQuery();
-            if (!rs.first() || rs.last() && rs.getRow() < ACCOUNTS_PER_MAC) {
-                PreparedStatement ps = con.prepareStatement("INSERT INTO accounts (name, password, email, birthday, macs, SessionIP) VALUES (?, ?, ?, ?, ?, ?)");
-                ps.setString(1, login);
-                ps.setString(2, LoginCrypto.hexSha1(pwd));
-                ps.setString(3, "autoregister@mail.com");
-                ps.setString(4, "2016-04-10");
-                ps.setString(5, macs);
-                ps.setString(6, "/" + eip.substring(1, eip.lastIndexOf(':')));
-                ps.executeUpdate();
-                success = true;
-            }
-            //  
-            //  ipc.close();
-            if (rs.getRow() >= ACCOUNTS_PER_MAC) {
-                mac = false;
-            }
-            rs.close();
-        } catch (SQLException ex) {
-            LOGGER.error("SQL 问题", ex);
+        macCount = findCountByMac(macs);
+        if (macCount >= ACCOUNTS_PER_MAC) {
+            mac = false;
         }
+    }
+
+    private static int findCountByMac(String macs) {
+        return new QDAccount().mac.eq(macs).findCount();
     }
 }

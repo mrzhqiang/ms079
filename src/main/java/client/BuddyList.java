@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.io.Serializable;
 
+import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
 import database.DatabaseConnection;
 import io.ebean.DB;
 import io.ebean.SqlQuery;

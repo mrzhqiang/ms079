@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.anticheat;
 
 public enum CheatingOffense {
@@ -55,44 +35,44 @@ public enum CheatingOffense {
     private final byte points;
     private final long validityDuration;
     private final int autobancount;
-    private byte bantype = 0; // 0 = Disabled, 1 = Enabled, 2 = DC
+    private byte bantype; // 0 = Disabled, 1 = Enabled, 2 = DC
 
-    public final byte getPoints() {
+    public byte getPoints() {
         return points;
     }
 
-    public final long getValidityDuration() {
+    public long getValidityDuration() {
         return validityDuration;
     }
 
-    public final boolean shouldAutoban(final int count) {
+    public boolean shouldAutoban(final int count) {
         if (autobancount == -1) {
             return false;
         }
         return count >= autobancount;
     }
 
-    public final byte getBanType() {
+    public byte getBanType() {
         return bantype;
     }
 
-    public final void setEnabled(final boolean enabled) {
+    public void setEnabled(final boolean enabled) {
         bantype = (byte) (enabled ? 1 : 0);
     }
 
-    public final boolean isEnabled() {
+    public boolean isEnabled() {
         return bantype >= 1;
     }
 
-    private CheatingOffense(final byte points, final long validityDuration) {
+    CheatingOffense(byte points, long validityDuration) {
         this(points, validityDuration, -1, (byte) 1);
     }
 
-    private CheatingOffense(final byte points, final long validityDuration, final int autobancount) {
+    CheatingOffense(byte points, long validityDuration, int autobancount) {
         this(points, validityDuration, autobancount, (byte) 1);
     }
 
-    private CheatingOffense(final byte points, final long validityDuration, final int autobancount, final byte bantype) {
+    CheatingOffense(byte points, long validityDuration, int autobancount, byte bantype) {
         this.points = points;
         this.validityDuration = validityDuration;
         this.autobancount = autobancount;

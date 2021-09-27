@@ -1,53 +1,27 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.anticheat;
 
-import java.awt.Point;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import constants.GameConstants;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import handling.world.World;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.AutobanManager;
 import server.Timer.CheatTimer;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.StringUtil;
 
+import java.lang.ref.WeakReference;
+import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 public class CheatTracker {
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock rL = lock.readLock(), wL = lock.writeLock();
-    private final Map<CheatingOffense, CheatingOffenseEntry> offenses = new LinkedHashMap<CheatingOffense, CheatingOffenseEntry>();
+    private final Map<CheatingOffense, CheatingOffenseEntry> offenses = new LinkedHashMap<>();
     private final WeakReference<MapleCharacter> chr;
     // For keeping track of speed attack hack.
     private int lastAttackTickCount = 0;
@@ -75,18 +49,18 @@ public class CheatTracker {
     private long[] lastTime = new long[6];
     private long lastSaveTime = 0L;
 
-    public CheatTracker(final MapleCharacter chr) {
-        this.chr = new WeakReference<MapleCharacter>(chr);
+    public CheatTracker(MapleCharacter chr) {
+        this.chr = new WeakReference<>(chr);
         invalidationTask = CheatTimer.getInstance().register(new InvalidationTask(), 60000);
         takingDamageSince = System.currentTimeMillis();
     }
 
-    public final void checkAttack(final int skillId, final int tickcount) {
-        final short AtkDelay = GameConstants.getAttackDelay(skillId);
+    public void checkAttack(int skillId, int tickcount) {
+        short AtkDelay = GameConstants.getAttackDelay(skillId);
         if ((tickcount - lastAttackTickCount) < AtkDelay) {
             registerOffense(CheatingOffense.快速攻击);
         }
-        final long STime_TC = System.currentTimeMillis() - tickcount; // hack = - more
+        long STime_TC = System.currentTimeMillis() - tickcount; // hack = - more
         if (Server_ClientAtkTickDiff - STime_TC > 250) { // 250 is the ping, TODO
             registerOffense(CheatingOffense.快速攻击2);
         }
@@ -104,7 +78,7 @@ public class CheatTracker {
         lastAttackTickCount = tickcount;
     }
 
-    public final void checkTakeDamage(final int damage) {
+    public void checkTakeDamage(int damage) {
         numSequentialDamage++;
         lastDamageTakenTime = System.currentTimeMillis();
 
@@ -133,7 +107,7 @@ public class CheatTracker {
         }
     }
 
-    public final void checkSameDamage(final int dmg) {
+    public void checkSameDamage(int dmg) {
         if (dmg > 2000 && lastDamage == dmg) {
             numSameDamage++;
 
@@ -147,7 +121,7 @@ public class CheatTracker {
         }
     }
 
-    public final void checkMoveMonster(final Vector pos, MapleCharacter chr) {
+    public void checkMoveMonster(Vector pos, MapleCharacter chr) {
 
         //double dis = Math.abs(pos.distance(lastMonsterMove));
         if (pos.equals(this.lastMonsterMove)) {
@@ -172,12 +146,12 @@ public class CheatTracker {
         }
     }
 
-    public final void resetSummonAttack() {
+    public void resetSummonAttack() {
         summonSummonTime = System.currentTimeMillis();
         numSequentialSummonAttack = 0;
     }
 
-    public final boolean checkSummonAttack() {
+    public boolean checkSummonAttack() {
         numSequentialSummonAttack++;
         //estimated
         // LOGGER.debug(numMPRegens + "/" + allowedRegens);
@@ -188,11 +162,11 @@ public class CheatTracker {
         return true;
     }
 
-    public final void checkDrop() {
+    public void checkDrop() {
         checkDrop(false);
     }
 
-    public final void checkDrop(final boolean dc) {
+    public void checkDrop(final boolean dc) {
         if ((System.currentTimeMillis() - lastDropTime) < 1000) {
             dropsPerSecond++;
             if (dropsPerSecond >= (dc ? 32 : 16) && chr.get() != null) {
@@ -227,7 +201,7 @@ public class CheatTracker {
         return false;
     }
 
-    public final void checkMsg() { //ALL types of msg. caution with number of  msgsPerSecond
+    public void checkMsg() { //ALL types of msg. caution with number of  msgsPerSecond
         if ((System.currentTimeMillis() - lastMsgTime) < 1000) { //luckily maplestory has auto-check for too much msging
             msgsPerSecond++;
             /*
@@ -240,11 +214,11 @@ public class CheatTracker {
         lastMsgTime = System.currentTimeMillis();
     }
 
-    public final int getAttacksWithoutHit() {
+    public int getAttacksWithoutHit() {
         return attacksWithoutHit;
     }
 
-    public final void setAttacksWithoutHit(final boolean increase) {
+    public void setAttacksWithoutHit(boolean increase) {
         if (increase) {
             this.attacksWithoutHit++;
         } else {
@@ -252,11 +226,11 @@ public class CheatTracker {
         }
     }
 
-    public final void registerOffense(final CheatingOffense offense) {
+    public void registerOffense(CheatingOffense offense) {
         registerOffense(offense, null);
     }
 
-    public final void registerOffense(final CheatingOffense offense, final String param) {
+    public void registerOffense(CheatingOffense offense, String param) {
         final MapleCharacter chrhardref = chr.get();
         if (chrhardref == null || !offense.isEnabled() || chrhardref.isClone() || chrhardref.isGM()) {
             return;
@@ -347,7 +321,7 @@ public class CheatTracker {
 
     public void updateTick(int newTick) {
         if (newTick == lastTickCount) { //definitely packet spamming
-/*
+            /*
              * if (tickSame >= 5) { chr.get().getClient().getSession().close();
              * //i could also add a check for less than, but i'm not too worried
              * at the moment :) } else {
@@ -360,7 +334,7 @@ public class CheatTracker {
         lastTickCount = newTick;
     }
 
-    public final void expireEntry(final CheatingOffenseEntry coe) {
+    public void expireEntry(final CheatingOffenseEntry coe) {
         wL.lock();
         try {
             offenses.remove(coe.getOffense());
@@ -369,7 +343,7 @@ public class CheatTracker {
         }
     }
 
-    public final int getPoints() {
+    public int getPoints() {
         int ret = 0;
         CheatingOffenseEntry[] offenses_copy;
         rL.lock();
@@ -378,7 +352,7 @@ public class CheatTracker {
         } finally {
             rL.unlock();
         }
-        for (final CheatingOffenseEntry entry : offenses_copy) {
+        for (CheatingOffenseEntry entry : offenses_copy) {
             if (entry.isExpired()) {
                 expireEntry(entry);
             } else {
@@ -388,16 +362,16 @@ public class CheatTracker {
         return ret;
     }
 
-    public final Map<CheatingOffense, CheatingOffenseEntry> getOffenses() {
+    public Map<CheatingOffense, CheatingOffenseEntry> getOffenses() {
         return Collections.unmodifiableMap(offenses);
     }
 
-    public final String getSummary() {
-        final StringBuilder ret = new StringBuilder();
-        final List<CheatingOffenseEntry> offenseList = new ArrayList<CheatingOffenseEntry>();
+    public String getSummary() {
+        StringBuilder ret = new StringBuilder();
+        List<CheatingOffenseEntry> offenseList = new ArrayList<>();
         rL.lock();
         try {
-            for (final CheatingOffenseEntry entry : offenses.values()) {
+            for (CheatingOffenseEntry entry : offenses.values()) {
                 if (!entry.isExpired()) {
                     offenseList.add(entry);
                 }
@@ -405,16 +379,12 @@ public class CheatTracker {
         } finally {
             rL.unlock();
         }
-        Collections.sort(offenseList, new Comparator<CheatingOffenseEntry>() {
-
-            @Override
-            public final int compare(final CheatingOffenseEntry o1, final CheatingOffenseEntry o2) {
-                final int thisVal = o1.getPoints();
-                final int anotherVal = o2.getPoints();
-                return (thisVal < anotherVal ? 1 : (thisVal == anotherVal ? 0 : -1));
-            }
+        offenseList.sort((o1, o2) -> {
+            int thisVal = o1.getPoints();
+            int anotherVal = o2.getPoints();
+            return (Integer.compare(anotherVal, thisVal));
         });
-        final int to = Math.min(offenseList.size(), 4);
+        int to = Math.min(offenseList.size(), 4);
         for (int x = 0; x < to; x++) {
             ret.append(StringUtil.makeEnumHumanReadable(offenseList.get(x).getOffense().name()));
             ret.append(": ");
@@ -426,7 +396,7 @@ public class CheatTracker {
         return ret.toString();
     }
 
-    public final void dispose() {
+    public void dispose() {
         if (invalidationTask != null) {
             invalidationTask.cancel(false);
         }
@@ -450,14 +420,13 @@ public class CheatTracker {
         if (lastSaveTime <= 0) {
             lastSaveTime = System.currentTimeMillis();
         }
-        int seconds = (int) (((lastSaveTime + (3 * 60 * 1000)) - System.currentTimeMillis()) / 1000);
-        return seconds;
+        return (int) (((lastSaveTime + (3 * 60 * 1000)) - System.currentTimeMillis()) / 1000);
     }
 
     private final class InvalidationTask implements Runnable {
 
         @Override
-        public final void run() {
+        public void run() {
             CheatingOffenseEntry[] offenses_copy;
             rL.lock();
             try {

@@ -29,21 +29,21 @@ public class DAccount extends Model {
     @NotNull
     @Length(128)
     @DbComment("用户密码，不能为 Null")
-    public final String password;
+    public String password;
     @Length(32)
     @DbComment("用户密码的盐")
     public String salt;
     @Length(134)
-//    @Column(name = "2ndpassword")
-    @Column(name = "second_password")
+    @Column(name = "2ndpassword")
+//    @Column(name = "second_password")
     @DbComment("二级密码")
     public String secondPassword;
     @Length(32)
     @DbComment("二级密码的盐")
     public String salt2;
     @Column(name = "loggedin")
-    @DbComment("登录状态：是否在线？0 false == 离线；1 true == 在线")
-    public Boolean loggedIn = false;
+    @DbComment("登录状态")
+    public Integer loggedIn;
     @WhenModified
     @Column(name = "lastlogin")
     @DbComment("上次登录时间")
@@ -55,7 +55,7 @@ public class DAccount extends Model {
     @DbComment("生日")
     public LocalDate birthday = LocalDate.now();
     @DbComment("是否禁用")
-    public Boolean banned = false;
+    public Integer banned;
     @Column(name = "banreason")
     @DbComment("禁用理由")
     public String banReason;

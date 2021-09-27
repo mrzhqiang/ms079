@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ChannelServer implements Serializable {
@@ -58,7 +59,7 @@ public class ChannelServer implements Serializable {
     private final MapleMapFactory mapFactory;
     private final MapleCodecFactory codecFactory;
     private EventScriptManager eventSM;
-    private static final Map<Integer, ChannelServer> INSTANCE_CACHED = new HashMap<>();
+    private static final Map<Integer, ChannelServer> INSTANCE_CACHED = new ConcurrentHashMap<>();
     private final Map<MapleSquadType, MapleSquad> mapleSquads = new ConcurrentEnumMap<MapleSquadType, MapleSquad>(MapleSquadType.class);
     private final Map<Integer, HiredMerchant> merchants = new HashMap<Integer, HiredMerchant>();
     private final Map<Integer, PlayerNPC> playerNPCs = new HashMap<Integer, PlayerNPC>();
@@ -253,7 +254,7 @@ public class ChannelServer implements Serializable {
         serverHandler.getLoginServer().addChannel(channel);
     }
 
-    public static final Collection<ChannelServer> getAllInstances() {
+    public static Collection<ChannelServer> getAllInstances() {
         return Collections.unmodifiableCollection(INSTANCE_CACHED.values());
     }
 
@@ -573,7 +574,7 @@ public class ChannelServer implements Serializable {
     }
 
     public static Map<Integer, Integer> getChannelLoad() {
-        Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> ret = new HashMap<>();
         for (ChannelServer cs : INSTANCE_CACHED.values()) {
             ret.put(cs.getChannel(), cs.getConnectedClients());
         }
@@ -697,6 +698,7 @@ public class ChannelServer implements Serializable {
     }
 
     public static void forceRemovePlayerByAccId(MapleClient c, int accid) {
+        // todo find maple character by accid in hash map
         for (ChannelServer ch : ChannelServer.getAllInstances()) {
             Collection<MapleCharacter> chrs = ch.getPlayerStorage().getAllCharactersThreadSafe();
             for (MapleCharacter chr : chrs) {

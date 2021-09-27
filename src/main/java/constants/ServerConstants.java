@@ -88,6 +88,11 @@ public class ServerConstants {
         return 0;
     }
 
+    public static void setProperties(ServerProperties instance) {
+        properties = instance;
+        autoRegister = instance.isAutoRegister();
+    }
+
     public static enum PlayerGMRank {
 
         NORMAL('@', 0),

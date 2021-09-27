@@ -22,7 +22,7 @@ public final class MapleStoryApplication {
                 DatabaseConfiguration.INSTANCE
         );
         ApplicationStarter starter = injector.getInstance(ApplicationStarter.class);
-        ServerConstants.properties = injector.getInstance(ServerProperties.class);
+        ServerConstants.setProperties(injector.getInstance(ServerProperties.class));
         starter.startServer(injector);
         LOGGER.info("服务端启动完毕！总计耗时：{}，现在可以进入游戏了...", allWatch.stop());
     }

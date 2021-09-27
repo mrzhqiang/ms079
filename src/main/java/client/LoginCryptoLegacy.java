@@ -87,12 +87,12 @@ public class LoginCryptoLegacy {
      * @return <code>true</code> if the password is correct, <code>false</code>
      * otherwise.
      */
-    public static final boolean checkPassword(String password, String hash) {
+    public static boolean checkPassword(String password, String hash) {
         return (myCrypt(password, hash).equals(hash));
     }
 
-    public static final boolean isLegacyPassword(String hash) {
-        return hash.substring(0, 3).equals("$H$");
+    public static boolean isLegacyPassword(String hash) {
+        return hash.startsWith("$H$");
     }
 
     /**
@@ -103,13 +103,13 @@ public class LoginCryptoLegacy {
      * @return The salted SHA1 hash of password.
      * @throws RuntimeException
      */
-    private static final String myCrypt(String password, String seed) throws RuntimeException {
+    private static String myCrypt(String password, String seed) throws RuntimeException {
         String out = null;
         int count = 8;
         MessageDigest digester;
 
         // Check for correct Seed
-        if (!seed.substring(0, 3).equals("$H$")) {
+        if (!seed.startsWith("$H$")) {
             // Oh noes! Generate a seed and continue.
             byte[] randomBytes = new byte[6];
             rand.nextBytes(randomBytes);

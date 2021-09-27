@@ -21,6 +21,8 @@ import tools.StringUtil;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.LoginPacket;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.List;
 
@@ -64,29 +66,32 @@ public class CharLoginHandler {
         int loginok = 0;
         if (ServerConstants.properties.isAutoRegister()) {
 
-            if (AutoRegister.autoRegister && !AutoRegister.getAccountExists(login) && (!banned)) {
-                if (pwd.equalsIgnoreCase("disconnect") || pwd.equalsIgnoreCase("fixme")) {
+            if (AutoRegister.isAutoRegister() && !AutoRegister.getAccountExists(login) && (!banned)) {
+                if ("disconnect".equalsIgnoreCase(pwd) || "fixme".equalsIgnoreCase(pwd)) {
                     c.getSession().write(MaplePacketCreator.serverNotice(1, "密码无效！"));
                     c.getSession().write(LoginPacket.getLoginFailed(1)); //Shows no message, used for unstuck the login button
                     return;
                 }
                 AutoRegister.createAccount(login, pwd, c.getSession().getRemoteAddress().toString(), macData);
-                if (AutoRegister.success && AutoRegister.mac) {
+                if (AutoRegister.isSuccess() && AutoRegister.isMac()) {
                     c.getSession().write(MaplePacketCreator.serverNotice(1, "账号创建成功,请尝试重新登录！"));
-                } else if (!AutoRegister.mac) {
+                } else if (!AutoRegister.isMac()) {
                     c.getSession().write(MaplePacketCreator.serverNotice(1, "账号创建失败，机器码已经注册过账号！"));
                 }
-                AutoRegister.success = true;
-                AutoRegister.mac = true;
+                AutoRegister.reset();
                 c.getSession().write(LoginPacket.getLoginFailed(1)); //Shows no message, used for unstuck the login button
                 return;
             }
         }
 
         // loginok = c.fblogin(login, pwd, ipBan || macBan);
-        loginok = c.login(login, pwd, ipBan || macBan);
+        loginok = c.login(login, pwd);
 
-        final Calendar tempbannedTill = c.getTempBanCalendar();
+        LocalDateTime tempbannedTill = c.getTempBanCalendar();
+        long epochMilli = 0;
+        if (tempbannedTill != null && LocalDateTime.now().isBefore(tempbannedTill)) {
+            epochMilli = tempbannedTill.toInstant(ZoneOffset.UTC).toEpochMilli();
+        }
         if (loginok == 0 && (ipBan || macBan) && !c.isGm()) {
             loginok = 3;
             if (macBan) {
@@ -98,9 +103,9 @@ public class CharLoginHandler {
             if (!loginFailCount(c)) {
                 c.getSession().write(LoginPacket.getLoginFailed(loginok));
             }
-        } else if (tempbannedTill.getTimeInMillis() != 0) {
+        } else if (epochMilli != 0) {
             if (!loginFailCount(c)) {
-                c.getSession().write(LoginPacket.getTempBan(KoreanDateUtil.getTempBanTimestamp(tempbannedTill.getTimeInMillis()), c.getBanReason()));
+                c.getSession().write(LoginPacket.getTempBan(KoreanDateUtil.getTempBanTimestamp(epochMilli), c.getBanReason()));
             }
         } else {
             FileoutputUtil.logToFile("日志/logs/ACPW.txt", "ACC: " + login + " PW: " + pwd + " MAC : " + macData + " IP: " + c.getSession().getRemoteAddress().toString() + "\r\n");
