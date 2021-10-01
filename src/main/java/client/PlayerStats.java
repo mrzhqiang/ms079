@@ -58,7 +58,7 @@ public class PlayerStats implements Serializable {
     private Map<Integer, Integer> setHandling = new HashMap<Integer, Integer>();
     private List<Equip> durabilityHandling = new ArrayList<Equip>(), equipLevelHandling = new ArrayList<Equip>();
     private transient float shouldHealHP, shouldHealMP;
-    public short str, dex, luk, int_, hp, maxhp, mp, maxmp;
+    public int str, dex, luk, int_, hp, maxhp, mp, maxmp;
     private transient short passive_sharpeye_percent, localmaxhp, localmaxmp;
     private transient byte passive_mastery, passive_sharpeye_rate;
     private transient int localstr, localdex, localluk, localint_;
@@ -81,7 +81,7 @@ public class PlayerStats implements Serializable {
 
     public PlayerStats(final MapleCharacter chr) {
         // TODO, move str/dex/int etc here -_-
-        this.chr = new WeakReference<MapleCharacter>(chr);
+        this.chr = new WeakReference<>(chr);
     }
 
     //POTENTIALS:
@@ -92,19 +92,19 @@ public class PlayerStats implements Serializable {
     }
 
     public final short getStr() {
-        return str;
+        return (short) str;
     }
 
     public final short getDex() {
-        return dex;
+        return (short) dex;
     }
 
     public final short getLuk() {
-        return luk;
+        return (short) luk;
     }
 
     public final short getInt() {
-        return int_;
+        return (short) int_;
     }
 
     public final void setStr(final short str) {
@@ -132,7 +132,7 @@ public class PlayerStats implements Serializable {
     }
 
     public final boolean setHp(int newhp, boolean silent) {
-        final short oldHp = hp;
+        final short oldHp = (short) hp;
         int thp = newhp;
         if (thp < 0) {
             thp = 0;
@@ -155,7 +155,7 @@ public class PlayerStats implements Serializable {
     }
 
     public final boolean setMp(final int newmp) {
-        final short oldMp = mp;
+        final short oldMp = (short) mp;
         int tmp = newmp;
         if (tmp < 0) {
             tmp = 0;
@@ -178,19 +178,19 @@ public class PlayerStats implements Serializable {
     }
 
     public final short getHp() {
-        return hp;
+        return (short) hp;
     }
 
     public final short getMaxHp() {
-        return maxhp;
+        return (short) maxhp;
     }
 
     public final short getMp() {
-        return mp;
+        return (short) mp;
     }
 
     public final short getMaxMp() {
-        return maxmp;
+        return (short) maxmp;
     }
 
     public final int getTotalDex() {

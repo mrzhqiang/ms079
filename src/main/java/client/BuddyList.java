@@ -1,21 +1,18 @@
 package client;
 
+import com.github.mrzhqiang.maplestory.domain.DBuddy;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import database.DatabaseConnection;
+import tools.MaplePacketCreator;
+
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.io.Serializable;
-
-import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
-import database.DatabaseConnection;
-import io.ebean.DB;
-import io.ebean.SqlQuery;
-import tools.MaplePacketCreator;
+import java.util.*;
 
 public class BuddyList implements Serializable {
 
@@ -44,7 +41,7 @@ public class BuddyList implements Serializable {
     /**
      * 儲存的好友
      */
-    private final Map<Integer, BuddyEntry> buddies;
+    private final Map<Integer, BuddyEntry> buddies = new LinkedHashMap<>();
 
     /**
      * 好友清單的容量
@@ -62,8 +59,6 @@ public class BuddyList implements Serializable {
      * @param capacity 好友容量
      */
     public BuddyList(byte capacity) {
-        super();
-        this.buddies = new LinkedHashMap<>();
         this.capacity = capacity;
     }
 
@@ -73,8 +68,6 @@ public class BuddyList implements Serializable {
      * @param capacity 好友容量
      */
     public BuddyList(int capacity) {
-        super();
-        this.buddies = new LinkedHashMap<>();
         this.capacity = (byte) capacity;
     }
 
@@ -204,30 +197,25 @@ public class BuddyList implements Serializable {
 
     /**
      * 从数据库读取好友列表。
-     *
-     * @param characterId 目标角色 ID
      */
-    public void loadFromDb(int characterId) throws SQLException {
-
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT b.buddyid, b.pending, c.name as buddyname, c.job as buddyjob, c.level as buddylevel, b.groupname FROM buddies as b, characters as c WHERE c.id = b.buddyid AND b.characterid = ?");
-        ps.setInt(1, characterId);
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            int buddyid = rs.getInt("buddyid");
-            String buddyname = rs.getString("buddyname");
-            if (rs.getInt("pending") == 1) {
-                pendingReqs.push(new BuddyEntry(buddyname, buddyid, rs.getString("groupname"), -1, false, rs.getInt("buddylevel"), rs.getInt("buddyjob")));
-            } else {
-                put(new BuddyEntry(buddyname, buddyid, rs.getString("groupname"), -1, true, rs.getInt("buddylevel"), rs.getInt("buddyjob")));
+    public void loadFromDb(DCharacter character) {
+        if (character != null) {
+            List<DBuddy> buddies = new QDBuddy().owner.eq(character).findList();
+            for (DBuddy buddy : buddies) {
+                int buddyid = buddy.id;
+                String buddyname = buddy.owner.name;
+                if (buddy.pending == 1) {
+                    pendingReqs.push(new BuddyEntry(buddyname, buddyid, buddy.groupName,
+                            -1, false, buddy.owner.level, buddy.owner.job));
+                } else {
+                    put(new BuddyEntry(buddyname, buddyid, buddy.groupName,
+                            -1, true, buddy.owner.level, buddy.owner.job));
+                }
             }
         }
-        rs.close();
-        ps.close();
-        ps = con.prepareStatement("DELETE FROM buddies WHERE pending = 1 AND characterid = ?");
-        ps.setInt(1, characterId);
-        ps.executeUpdate();
-        ps.close();
+
+        // todo what is the means?
+        new QDBuddy().pending.eq(1).and().owner.eq(character).delete();
     }
 
     /**

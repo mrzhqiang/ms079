@@ -1,41 +1,22 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
+
 /**
- *
- * @author Matze
+ * 背包类型。
  */
 public enum MapleInventoryType {
 
     UNDEFINED(0),
-    EQUIP(1),
-    USE(2),
-    SETUP(3),
-    ETC(4),
-    CASH(5),
-    EQUIPPED(-1);
-    final byte type;
+    EQUIP(1),// 装备
+    USE(2),// 消耗
+    SETUP(3),// 设置
+    ETC(4),// 其他
+    CASH(5),// 特殊
+    EQUIPPED(-1); // 已装备
 
-    private MapleInventoryType(int type) {
+    private final byte type;
+
+    MapleInventoryType(int type) {
         this.type = (byte) type;
     }
 
@@ -48,26 +29,27 @@ public enum MapleInventoryType {
     }
 
     public static MapleInventoryType getByType(byte type) {
-        for (MapleInventoryType l : MapleInventoryType.values()) {
-            if (l.getType() == type) {
-                return l;
+        for (MapleInventoryType value : MapleInventoryType.values()) {
+            if (value.getType() == type) {
+                return value;
             }
         }
         return null;
     }
 
     public static MapleInventoryType getByWZName(String name) {
-        if (name.equals("Install")) {
-            return SETUP;
-        } else if (name.equals("Consume")) {
-            return USE;
-        } else if (name.equals("Etc")) {
-            return ETC;
-        } else if (name.equals("Cash")) {
-            return CASH;
-        } else if (name.equals("Pet")) {
-            return CASH;
+        switch (name) {
+            case "Install":
+                return SETUP;
+            case "Consume":
+                return USE;
+            case "Etc":
+                return ETC;
+            case "Cash":
+            case "Pet":
+                return CASH;
+            default:
+                return UNDEFINED;
         }
-        return UNDEFINED;
     }
 }

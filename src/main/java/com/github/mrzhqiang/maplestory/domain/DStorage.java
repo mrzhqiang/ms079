@@ -1,14 +1,15 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "storages")
-public class DStorage {
+public class DStorage extends Model {
 
     @Id
     @Column(name = "storageid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer storageid;
 
     @Column(name = "accountid", nullable = false)

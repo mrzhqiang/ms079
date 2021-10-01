@@ -1,39 +1,20 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
 import constants.GameConstants;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Map;
-import database.DatabaseConnection;
-import java.sql.*;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.*;
 
+import database.DatabaseConnection;
+
+import java.sql.*;
+
+import io.ebean.DB;
+import io.ebean.SqlQuery;
+import io.ebean.SqlRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Pair;
@@ -52,6 +33,7 @@ public enum ItemLoader {
     MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "characterid"),
     CASHSHOP_DB("csitems", "csequipment", 10, "accountid"),
     CASHSHOP_RESIST("csitems", "csequipment", 11, "accountid");
+
     private int value;
     private String table, table_equip;
     private List<String> arg;
@@ -154,12 +136,13 @@ public enum ItemLoader {
     }
     //does not need connection con to be auto commit
 
-    public Map<Integer, Pair<IItem, MapleInventoryType>> loadItems(boolean login, Integer... id) throws SQLException {
+    public Map<Integer, Pair<IItem, MapleInventoryType>> loadItems(boolean login, Integer... id) {
         List<Integer> lulz = Arrays.asList(id);
-        Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<Integer, Pair<IItem, MapleInventoryType>>();
         if (lulz.size() != arg.size()) {
-            return items;
+            return Collections.emptyMap();
         }
+
+        Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
         StringBuilder query = new StringBuilder();
         query.append("SELECT * FROM `");
         query.append(table);
@@ -176,53 +159,58 @@ public enum ItemLoader {
             query.append(" AND `inventorytype` = ");
             query.append(MapleInventoryType.EQUIPPED.getType());
         }
-        PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(query.toString());
-        ps.setInt(1, value);
-        for (int i = 0; i < lulz.size(); i++) {
-            ps.setInt(i + 2, lulz.get(i));
-        }
-        ResultSet rs = ps.executeQuery();
 
-        while (rs.next()) {
-            MapleInventoryType mit = MapleInventoryType.getByType(rs.getByte("inventorytype"));
+        SqlQuery sqlQuery = DB.sqlQuery(query.toString()).setParameter(1, value);
+        for (int i = 0; i < lulz.size(); i++) {
+            sqlQuery.setParameter(i + 2, lulz.get(i));
+        }
+        for (SqlRow sqlRow : sqlQuery.findList()) {
+            MapleInventoryType mit = MapleInventoryType.getByType(sqlRow.getInteger("inventorytype").byteValue());
+
+            if (mit == null) {
+                continue;
+            }
 
             if (mit.equals(MapleInventoryType.EQUIP) || mit.equals(MapleInventoryType.EQUIPPED)) {
-                Equip equip = new Equip(rs.getInt("itemid"), rs.getShort("position"), rs.getInt("uniqueid"), rs.getByte("flag"));
+                Equip equip = new Equip(sqlRow.getInteger("itemid"),
+                        sqlRow.getInteger("position").shortValue(),
+                        sqlRow.getInteger("uniqueid"),
+                        sqlRow.getInteger("flag").byteValue());
                 if (!login) {
                     equip.setQuantity((short) 1);
-                    equip.setOwner(rs.getString("owner"));
-                    equip.setExpiration(rs.getLong("expiredate"));
-                    equip.setUpgradeSlots(rs.getByte("upgradeslots"));
-                    equip.setLevel(rs.getByte("level"));
-                    equip.setStr(rs.getShort("str"));
-                    equip.setDex(rs.getShort("dex"));
-                    equip.setInt(rs.getShort("int"));
-                    equip.setLuk(rs.getShort("luk"));
-                    equip.setHp(rs.getShort("hp"));
-                    equip.setMp(rs.getShort("mp"));
-                    equip.setWatk(rs.getShort("watk"));
-                    equip.setMatk(rs.getShort("matk"));
-                    equip.setWdef(rs.getShort("wdef"));
-                    equip.setMdef(rs.getShort("mdef"));
-                    equip.setAcc(rs.getShort("acc"));
-                    equip.setAvoid(rs.getShort("avoid"));
-                    equip.setHands(rs.getShort("hands"));
-                    equip.setSpeed(rs.getShort("speed"));
-                    equip.setJump(rs.getShort("jump"));
-                    equip.setViciousHammer(rs.getByte("ViciousHammer"));
-                    equip.setItemEXP(rs.getInt("itemEXP"));
-                    equip.setGMLog(rs.getString("GM_Log"));
-                    equip.setDurability(rs.getInt("durability"));
-                    equip.setEnhance(rs.getByte("enhance"));
-                    equip.setPotential1(rs.getShort("potential1"));
-                    equip.setPotential2(rs.getShort("potential2"));
-                    equip.setPotential3(rs.getShort("potential3"));
-                    equip.setHpR(rs.getShort("hpR"));
-                    equip.setMpR(rs.getShort("mpR"));
-                    equip.setGiftFrom(rs.getString("sender"));
-                    equip.setEquipLevel(rs.getByte("itemlevel"));
+                    equip.setOwner(sqlRow.getString("owner"));
+                    equip.setExpiration(sqlRow.getLong("expiredate"));
+                    equip.setUpgradeSlots(sqlRow.getInteger("upgradeslots").byteValue());
+                    equip.setLevel(sqlRow.getInteger("level").byteValue());
+                    equip.setStr(sqlRow.getInteger("str").shortValue());
+                    equip.setDex(sqlRow.getInteger("dex").shortValue());
+                    equip.setInt(sqlRow.getInteger("int").byteValue());
+                    equip.setLuk(sqlRow.getInteger("luk").shortValue());
+                    equip.setHp(sqlRow.getInteger("hp").shortValue());
+                    equip.setMp(sqlRow.getInteger("mp").shortValue());
+                    equip.setWatk(sqlRow.getInteger("watk").byteValue());
+                    equip.setMatk(sqlRow.getInteger("matk").byteValue());
+                    equip.setWdef(sqlRow.getInteger("wdef").byteValue());
+                    equip.setMdef(sqlRow.getInteger("mdef").byteValue());
+                    equip.setAcc(sqlRow.getInteger("acc").byteValue());
+                    equip.setAvoid(sqlRow.getInteger("avoid").byteValue());
+                    equip.setHands(sqlRow.getInteger("hands").byteValue());
+                    equip.setSpeed(sqlRow.getInteger("speed").byteValue());
+                    equip.setJump(sqlRow.getInteger("jump").byteValue());
+                    equip.setViciousHammer(sqlRow.getInteger("ViciousHammer").byteValue());
+                    equip.setItemEXP(sqlRow.getInteger("itemEXP"));
+                    equip.setGMLog(sqlRow.getString("GM_Log"));
+                    equip.setDurability(sqlRow.getInteger("durability"));
+                    equip.setEnhance(sqlRow.getInteger("enhance").byteValue());
+                    equip.setPotential1(sqlRow.getInteger("potential1").byteValue());
+                    equip.setPotential2(sqlRow.getInteger("potential2").byteValue());
+                    equip.setPotential3(sqlRow.getInteger("potential3").byteValue());
+                    equip.setHpR(sqlRow.getInteger("hpR").shortValue());
+                    equip.setMpR(sqlRow.getInteger("mpR").shortValue());
+                    equip.setGiftFrom(sqlRow.getString("sender"));
+                    equip.setEquipLevel(sqlRow.getInteger("itemlevel").byteValue());
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(rs.getInt("itemid"))) {
+                        if (GameConstants.isEffectRing(sqlRow.getInteger("itemid"))) {
                             MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals(MapleInventoryType.EQUIPPED));
                             if (ring != null) {
                                 equip.setRing(ring);
@@ -230,14 +218,17 @@ public enum ItemLoader {
                         }
                     }
                 }
-                items.put(rs.getInt("inventoryitemid"), new Pair<IItem, MapleInventoryType>(equip.copy(), mit));
+                items.put(sqlRow.getInteger("inventoryitemid"), new Pair<IItem, MapleInventoryType>(equip.copy(), mit));
             } else {
-                Item item = new Item(rs.getInt("itemid"), rs.getShort("position"), rs.getShort("quantity"), rs.getByte("flag"));
-                item.setUniqueId(rs.getInt("uniqueid"));
-                item.setOwner(rs.getString("owner"));
-                item.setExpiration(rs.getLong("expiredate"));
-                item.setGMLog(rs.getString("GM_Log"));
-                item.setGiftFrom(rs.getString("sender"));
+                Item item = new Item(sqlRow.getInteger("itemid"),
+                        sqlRow.getInteger("position").shortValue(),
+                        sqlRow.getInteger("quantity").byteValue(),
+                        sqlRow.getInteger("flag").byteValue());
+                item.setUniqueId(sqlRow.getInteger("uniqueid"));
+                item.setOwner(sqlRow.getString("owner"));
+                item.setExpiration(sqlRow.getLong("expiredate"));
+                item.setGMLog(sqlRow.getString("GM_Log"));
+                item.setGiftFrom(sqlRow.getString("sender"));
                 if (GameConstants.isPet(item.getItemId())) {
                     if (item.getUniqueId() > -1) {
                         MaplePet pet = MaplePet.loadFromDb(item.getItemId(), item.getUniqueId(), item.getPosition());
@@ -251,12 +242,9 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(rs.getInt("inventoryitemid"), new Pair<IItem, MapleInventoryType>(item.copy(), mit));
+                items.put(sqlRow.getInteger("inventoryitemid"), new Pair<>(item.copy(), mit));
             }
         }
-
-        rs.close();
-        ps.close();
         return items;
     }
 

@@ -1,7 +1,9 @@
 package client;
 
 import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDIPBans;
 import com.github.mrzhqiang.maplestory.domain.query.QDMacBans;
 import com.google.common.base.Strings;
@@ -36,6 +38,8 @@ import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+
 
 public class MapleClient implements Serializable {
 
@@ -43,31 +47,34 @@ public class MapleClient implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleClient.class);
 
-    public static final transient byte LOGIN_NOTLOGGEDIN = 0,
-            LOGIN_SERVER_TRANSITION = 1,
-            LOGIN_LOGGEDIN = 2,
-            LOGIN_WAITING = 3,
-            CASH_SHOP_TRANSITION = 4,
-            LOGIN_CS_LOGGEDIN = 5,
-            CHANGE_CHANNEL = 6;
+    public static final transient byte LOGIN_NOTLOGGEDIN = 0;
+    public static final transient byte LOGIN_SERVER_TRANSITION = 1;
+    public static final transient byte LOGIN_LOGGEDIN = 2;
+    public static final transient byte LOGIN_WAITING = 3;
+    public static final transient byte CASH_SHOP_TRANSITION = 4;
+    public static final transient byte LOGIN_CS_LOGGEDIN = 5;
+    public static final transient byte CHANGE_CHANNEL = 6;
     //ZlhssMS.MaxCharacters
     public static final int DEFAULT_CHARSLOT = ServerConstants.properties.getCharactersLimit();//最大角色数量
     public static final String CLIENT_KEY = "CLIENT";
     public static final String EMPTY_MAC = "00-00-00-00-00-00";
-    private transient MapleAESOFB send, receive;
+    private transient MapleAESOFB send;
+    private transient MapleAESOFB receive;
     private transient IoSession session;
     private MapleCharacter player;
     private DAccount account;
-    private int channel = 1, accId = 1, world;
+    private int channel = 1;
+    private int accId = 1;
+    private int world;
     private int charslots = DEFAULT_CHARSLOT;
     private boolean loggedIn = false, serverTransition = false;
     private String accountName;
     private transient long lastPong = 0, lastPing = 0;
     private boolean monitored = false, receiving = true;
     public boolean gm;
-    private byte  gender = -1;
+    private byte gender = -1;
     public transient short loginAttempt = 0;
-    private transient List<Integer> allowedChar = new LinkedList<Integer>();
+    private transient List<Integer> allowedChar = new LinkedList<>();
     private transient Set<String> macs = new HashSet<String>();
     private transient Map<String, ScriptEngine> engines = new HashMap<String, ScriptEngine>();
     private transient ScheduledFuture<?> idleTask = null;
@@ -141,11 +148,11 @@ public class MapleClient implements Serializable {
         return allowedChar.contains(id);
     }
 
-    public final List<MapleCharacter> loadCharacters(final int serverId) { // TODO make this less costly zZz
-        final List<MapleCharacter> chars = new LinkedList<>();
+    public List<MapleCharacter> loadCharacters(int serverId) {
+        List<MapleCharacter> chars = new LinkedList<>();
 
-        for (final CharNameAndId cni : loadCharactersInternal(serverId)) {
-            final MapleCharacter chr = MapleCharacter.loadCharFromDB(cni.id, this, false);
+        for (DCharacter character : loadCharactersInternal(serverId)) {
+            MapleCharacter chr = MapleCharacter.loadCharFromDB(character.id, this, false);
             chars.add(chr);
             allowedChar.add(chr.getId());
         }
@@ -153,31 +160,19 @@ public class MapleClient implements Serializable {
     }
 
     public List<String> loadCharacterNames(int serverId) {
-        List<String> chars = new LinkedList<String>();
-        for (CharNameAndId cni : loadCharactersInternal(serverId)) {
+        List<String> chars = new LinkedList<>();
+        for (DCharacter cni : loadCharactersInternal(serverId)) {
             chars.add(cni.name);
         }
         return chars;
     }
 
-    private List<CharNameAndId> loadCharactersInternal(int serverId) {
-        List<CharNameAndId> chars = new LinkedList<CharNameAndId>();
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT id, name FROM characters WHERE accountid = ? AND world = ?");
-            ps.setInt(1, accId);
-            ps.setInt(2, serverId);
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                chars.add(new CharNameAndId(rs.getString("name"), rs.getInt("id")));
-            }
-            rs.close();
-            ps.close();
-        } catch (SQLException e) {
-            LOGGER.error("error loading characters internal" + e);
-        }
-        return chars;
+    private List<DCharacter> loadCharactersInternal(int serverId) {
+        return new QDCharacter()
+                .account.eq(account)
+                .and()
+                .world.eq(serverId)
+                .findList();
     }
 
     public boolean isLoggedIn() {

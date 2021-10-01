@@ -40,7 +40,7 @@ public class MapleKeyLayout implements Serializable {
     private Map<Integer, Pair<Byte, Integer>> keymap;
 
     public MapleKeyLayout() {
-        keymap = new HashMap<Integer, Pair<Byte, Integer>>();
+        keymap = new HashMap<>();
     }
 
     public MapleKeyLayout(Map<Integer, Pair<Byte, Integer>> keys) {

@@ -1,6 +1,7 @@
 package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
+import io.ebean.annotation.DbForeignKey;
 import io.ebean.annotation.NotNull;
 
 import javax.persistence.*;
@@ -16,12 +17,12 @@ public class DBuddy extends Model {
     @Id
     public Integer id;
     @NotNull
+    @DbForeignKey(noConstraint = true)
     @OneToOne
-    @JoinColumn(name = "characterid", foreignKey = @ForeignKey(NO_CONSTRAINT))
+    @JoinColumn(name = "characterid")
     public DCharacter owner;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "buddyid", foreignKey = @ForeignKey(NO_CONSTRAINT))
-    public List<DCharacter> buddies;
+    @Column(name = "buddyid")
+    public Integer buddies;
     @NotNull
     @Column(name = "pending")
     public Integer pending;

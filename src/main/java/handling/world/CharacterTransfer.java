@@ -207,8 +207,8 @@ public class CharacterTransfer implements Externalizable {
 
         final MapleMount mount = chr.getMount();
         this.mount_itemid = mount.getItemId();
-        this.mount_Fatigue = mount.getFatigue();
-        this.mount_level = mount.getLevel();
+        this.mount_Fatigue = (byte) mount.getFatigue();
+        this.mount_level = (byte) mount.getLevel();
         this.mount_exp = mount.getExp();
         TranferTime = System.currentTimeMillis();
     }

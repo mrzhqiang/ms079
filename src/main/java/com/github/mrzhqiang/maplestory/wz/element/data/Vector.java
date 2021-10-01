@@ -77,8 +77,8 @@ public final class Vector {
      * @since copy from java\awt\geom\Point2D.java
      */
     public double distanceSq(Vector pt) {
-        double px = pt.x - this.x;
-        double py = pt.y - this.y;
+        int px = pt.x - this.x;
+        int py = pt.y - this.y;
         return (px * px + py * py);
     }
 

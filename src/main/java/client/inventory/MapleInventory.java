@@ -1,70 +1,47 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
 import client.MapleCharacter;
+import com.google.common.collect.Maps;
 import constants.GameConstants;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.io.Serializable;
 import server.MapleItemInformationProvider;
 import tools.MaplePacketCreator;
 
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class MapleInventory implements Iterable<IItem>, Serializable {
 
-    private Map<Short, IItem> inventory;
-    private byte slotLimit = 0;
-    private MapleInventoryType type;
+    private final AtomicInteger slotLimit;
+    private final MapleInventoryType type;
+
+    private final Map<Short, IItem> inventory = Maps.newLinkedHashMap();
 
     /**
      * Creates a new instance of MapleInventory
      */
-    public MapleInventory(MapleInventoryType type, byte slotLimit) {
-        this.inventory = new LinkedHashMap<Short, IItem>();
-        this.slotLimit = slotLimit;
+    public MapleInventory(MapleInventoryType type, int slotLimit) {
+        this.slotLimit = new AtomicInteger(slotLimit);
         this.type = type;
     }
 
     public void addSlot(byte slot) {
-        this.slotLimit += slot;
+        this.slotLimit.getAndAdd(slot);
 
-        if (slotLimit > 96) {
-            slotLimit = 96;
+        if (slotLimit.get() > 96) {
+            slotLimit.set(96);
         }
     }
 
     public byte getSlotLimit() {
-        return slotLimit;
+        return slotLimit.byteValue();
     }
 
-    public void setSlotLimit(byte slot) {
+    public void setSlotLimit(int slot) {
         if (slot > 96) {
             slot = 96;
         }
-        slotLimit = slot;
+        slotLimit.set(slot);
     }
 
     /**
@@ -173,7 +150,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     }
 
     public void move(short sSlot, short dSlot, short slotMax) {
-        if (dSlot > slotLimit) {
+        if (dSlot > slotLimit.get()) {
             return;
         }
         Item source = (Item) inventory.get(sSlot);
@@ -245,11 +222,11 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     }
 
     public boolean isFull() {
-        return inventory.size() >= slotLimit;
+        return inventory.size() >= slotLimit.get();
     }
 
     public boolean isFull(int margin) {
-        return inventory.size() + margin >= slotLimit;
+        return inventory.size() + margin >= slotLimit.get();
     }
 
     /**
@@ -259,7 +236,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
         if (isFull()) {
             return -1;
         }
-        for (short i = 1; i <= slotLimit; i++) {
+        for (short i = 1; i <= slotLimit.get(); i++) {
             if (!inventory.keySet().contains(i)) {
                 return i;
             }
@@ -272,7 +249,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
             return 0;
         }
         byte free = 0;
-        for (short i = 1; i <= slotLimit; i++) {
+        for (short i = 1; i <= slotLimit.get(); i++) {
             if (!inventory.keySet().contains(i)) {
                 free++;
             }

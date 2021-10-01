@@ -1,10 +1,12 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "mountdata")
-public class DMountData {
+public class DMountData extends Model {
 
     @Id
     @Column(name = "id", nullable = false)

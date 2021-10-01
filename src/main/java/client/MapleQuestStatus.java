@@ -93,7 +93,7 @@ public class MapleQuestStatus implements Serializable {
     }
 
     private final void registerMobs() {
-        killedMobs = new LinkedHashMap<Integer, Integer>();
+        killedMobs = new LinkedHashMap<>();
         for (final int i : quest.getRelevantMobs().keySet()) {
             killedMobs.put(i, 0);
         }

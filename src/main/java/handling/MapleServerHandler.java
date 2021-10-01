@@ -478,8 +478,6 @@ public class MapleServerHandler extends IoHandlerAdapter implements MapleServerH
                 CharLoginHandler.login(slea, c, loginServer);
                 break;
             case SERVERLIST_REQUEST:
-                CharLoginHandler.ServerListRequest(c, loginServer);
-                break;
             case LICENSE_REQUEST:
                 CharLoginHandler.ServerListRequest(c, loginServer);
                 break;

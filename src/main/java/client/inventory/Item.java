@@ -150,8 +150,8 @@ public class Item implements IItem, Serializable {
     }
 
     @Override
-    public void setGMLog(final String GameMaster_log) {
-        this.GameMaster_log = GameMaster_log;
+    public void setGMLog(final String message) {
+        this.GameMaster_log = message;
     }
 
     @Override

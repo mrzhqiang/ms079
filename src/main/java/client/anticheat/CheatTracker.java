@@ -427,14 +427,14 @@ public class CheatTracker {
 
         @Override
         public void run() {
-            CheatingOffenseEntry[] offenses_copy;
+            CheatingOffenseEntry[] offensesCopy;
             rL.lock();
             try {
-                offenses_copy = offenses.values().toArray(new CheatingOffenseEntry[offenses.size()]);
+                offensesCopy = offenses.values().toArray(new CheatingOffenseEntry[0]);
             } finally {
                 rL.unlock();
             }
-            for (CheatingOffenseEntry offense : offenses_copy) {
+            for (CheatingOffenseEntry offense : offensesCopy) {
                 if (offense.isExpired()) {
                     expireEntry(offense);
                 }

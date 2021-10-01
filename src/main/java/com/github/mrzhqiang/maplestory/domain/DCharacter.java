@@ -273,6 +273,10 @@ public class DCharacter extends Model {
     @Column(name = "sg")
     public Integer sg = 0;
 
+    @DbForeignKey(noConstraint = true)
+    @OneToOne(mappedBy = "owner")
+    public DBuddy buddy;
+
     public DCharacter(DAccount account, String name) {
         this.account = account;
         this.name = name;

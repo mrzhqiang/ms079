@@ -4,13 +4,21 @@ import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 
 public abstract class AbstractMapleMapObject implements MapleMapObject {
 
-    private Vector position = Vector.empty();
     private int objectId;
-
-    public abstract MapleMapObjectType getType();
+    private Vector position = Vector.empty();
 
     public Vector getTruePosition() {
         return this.position;
+    }
+
+    @Override
+    public int getObjectId() {
+        return objectId;
+    }
+
+    @Override
+    public void setObjectId(int id) {
+        this.objectId = id;
     }
 
     @Override
@@ -23,13 +31,4 @@ public abstract class AbstractMapleMapObject implements MapleMapObject {
         this.position = Vector.of(position);
     }
 
-    @Override
-    public int getObjectId() {
-        return objectId;
-    }
-
-    @Override
-    public void setObjectId(int id) {
-        this.objectId = id;
-    }
 }

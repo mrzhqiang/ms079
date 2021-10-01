@@ -1,6 +1,7 @@
 package com.github.mrzhqiang.maplestory.domain;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -19,7 +20,7 @@ public class DFameLog {
     private Integer characteridTo;
 
     @Column(name = "when", nullable = false)
-    private Date when;
+    private LocalDateTime when;
 
     public void setFamelogid(Integer famelogid) {
         this.famelogid = famelogid;
@@ -45,11 +46,11 @@ public class DFameLog {
         return characteridTo;
     }
 
-    public void setWhen(Date when) {
+    public void setWhen(LocalDateTime when) {
         this.when = when;
     }
 
-    public Date getWhen() {
+    public LocalDateTime getWhen() {
         return when;
     }
 

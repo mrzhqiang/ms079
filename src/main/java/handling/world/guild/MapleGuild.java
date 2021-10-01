@@ -836,7 +836,7 @@ public final class MapleGuild implements java.io.Serializable {
         }
     }
 
-    public static void setOfflineGuildStatus(int guildid, byte guildrank, byte alliancerank, int cid) {
+    public static void setOfflineGuildStatus(int guildid, int guildrank, int alliancerank, int cid) {
         try {
             java.sql.Connection con = DatabaseConnection.getConnection();
             java.sql.PreparedStatement ps = con.prepareStatement("UPDATE characters SET guildid = ?, guildrank = ?, alliancerank = ? WHERE id = ?");
