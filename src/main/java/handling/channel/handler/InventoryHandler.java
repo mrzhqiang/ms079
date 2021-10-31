@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
-import java.awt.Point;
 
 import client.inventory.Equip;
 import client.inventory.IEquip;
@@ -16,9 +15,7 @@ import client.inventory.MaplePet;
 import client.inventory.MaplePet.PetFlag;
 import client.inventory.MapleMount;
 import client.MapleCharacter;
-import client.MapleCharacterUtil;
 import client.MapleClient;
-import client.MapleDisease;
 import client.inventory.MapleInventoryType;
 import client.inventory.MapleInventory;
 import client.MapleStat;
@@ -27,8 +24,6 @@ import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import client.SkillFactory;
 import client.anticheat.CheatingOffense;
-import constants.ServerConstants;
-import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
 import java.awt.Rectangle;
@@ -58,14 +53,11 @@ import server.*;
 import server.maps.*;
 import server.shops.HiredMerchant;
 import server.shops.IMaplePlayerShop;
-import tools.HexTool;
 import tools.Pair;
 import tools.packet.MTSCSPacket;
 import tools.packet.PetPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.MaplePacketCreator;
-import tools.data.input.ByteArrayByteStream;
-import tools.data.input.GenericSeekableLittleEndianAccessor;
 import tools.packet.PlayerShopPacket;
 
 public class InventoryHandler {
@@ -425,11 +417,11 @@ public class InventoryHandler {
         if (toScroll == null) {
             return false;
         }
-        final byte oldLevel = toScroll.getLevel();
-        final byte oldEnhance = toScroll.getEnhance();
-        final byte oldState = toScroll.getState();
-        final byte oldFlag = toScroll.getFlag();
-        final byte oldSlots = toScroll.getUpgradeSlots();
+        final int oldLevel = toScroll.getLevel();
+        final int oldEnhance = toScroll.getEnhance();
+        final int oldState = toScroll.getState();
+        final int oldFlag = toScroll.getFlag();
+        final int oldSlots = toScroll.getUpgradeSlots();
 
         boolean checkIfGM = c.getPlayer().isGM();
         IItem scroll = chr.getInventory(MapleInventoryType.USE).getItem(slot);
@@ -1689,7 +1681,7 @@ public class InventoryHandler {
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && !ItemFlag.KARMA_EQ.check(item.getFlag()) && !ItemFlag.KARMA_USE.check(item.getFlag())) {
                     if (itemId == 5520000 && MapleItemInformationProvider.getInstance().isKarmaEnabled(item.getItemId()) || MapleItemInformationProvider.getInstance().isPKarmaEnabled(item.getItemId())) {
-                        byte flag = item.getFlag();
+                        int flag = item.getFlag();
                         if (type == MapleInventoryType.EQUIP) {
                             flag |= ItemFlag.KARMA_EQ.getValue();
                         } else {
@@ -1753,7 +1745,7 @@ public class InventoryHandler {
                 final MapleInventoryType type = MapleInventoryType.getByType((byte) slea.readInt());
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && item.getExpiration() == -1) {
-                    byte flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag |= ItemFlag.LOCK.getValue();
                     item.setFlag(flag);
                     //item.setExpiration(System.currentTimeMillis() + (7 * 24 * 60 * 60 * 1000));//时间注销掉，就变成永久的了
@@ -1766,7 +1758,7 @@ public class InventoryHandler {
                 final MapleInventoryType type = MapleInventoryType.getByType((byte) slea.readInt());
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && item.getExpiration() == -1) {
-                    byte flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag |= ItemFlag.LOCK.getValue();
                     item.setFlag(flag);
                     item.setExpiration(System.currentTimeMillis() + (7 * 24 * 60 * 60 * 1000));
@@ -1780,7 +1772,7 @@ public class InventoryHandler {
                 final MapleInventoryType type = MapleInventoryType.getByType((byte) slea.readInt());
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && item.getExpiration() == -1) {
-                    short flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag = (short) (flag | ItemFlag.LOCK.getValue());
                     item.setFlag((byte) flag);
                     long days = 0L;
@@ -1805,7 +1797,7 @@ public class InventoryHandler {
                 final MapleInventoryType type = MapleInventoryType.getByType((byte) slea.readInt());
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && item.getExpiration() == -1) {
-                    short flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag = (short) (flag | ItemFlag.LOCK.getValue());
                     item.setFlag((byte) flag);
                     long days = 0L;
@@ -1830,7 +1822,7 @@ public class InventoryHandler {
                 final MapleInventoryType type = MapleInventoryType.getByType((byte) slea.readInt());
                 final IItem item = c.getPlayer().getInventory(type).getItem((byte) slea.readInt());
                 if (item != null && item.getExpiration() == -1) {
-                    short flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag = (short) (flag | ItemFlag.LOCK.getValue());
                     item.setFlag((byte) flag);
                     long days = 0L;

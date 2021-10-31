@@ -1,53 +1,60 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "mts_items")
-public class DMtsItem {
+@Table(name = "mtsitems")
+public class DMtsItem extends Model {
 
-    @EmbeddedId
-    public PKMtsItem itemId;
-
-    @Column(name = "tab", nullable = false)
-    public Integer tab;
-
-    @Column(name = "price", nullable = false)
-    public Integer price;
-
-    @Column(name = "characterid", nullable = false)
-    public Integer characterid;
-    @Column(name = "accountid")
-    public Integer accountid;
+    @Id
+    @Column(name = "inventoryitemid")
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "characterid")
+    public DCharacter character;
+    @ManyToOne
+    @JoinColumn(name = "accountid")
+    public DAccount account;
     @Column(name = "packageId")
     public Integer packageId;
-    @Column(name = "itemid", nullable = false)
+    @NotNull
+    @Column(name = "itemid")
     public Integer itemid;
-    @Column(name = "inventorytype", nullable = false)
+    @NotNull
+    @Column(name = "inventorytype")
     public Integer inventorytype;
-    @Column(name = "position", nullable = false)
+    @NotNull
+    @Column(name = "position")
     public Integer position;
-    @Column(name = "quantity", nullable = false)
+    @NotNull
+    @Column(name = "quantity")
     public Integer quantity;
     @Column(name = "owner")
     public String owner;
     @Column(name = "GM_Log")
     public String gmLog;
-    @Column(name = "uniqueid", nullable = false)
+    @NotNull
+    @Column(name = "uniqueid")
     public Integer uniqueid;
-    @Column(name = "flag", nullable = false)
+    @NotNull
+    @Column(name = "flag")
     public Integer flag;
-    @Column(name = "expiredate", nullable = false)
-    public Long expiredate;
-    @Column(name = "type", nullable = false)
+    @NotNull
+    @Column(name = "expiredate")
+    public LocalDateTime expiredate;
+    @NotNull
+    @Column(name = "type")
     public Integer type;
-    @Column(name = "sender", nullable = false)
+    @NotNull
+    @Column(name = "sender")
     public String sender;
 
-    @Column(name = "seller", nullable = false)
-    public String seller;
-
-    @Column(name = "expiration", nullable = false)
-    public Long expiration;
+    @OneToOne(mappedBy = "item")
+    public DMtsEquipment equipment;
 
 }

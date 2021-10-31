@@ -1,7 +1,7 @@
 package scripting;
 
 import client.MapleCharacter;
-import database.DatabaseConnection;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import handling.channel.ChannelServer;
 import handling.world.MapleParty;
 import org.slf4j.LoggerFactory;
@@ -21,14 +21,8 @@ import tools.MaplePacketCreator;
 
 import javax.script.Invocable;
 import javax.script.ScriptException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class EventManager {
 
@@ -343,20 +337,7 @@ public class EventManager {
     }
 
     public int online() {
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps;
-        ResultSet re;
-        int count = 0;
-        try {
-            ps = con.prepareStatement("SELECT count(*) as cc FROM accounts WHERE loggedin = 2");
-            re = ps.executeQuery();
-            while (re.next()) {
-                count = re.getInt("cc");
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(EventInstanceManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return count;
+        return new QDAccount().loggedIn.eq(2).findCount();
     }
 
     public MapleMapFactory getMapFactory() {

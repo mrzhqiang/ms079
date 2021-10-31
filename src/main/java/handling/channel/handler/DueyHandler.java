@@ -1,23 +1,22 @@
 package handling.channel.handler;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.LinkedList;
+import java.time.LocalDateTime;
 import java.util.List;
+
 import client.inventory.IItem;
 import client.inventory.ItemFlag;
+import com.github.mrzhqiang.maplestory.domain.DDueyPackage;
+import com.github.mrzhqiang.maplestory.domain.query.QDDueyPackage;
 import constants.GameConstants;
 import client.inventory.ItemLoader;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
 import client.MapleClient;
 import client.inventory.MapleInventoryType;
-import database.DatabaseConnection;
-import java.sql.*;
+
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,7 @@ public class DueyHandler {
         switch (operation) {
             case 1: { // Start Duey, 13 digit AS
                 final String AS13Digit = slea.readMapleAsciiString();
-        //		int unk = slea.readInt(); // Theres an int here, value = 1
+                //		int unk = slea.readInt(); // Theres an int here, value = 1
                 //  9 = error
                 final int conv = c.getPlayer().getConversation();
 
@@ -92,7 +91,7 @@ public class DueyHandler {
                                     c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null)); // Unsuccessfull
                                     return;
                                 }
-                                final byte flag = item.getFlag();
+                                final int flag = item.getFlag();
                                 if (ItemFlag.UNTRADEABLE.check(flag) || ItemFlag.LOCK.check(flag)) {
                                     c.getSession().write(MaplePacketCreator.enableActions());
                                     return;
@@ -126,7 +125,7 @@ public class DueyHandler {
                                     c.getSession().write(MaplePacketCreator.sendDuey((byte) 17, null)); // Unsuccessfull
                                 }
                             }
-        //                            if (recipientOn && rClient != null) {
+                            //                            if (recipientOn && rClient != null) {
                             //                              rClient.getSession().write(MaplePacketCreator.sendDueyMSG(Actions.PACKAGE_MSG.getCode()));
                             //                        }
                         } else {
@@ -189,134 +188,69 @@ public class DueyHandler {
 
     }
 
-    private static final boolean addMesoToDB(final int mesos, final String sName, final int recipientID, final boolean isOn) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, recipientID);
-            ps.setString(2, sName);
-            ps.setInt(3, mesos);
-            ps.setLong(4, System.currentTimeMillis());
-            ps.setInt(5, isOn ? 0 : 1);
-            ps.setInt(6, 3);
+    private static boolean addMesoToDB(int mesos, String sName, int recipientID, boolean isOn) {
+        DDueyPackage aPackage = new DDueyPackage();
+        aPackage.recieverId = recipientID;
+        aPackage.senderName = sName;
+        aPackage.mesos = mesos;
+        aPackage.timeStamp = LocalDateTime.now();
+        aPackage.checked = isOn ? 0 : 1;
+        aPackage.type = 3;
+        aPackage.save();
+        return true;
+    }
 
-            ps.executeUpdate();
-            ps.close();
+    private static boolean addItemToDB(IItem item, int quantity, int mesos, String sName, int recipientID, boolean isOn) {
+        DDueyPackage aPackage = new DDueyPackage();
+        aPackage.recieverId = recipientID;
+        aPackage.senderName = sName;
+        aPackage.mesos = mesos;
+        aPackage.timeStamp = LocalDateTime.now();
+        aPackage.checked = isOn ? 0 : 1;
+        aPackage.type = item.getType();
+        aPackage.save();
+        ItemLoader.saveItems(Collections.singletonList(new Pair<>(item, GameConstants.getInventoryType(item.getItemId()))));
+        return true;
+    }
 
-            return true;
-        } catch (SQLException se) {
-            se.printStackTrace();
-            return false;
+    public static List<MapleDueyActions> loadItems(MapleCharacter chr) {
+        return new QDDueyPackage().recieverId.eq(chr.getId()).findStream()
+                .map(data -> {
+                    MapleDueyActions dueypack = getItemByPID(data.id);
+                    dueypack.setSender(data.senderName);
+                    dueypack.setMesos(data.mesos);
+                    dueypack.setSentTime(data.timeStamp);
+                    return dueypack;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static MapleDueyActions loadSingleItem(int packageid, int charid) {
+        return new QDDueyPackage().id.eq(packageid).recieverId.eq(charid).findOneOrEmpty()
+                .map(data -> {
+                    MapleDueyActions dueypack = getItemByPID(data.id);
+                    dueypack.setSender(data.senderName);
+                    dueypack.setMesos(data.mesos);
+                    dueypack.setSentTime(data.timeStamp);
+                    return dueypack;
+                }).orElse(null);
+    }
+
+    public static void reciveMsg(MapleClient c, int recipientId) {
+        DDueyPackage one = new QDDueyPackage().recieverId.eq(recipientId).findOne();
+        if (one != null) {
+            one.checked = 0;
+            one.save();
         }
     }
 
-    private static final boolean addItemToDB(final IItem item, final int quantity, final int mesos, final String sName, final int recipientID, final boolean isOn) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type) VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, recipientID);
-            ps.setString(2, sName);
-            ps.setInt(3, mesos);
-            ps.setLong(4, System.currentTimeMillis());
-            ps.setInt(5, isOn ? 0 : 1);
-
-            ps.setInt(6, item.getType());
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                ItemLoader.DUEY.saveItems(Collections.singletonList(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId()))), rs.getInt(1));
-            }
-            rs.close();
-            ps.close();
-
-            return true;
-        } catch (SQLException se) {
-            se.printStackTrace();
-            return false;
-        }
+    private static void removeItemFromDB(int packageid, int charid) {
+        new QDDueyPackage().id.eq(packageid).recieverId.eq(charid).delete();
     }
 
-    public static final List<MapleDueyActions> loadItems(final MapleCharacter chr) {
-        List<MapleDueyActions> packages = new LinkedList<MapleDueyActions>();
-        Connection con = DatabaseConnection.getConnection();
+    private static MapleDueyActions getItemByPID(int packageid) {
         try {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM dueypackages WHERE RecieverId = ?");
-            ps.setInt(1, chr.getId());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                MapleDueyActions dueypack = getItemByPID(rs.getInt("packageid"));
-                dueypack.setSender(rs.getString("SenderName"));
-                dueypack.setMesos(rs.getInt("Mesos"));
-                dueypack.setSentTime(rs.getLong("TimeStamp"));
-                packages.add(dueypack);
-            }
-            rs.close();
-            ps.close();
-            return packages;
-        } catch (SQLException se) {
-            se.printStackTrace();
-            return null;
-        }
-    }
-
-    public static final MapleDueyActions loadSingleItem(final int packageid, final int charid) {
-        List<MapleDueyActions> packages = new LinkedList<MapleDueyActions>();
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM dueypackages WHERE PackageId = ? and RecieverId = ?");
-            ps.setInt(1, packageid);
-            ps.setInt(2, charid);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                MapleDueyActions dueypack = getItemByPID(packageid);
-                dueypack.setSender(rs.getString("SenderName"));
-                dueypack.setMesos(rs.getInt("Mesos"));
-                dueypack.setSentTime(rs.getLong("TimeStamp"));
-                packages.add(dueypack);
-                rs.close();
-                ps.close();
-                return dueypack;
-            } else {
-                rs.close();
-                ps.close();
-                return null;
-            }
-        } catch (SQLException se) {
-//	    se.printStackTrace();
-            return null;
-        }
-    }
-
-    public static final void reciveMsg(final MapleClient c, final int recipientId) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("UPDATE dueypackages SET Checked = 0 where RecieverId = ?");
-            ps.setInt(1, recipientId);
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException se) {
-            se.printStackTrace();
-        }
-    }
-
-    private static final void removeItemFromDB(final int packageid, final int charid) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("DELETE FROM dueypackages WHERE PackageId = ? and RecieverId = ?");
-            ps.setInt(1, packageid);
-            ps.setInt(2, charid);
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException se) {
-            se.printStackTrace();
-        }
-    }
-
-    private static final MapleDueyActions getItemByPID(final int packageid) {
-        try {
-            Map<Integer, Pair<IItem, MapleInventoryType>> iter = ItemLoader.DUEY.loadItems(false, packageid);
+            Map<Integer, Pair<IItem, MapleInventoryType>> iter = ItemLoader.loadItems(6,false, packageid);
             if (iter != null && iter.size() > 0) {
                 for (Pair<IItem, MapleInventoryType> i : iter.values()) {
                     return new MapleDueyActions(packageid, i.getLeft());

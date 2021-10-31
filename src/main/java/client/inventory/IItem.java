@@ -2,15 +2,15 @@ package client.inventory;
 
 public interface IItem extends Comparable<IItem> {
 
-    byte getType();
+    int getType();
 
-    short getPosition();
+    int getPosition();
 
-    byte getFlag();
+    int getFlag();
 
     boolean getLocked();
 
-    short getQuantity();
+    int getQuantity();
 
     String getOwner();
 
@@ -26,13 +26,13 @@ public interface IItem extends Comparable<IItem> {
 
     long getExpiration();
 
-    void setFlag(byte flag);
+    void setFlag(int flag);
 
-    void setLocked(byte flag);
+    void setLocked(int flag);
     
     void setUniqueId(int id);
 
-    void setPosition(short position);
+    void setPosition(int position);
 
     void setExpiration(long expire);
 
@@ -40,13 +40,13 @@ public interface IItem extends Comparable<IItem> {
 
     void setGMLog(String message);
 
-    void setQuantity(short quantity);
+    void setQuantity(int quantity);
 
     void setGiftFrom(String gf);
 
-    void setEquipLevel(byte j);
+    void setEquipLevel(int j);
 
-    byte getEquipLevel();
+    int getEquipLevel();
 
     String getGiftFrom();
 

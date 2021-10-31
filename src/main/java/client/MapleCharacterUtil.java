@@ -20,18 +20,21 @@
  */
 package client;
 
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.DGamePollReply;
+import com.github.mrzhqiang.maplestory.domain.DNote;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDGamePollReply;
+import com.github.mrzhqiang.maplestory.domain.query.QDNxCode;
 import constants.GameConstants;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Connection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Pair;
-import java.util.regex.Pattern;
 
-import database.DatabaseConnection;
+import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 public class MapleCharacterUtil {
 
@@ -83,236 +86,110 @@ public class MapleCharacterUtil {
         return wui;
     }
 
-    public static final int getIdByName(final String name) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT id FROM characters WHERE name = ?");
-            ps.setString(1, name);
-            final ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-                return -1;
-            }
-            final int id = rs.getInt("id");
-            rs.close();
-            ps.close();
-
-            return id;
-        } catch (SQLException e) {
-            LOGGER.error("error 'getIdByName' " + e);
+    public static int getIdByName(String name) {
+        DCharacter one = new QDCharacter().name.eq(name).findOne();
+        if (one == null) {
+            return -1;
         }
-        return -1;
+
+        return one.id;
     }
 
-    public static final boolean PromptPoll(final int accountid) {
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-
-        boolean prompt = false;
-        try {
-            ps = DatabaseConnection.getConnection().prepareStatement("SELECT * from game_poll_reply where AccountId = ?");
-            ps.setInt(1, accountid);
-
-            rs = ps.executeQuery();
-            prompt = rs.next() ? false : true;
-        } catch (SQLException e) {
-        } finally {
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException e) {
-            }
-        }
-        return prompt;
+    public static boolean PromptPoll(int accountid) {
+        DGamePollReply one = new QDGamePollReply().account.id.eq(accountid).findOne();
+        return one == null;
     }
 
-    public static final boolean SetPoll(final int accountid, final int selection) {
+    public static boolean SetPoll(int accountid, int selection) {
         if (!PromptPoll(accountid)) { // Hacking OR spamming the db.
             return false;
         }
 
-        PreparedStatement ps = null;
-        try {
-            ps = DatabaseConnection.getConnection().prepareStatement("INSERT INTO game_poll_reply (AccountId, SelectAns) VALUES (?, ?)");
-            ps.setInt(1, accountid);
-            ps.setInt(2, selection);
+        DGamePollReply reply = new DGamePollReply();
+        reply.account = new QDAccount().id.eq(accountid).findOne();
+        reply.selectAns = selection;
+        reply.save();
 
-            ps.execute();
-        } catch (SQLException e) {
-        } finally {
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-            }
-        }
         return true;
     }
 
-    // -2 = An unknown error occured
-    // -1 = Account not found on database
-    // 0 = You do not have a second password set currently.
-    // 1 = The password you have input is wrong
-    // 2 = Password Changed successfully
-    public static final int Change_SecondPassword(final int accid, final String password, final String newpassword) {
-        Connection con = DatabaseConnection.getConnection();
+    // -2 = 出现未知错误
+    // -1 = 在数据库中找不到帐户
+    // 0 = 您当前没有设置第二个密码。
+    // 1 = 您输入的密码错误
+    // 2 = 密码修改成功
+    public static int Change_SecondPassword(int accid, String password, String newpassword) {
+        DAccount one = new QDAccount().id.eq(accid).findOne();
+        if (one == null) {
+            return -1;
+        }
+
+        if (one.secondPassword == null && one.salt2 == null) {
+            return 0;
+        }
+
+        if (one.secondPassword != null && one.salt2 != null) {
+            one.secondPassword = LoginCrypto.rand_r(one.secondPassword);
+        }
+
+        if (!check_ifPasswordEquals(one.secondPassword, password, one.salt2)) {
+            return 1;
+        }
+
+        String SHA1hashedsecond;
         try {
-            PreparedStatement ps = con.prepareStatement("SELECT * from accounts where id = ?");
-            ps.setInt(1, accid);
-            final ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-                return -1;
-            }
-            String secondPassword = rs.getString("2ndpassword");
-            final String salt2 = rs.getString("salt2");
-            if (secondPassword != null && salt2 != null) {
-                secondPassword = LoginCrypto.rand_r(secondPassword);
-            } else if (secondPassword == null && salt2 == null) {
-                rs.close();
-                ps.close();
-                return 0;
-            }
-            if (!check_ifPasswordEquals(secondPassword, password, salt2)) {
-                rs.close();
-                ps.close();
-                return 1;
-            }
-            rs.close();
-            ps.close();
-
-            String SHA1hashedsecond;
-            try {
-                SHA1hashedsecond = LoginCryptoLegacy.encodeSHA1(newpassword);
-            } catch (Exception e) {
-                return -2;
-            }
-            ps = con.prepareStatement("UPDATE accounts set 2ndpassword = ?, salt2 = ? where id = ?");
-            ps.setString(1, SHA1hashedsecond);
-            ps.setString(2, null);
-            ps.setInt(3, accid);
-
-            if (!ps.execute()) {
-                ps.close();
-                return 2;
-            }
-            ps.close();
-            return -2;
-        } catch (SQLException e) {
-            LOGGER.error("error 'getIdByName' " + e);
+            SHA1hashedsecond = LoginCryptoLegacy.encodeSHA1(newpassword);
+        } catch (Exception e) {
             return -2;
         }
+        one.secondPassword = SHA1hashedsecond;
+        one.salt2 = null;
+        one.save();
+        return 2;
     }
 
-    private static final boolean check_ifPasswordEquals(final String passhash, final String pwd, final String salt) {
-        // Check if the passwords are correct here. :B
+    private static boolean check_ifPasswordEquals(String passhash, String pwd, String salt) {
+        // 在这里检查密码是否正确。 :B
         if (LoginCryptoLegacy.isLegacyPassword(passhash) && LoginCryptoLegacy.checkPassword(pwd, passhash)) {
-            // Check if a password upgrade is needed.
+            // 检查是否需要密码升级。
             return true;
         } else if (salt == null && LoginCrypto.checkSha1Hash(passhash, pwd)) {
             return true;
-        } else if (LoginCrypto.checkSaltedSha512Hash(passhash, pwd, salt)) {
-            return true;
-        }
-        return false;
+        } else return LoginCrypto.checkSaltedSha512Hash(passhash, pwd, salt);
     }
 
     //id accountid gender
     public static Pair<Integer, Pair<Integer, Integer>> getInfoByName(String name, int world) {
-        try {
-
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE name = ? AND world = ?");
-            ps.setString(1, name);
-            ps.setInt(2, world);
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-                return null;
-            }
-            Pair<Integer, Pair<Integer, Integer>> id = new Pair<Integer, Pair<Integer, Integer>>(rs.getInt("id"), new Pair<Integer, Integer>(rs.getInt("accountid"), rs.getInt("gender")));
-            rs.close();
-            ps.close();
-            return id;
-        } catch (Exception e) {
-            e.printStackTrace();
+        DCharacter one = new QDCharacter().name.eq(name).world.eq(world).findOne();
+        if (one == null) {
+            return null;
         }
-        return null;
+        return new Pair<>(one.id, new Pair<>(one.account.id, one.gender));
     }
 
-    public static void setNXCodeUsed(String name, String code) throws SQLException {
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("UPDATE nxcode SET `user` = ?, `valid` = 0 WHERE code = ?");
-        ps.setString(1, name);
-        ps.setString(2, code);
-        ps.execute();
-        ps.close();
+    public static void setNXCodeUsed(String name, String code) {
+        new QDNxCode().code.eq(code).asUpdate().set("user", name).update();
     }
 
     public static void sendNote(String to, String name, String msg, int fame) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("INSERT INTO notes (`to`, `from`, `message`, `timestamp`, `gift`) VALUES (?, ?, ?, ?, ?)");
-            ps.setString(1, to);
-            ps.setString(2, name);
-            ps.setString(3, msg);
-            ps.setLong(4, System.currentTimeMillis());
-            ps.setInt(5, fame);
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException e) {
-            LOGGER.error("Unable to send note" + e);
-        }
+        DNote note = new DNote();
+        note.to = to;
+        note.from = name;
+        note.message = msg;
+        note.timestamp = System.currentTimeMillis();
+        note.gift = fame;
+        note.save();
     }
 
     public static boolean getNXCodeValid(String code, boolean validcode) throws SQLException {
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT `valid` FROM nxcode WHERE code = ?");
-        ps.setString(1, code);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            validcode = rs.getInt("valid") > 0;
-        }
-        rs.close();
-        ps.close();
-        return validcode;
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.valid > 0).orElse(validcode);
     }
 
     public static int getNXCodeType(String code) throws SQLException {
-        int type = -1;
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT `type` FROM nxcode WHERE code = ?");
-        ps.setString(1, code);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            type = rs.getInt("type");
-        }
-        rs.close();
-        ps.close();
-        return type;
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.type).orElse(-1);
     }
 
     public static int getNXCodeItem(String code) throws SQLException {
-        int item = -1;
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT `item` FROM nxcode WHERE code = ?");
-        ps.setString(1, code);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            item = rs.getInt("item");
-        }
-        rs.close();
-        ps.close();
-        return item;
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.item).orElse(-1);
     }
 }

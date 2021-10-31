@@ -1,16 +1,15 @@
 package tools.wztosql;
 
+import com.github.mrzhqiang.maplestory.domain.DWzOxData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzOxData;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
-import database.DatabaseConnection;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +21,6 @@ public class DumpOxQuizData {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DumpOxQuizData.class);
 
-    private final Connection con = DatabaseConnection.getConnection();
     static CharsetEncoder asciiEncoder = Charset.forName("GBK").newEncoder();
 
     public static void main(String[] args) {
@@ -46,9 +44,7 @@ public class DumpOxQuizData {
     }
 
     public void dumpOxData() throws SQLException {
-        PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_oxdata`");
-        ps.execute();
-        ps.close();
+        new QDWzOxData().delete();
         WzData.ETC.directory().findFile("OXQuiz.img")
                 .map(WzFile::content)
                 .map(WzElement::childrenStream)
@@ -72,20 +68,13 @@ public class DumpOxQuizData {
                                 || !asciiEncoder.canEncode(as)) {
                             return;
                         }
-                        PreparedStatement statement;
-                        try {
-                            statement = con.prepareStatement("INSERT INTO `wz_oxdata`"
-                                    + " (`questionset`, `questionid`, `question`, `display`, `answer`)"
-                                    + " VALUES (?, ?, ?, ?, ?)");
-                            statement.setString(1, name1);
-                            statement.setString(2, name2);
-                            statement.setString(3, qs);
-                            statement.setString(4, ds);
-                            statement.setString(5, as);
-                            statement.execute();
-                            statement.close();
-                        } catch (SQLException ignore) {
-                        }
+                        DWzOxData oxData = new DWzOxData();
+                        oxData.pkQuestion.questionset = Integer.parseInt(name1);
+                        oxData.pkQuestion.questionid = Integer.parseInt(name2);
+                        oxData.question = qs;
+                        oxData.display = ds;
+                        oxData.answer = as;
+                        oxData.save();
                     });
                 }));
     }

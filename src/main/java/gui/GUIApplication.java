@@ -8,13 +8,12 @@ import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.config.DatabaseConfiguration;
 import com.github.mrzhqiang.maplestory.config.ServerConfiguration;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 import constants.GameConstants;
 import constants.ServerConstants;
-import database.DatabaseConnection;
 import handling.RecvPacketOpcode;
 import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
@@ -31,9 +30,6 @@ import tools.MaplePacketCreator;
 
 import javax.swing.*;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.concurrent.ScheduledFuture;
 
 public class GUIApplication extends javax.swing.JFrame {
@@ -782,19 +778,15 @@ public class GUIApplication extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "账号不存在");
             return;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps;
 
-            ps = con.prepareStatement("Update accounts set password = ? Where name = ?");
-            ps.setString(1, LoginCrypto.hexSha1(password));
-            ps.setString(2, account);
-            ps.execute();
-            ps.close();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "错误!\r\n" + ex);
+        DAccount one = new QDAccount().name.eq(account).findOne();
+        if (one != null) {
+            one.password = LoginCrypto.hexSha1(password);
+            one.save();
+            printChatLog("更改账号: " + account + "的密码为 " + password);
+        } else {
+            JOptionPane.showMessageDialog(null, "无效的账号\r\n");
         }
-        printChatLog("更改账号: " + account + "的密码为 " + password);
     }
 
     private void shutdownServer() {
@@ -1076,7 +1068,7 @@ public class GUIApplication extends javax.swing.JFrame {
                                     item.setMp((short) (MP));
                                 }
                                 if ("可以交易".equals(isTransaction)) {
-                                    byte flag = item.getFlag();
+                                    int flag = item.getFlag();
                                     if (item.getType() == MapleInventoryType.EQUIP.getType()) {
                                         flag |= ItemFlag.KARMA_EQ.getValue();
                                     } else {
@@ -1156,15 +1148,14 @@ public class GUIApplication extends javax.swing.JFrame {
     }
 
     private void FixAcLogged() {
-        try {
-            Connection dcon = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = dcon.prepareStatement("UPDATE accounts SET loggedin = 0 WHERE name = " + jTextField23.getText())) {
-                ps.executeUpdate();
-            }
-            printChatLog("解除卡账号" + jTextField23.getText());
-            jTextField23.setText("");
-        } catch (SQLException ignored) {
+        String account = jTextField23.getText().trim();
+        DAccount one = new QDAccount().name.eq(account).findOne();
+        if (one != null) {
+            one.loggedIn = 0;
+            one.save();
         }
+        printChatLog("解除卡账号" + account);
+        jTextField23.setText("");
     }
 
     private void sendNotice(int type) {

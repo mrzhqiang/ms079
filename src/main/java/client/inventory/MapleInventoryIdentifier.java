@@ -1,38 +1,13 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItemAggregate;
+import com.github.mrzhqiang.maplestory.domain.query.QDPetAggregate;
+import com.github.mrzhqiang.maplestory.domain.query.QDRingAggregate;
+
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import database.DatabaseConnection;
-import handling.cashshop.CashShopServer;
-import handling.channel.ChannelServer;
-import handling.login.LoginServer;
-import handling.world.World;
-import java.io.Serializable;
 
 public class MapleInventoryIdentifier implements Serializable {
 
@@ -89,48 +64,31 @@ public class MapleInventoryIdentifier implements Serializable {
         if (grabRunningUID() > 0) {
             return grabRunningUID();
         }
-        try {
-            int[] ids = new int[4];
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT MAX(uniqueid) FROM inventoryitems");
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ids[0] = rs.getInt(1) + 1;
+        int[] ids = new int[4];
+        ids[0] = new QDInventoryItemAggregate()
+                .select(QDInventoryItemAggregate.alias().uniqueid)
+                .findOneOrEmpty()
+                .map(it -> it.uniqueid + 1)
+                .orElse(0);
+        ids[1] = new QDPetAggregate()
+                .select(QDPetAggregate.alias().petid)
+                .findOneOrEmpty()
+                .map(it -> it.petid + 1)
+                .orElse(0);
+        ids[2] = new QDRingAggregate()
+                .select(QDRingAggregate.alias().ringid)
+                .findOneOrEmpty()
+                .map(it -> it.ringid + 1)
+                .orElse(0);
+        ids[3] = new QDRingAggregate()
+                .select(QDRingAggregate.alias().partnerringid)
+                .findOneOrEmpty()
+                .map(it -> it.partnerringid + 1)
+                .orElse(0);
+        for (int i = 0; i < 4; i++) {
+            if (ids[i] > ret) {
+                ret = ids[i];
             }
-            rs.close();
-            ps.close();
-
-            ps = con.prepareStatement("SELECT MAX(petid) FROM pets");
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                ids[1] = rs.getInt(1) + 1;
-            }
-            rs.close();
-            ps.close();
-
-            ps = con.prepareStatement("SELECT MAX(ringid) FROM rings");
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                ids[2] = rs.getInt(1) + 1;
-            }
-            rs.close();
-            ps.close();
-
-            ps = con.prepareStatement("SELECT MAX(partnerringid) FROM rings");
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                ids[3] = rs.getInt(1) + 1; //biggest pl0x. but if this happens -> o_O
-            }
-            rs.close();
-            ps.close();
-
-            for (int i = 0; i < 4; i++) {
-                if (ids[i] > ret) {
-                    ret = ids[i];
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return ret;
     }

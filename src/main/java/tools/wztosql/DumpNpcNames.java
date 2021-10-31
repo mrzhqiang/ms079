@@ -1,18 +1,16 @@
 package tools.wztosql;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.DWzNPCNameData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzNPCNameData;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.google.common.base.Strings;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,21 +21,18 @@ public class DumpNpcNames {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DumpNpcNames.class);
 
-    private final Connection con = DatabaseConnection.getConnection();
     private static final Map<Integer, String> npcNames = new HashMap<>();
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
         LOGGER.debug("Dumping npc name data.");
         DumpNpcNames dump = new DumpNpcNames();
         dump.dumpNpcNameData();
         LOGGER.debug("Dump complete.");
     }
 
-    public void dumpNpcNameData() throws SQLException {
+    public void dumpNpcNameData() {
         WzData.STRING.directory().findFile("Npc.img");
-        try (PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_npcnamedata`")) {
-            ps.execute();
-        }
+        new QDWzNPCNameData().delete();
         WzData.STRING.directory().findFile("Npc.img")
                 .map(WzFile::content)
                 .map(WzElement::childrenStream)
@@ -59,11 +54,10 @@ public class DumpNpcNames {
                 }));
         for (int key : npcNames.keySet()) {
             try {
-                try (PreparedStatement ps = con.prepareStatement("INSERT INTO `wz_npcnamedata` (`npc`, `name`) VALUES (?, ?)")) {
-                    ps.setInt(1, key);
-                    ps.setString(2, npcNames.get(key));
-                    ps.execute();
-                }
+                DWzNPCNameData nameData = new DWzNPCNameData();
+                nameData.npc = key;
+                nameData.name = npcNames.get(key);
+                nameData.save();
                 LOGGER.debug("key: " + key + " name: " + npcNames.get(key));
             } catch (Exception ex) {
                 LOGGER.debug("Failed to save key " + key);

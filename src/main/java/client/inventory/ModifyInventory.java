@@ -13,14 +13,14 @@ public class ModifyInventory {
 
     private final int mode;
     private IItem item;
-    private short oldPos;
+    private int oldPos;
 
     public ModifyInventory(final int mode, final IItem item) {
         this.mode = mode;
         this.item = item.copy();
     }
 
-    public ModifyInventory(final int mode, final IItem item, final short oldPos) {
+    public ModifyInventory(final int mode, final IItem item, final int oldPos) {
         this.mode = mode;
         this.item = item.copy();
         this.oldPos = oldPos;
@@ -34,15 +34,15 @@ public class ModifyInventory {
         return GameConstants.getInventoryType(item.getItemId()).getType();
     }
 
-    public final short getPosition() {
+    public final int getPosition() {
         return item.getPosition();
     }
 
-    public final short getOldPosition() {
+    public final int getOldPosition() {
         return oldPos;
     }
 
-    public final short getQuantity() {
+    public final int getQuantity() {
         return item.getQuantity();
     }
 

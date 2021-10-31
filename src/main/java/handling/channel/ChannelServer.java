@@ -516,7 +516,7 @@ public class ChannelServer implements Serializable {
         return playerNPCs.get(id);
     }
 
-    public final void addPlayerNPC(final PlayerNPC npc) {
+    public final void addPlayerNPC(PlayerNPC npc) {
         if (playerNPCs.containsKey(npc.getId())) {
             removePlayerNPC(npc);
         }

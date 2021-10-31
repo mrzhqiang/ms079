@@ -3,22 +3,18 @@ package server.quest;
 import client.ISkill;
 import client.MapleCharacter;
 import client.MapleQuestStatus;
-import client.Skill;
 import client.SkillFactory;
 import client.inventory.IItem;
-import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
+import com.github.mrzhqiang.maplestory.domain.DWzQuestReqData;
 import constants.GameConstants;
+import tools.Pair;
+
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
-import tools.Pair;
 
 public class MapleQuestRequirement implements Serializable {
 
@@ -29,10 +25,12 @@ public class MapleQuestRequirement implements Serializable {
     private String stringStore;
     private List<Pair<Integer, Integer>> dataStore;
 
-    public MapleQuestRequirement(MapleQuest quest, MapleQuestRequirementType type, ResultSet rse)
-            throws SQLException {
+    public final DWzQuestReqData data;
+
+    public MapleQuestRequirement(MapleQuest quest, MapleQuestRequirementType type, DWzQuestReqData data) {
         this.type = type;
         this.quest = quest;
+        this.data = data;
 
         switch (type) {
             case pet:
@@ -43,11 +41,10 @@ public class MapleQuestRequirement implements Serializable {
             case skill:
             case job:
                 this.dataStore = new LinkedList<>();
-                String[] first = rse.getString("intStoresFirst").split(", ");
-                String[] second = rse.getString("intStoresSecond").split(", ");
-                if ((first.length <= 0) && (rse.getString("intStoresFirst").length() > 0)) {
-                    this.dataStore.add(new Pair<>(Integer.parseInt(rse.getString("intStoresFirst")),
-                            Integer.parseInt(rse.getString("intStoresSecond"))));
+                String[] first = data.intStoresFirst.split(", ");
+                String[] second = data.intStoresSecond.split(", ");
+                if ((first.length <= 0) && (data.intStoresFirst.length() > 0)) {
+                    this.dataStore.add(new Pair<>(Integer.parseInt(data.intStoresFirst), Integer.parseInt(data.intStoresSecond)));
                 }
                 for (int i = 0; i < first.length; i++) {
                     if ((first[i].length() > 0) && (second[i].length() > 0)) {
@@ -68,10 +65,10 @@ public class MapleQuestRequirement implements Serializable {
             case mbmin:
             case lvmax:
             case lvmin:
-                this.intStore = Integer.parseInt(rse.getString("stringStore"));
+                this.intStore = Integer.parseInt(data.stringStore);
                 break;
             case end:
-                this.stringStore = rse.getString("stringStore");
+                this.stringStore = data.stringStore;
         }
     }
 

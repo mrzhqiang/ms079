@@ -1,64 +1,25 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "auth_server_channel_ip")
-public class DAuthServerChannelIp {
+public class DAuthServerChannelIp extends Model {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "channelconfigid", nullable = false)
-    private Integer channelconfigid;
+    @Column(name = "channelconfigid")
+    public Integer id;
+    @NotNull
+    @Column(name = "channelid")
+    public Integer channelid;
+    @NotNull
+    @Column(name = "name")
+    public String name;
+    @NotNull
+    @Column(name = "value")
+    public String value;
 
-    @Column(name = "channelid", nullable = false)
-    private Integer channelid;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "value", nullable = false)
-    private String value;
-
-    public void setChannelconfigid(Integer channelconfigid) {
-        this.channelconfigid = channelconfigid;
-    }
-
-    public Integer getChannelconfigid() {
-        return channelconfigid;
-    }
-
-    public void setChannelid(Integer channelid) {
-        this.channelid = channelid;
-    }
-
-    public Integer getChannelid() {
-        return channelid;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        return "DAuthServerChannelIp{" +
-                "channelconfigid=" + channelconfigid + '\'' +
-                "channelid=" + channelid + '\'' +
-                "name=" + name + '\'' +
-                "value=" + value + '\'' +
-                '}';
-    }
 }

@@ -41,7 +41,9 @@ public final class AutoRegister {
     public static void createAccount(String login, String pwd, String eip, String macs) {
         int macCount = findCountByMac(macs);
         if (macCount < ACCOUNTS_PER_MAC) {
-            DAccount account = new DAccount(login, LoginCrypto.hexSha1(pwd));
+            DAccount account = new DAccount();
+            account.name = login;
+            account.password = LoginCrypto.hexSha1(pwd);
             account.email = "autoregister@mail.com";
             account.birthday = LocalDate.now();
             account.mac = macs;

@@ -109,11 +109,11 @@ public class StringUtil {
      * @param enumName The name of the enum to neaten up.
      * @return The human-readable enum name.
      */
-    public static final String makeEnumHumanReadable(final String enumName) {
+    public static String makeEnumHumanReadable(String enumName) {
         StringBuilder builder = new StringBuilder(enumName.length() + 1);
         for (String word : enumName.split("_")) {
             if (word.length() <= 2) {
-                builder.append(word); // assume that it's an abbrevation
+                builder.append(word); // 假设它是一个缩写
             } else {
                 builder.append(word.charAt(0));
                 builder.append(word.substring(1).toLowerCase());

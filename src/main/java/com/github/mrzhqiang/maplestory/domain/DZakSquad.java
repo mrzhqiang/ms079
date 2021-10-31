@@ -1,76 +1,30 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "zaksquads")
-public class DZakSquad {
+public class DZakSquad extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "channel")
+    public Integer channel;
+    @NotNull
+    @Column(name = "leaderid")
+    public Integer leaderid;
+    @NotNull
+    @Column(name = "status")
+    public Integer status;
+    @NotNull
+    @Column(name = "members")
+    public Integer members;
 
-    @Column(name = "channel", nullable = false)
-    private Integer channel;
-
-    @Column(name = "leaderid", nullable = false)
-    private Integer leaderid;
-
-    @Column(name = "status", nullable = false)
-    private Integer status;
-
-    @Column(name = "members", nullable = false)
-    private Integer members;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setChannel(Integer channel) {
-        this.channel = channel;
-    }
-
-    public Integer getChannel() {
-        return channel;
-    }
-
-    public void setLeaderid(Integer leaderid) {
-        this.leaderid = leaderid;
-    }
-
-    public Integer getLeaderid() {
-        return leaderid;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setMembers(Integer members) {
-        this.members = members;
-    }
-
-    public Integer getMembers() {
-        return members;
-    }
-
-    @Override
-    public String toString() {
-        return "DZakSquad{" +
-                "id=" + id + '\'' +
-                "channel=" + channel + '\'' +
-                "leaderid=" + leaderid + '\'' +
-                "status=" + status + '\'' +
-                "members=" + members + '\'' +
-                '}';
-    }
 }

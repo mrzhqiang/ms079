@@ -1,64 +1,27 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_questactquestdata")
-public class DWzQuestActQuestData {
+public class DWzQuestActQuestData extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "quest")
+    public Integer quest;
+    @NotNull
+    @Column(name = "state")
+    public Integer state;
+    @NotNull
+    @Column(name = "uniqueid")
+    public Integer uniqueid;
 
-    @Column(name = "quest", nullable = false)
-    private Integer quest;
-
-    @Column(name = "state", nullable = false)
-    private Integer state;
-
-    @Column(name = "uniqueid", nullable = false)
-    private Integer uniqueid;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setQuest(Integer quest) {
-        this.quest = quest;
-    }
-
-    public Integer getQuest() {
-        return quest;
-    }
-
-    public void setState(Integer state) {
-        this.state = state;
-    }
-
-    public Integer getState() {
-        return state;
-    }
-
-    public void setUniqueid(Integer uniqueid) {
-        this.uniqueid = uniqueid;
-    }
-
-    public Integer getUniqueid() {
-        return uniqueid;
-    }
-
-    @Override
-    public String toString() {
-        return "DWzQuestActQuestData{" +
-                "id=" + id + '\'' +
-                "quest=" + quest + '\'' +
-                "state=" + state + '\'' +
-                "uniqueid=" + uniqueid + '\'' +
-                '}';
-    }
 }

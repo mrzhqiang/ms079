@@ -1,52 +1,24 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "mts_cart")
-public class DMtsCart {
+public class DMtsCart extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "characterid")
+    public Integer characterid;
+    @NotNull
+    @Column(name = "itemid")
+    public Integer itemid;
 
-    @Column(name = "characterid", nullable = false)
-    private Integer characterid;
-
-    @Column(name = "itemid", nullable = false)
-    private Integer itemid;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharacterid(Integer characterid) {
-        this.characterid = characterid;
-    }
-
-    public Integer getCharacterid() {
-        return characterid;
-    }
-
-    public void setItemid(Integer itemid) {
-        this.itemid = itemid;
-    }
-
-    public Integer getItemid() {
-        return itemid;
-    }
-
-    @Override
-    public String toString() {
-        return "DMtsCart{" +
-                "id=" + id + '\'' +
-                "characterid=" + characterid + '\'' +
-                "itemid=" + itemid + '\'' +
-                '}';
-    }
 }

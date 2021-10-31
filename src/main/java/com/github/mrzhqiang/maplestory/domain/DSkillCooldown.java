@@ -1,76 +1,28 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "skills_cooldowns")
-public class DSkillCooldown {
+public class DSkillCooldown extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "charid")
+    public DCharacter character;
+    @NotNull
+    @Column(name = "SkillID")
+    public Integer skillID;
+    @NotNull
+    @Column(name = "length")
+    public Long length;
+    @NotNull
+    @Column(name = "StartTime")
+    public Long startTime;
 
-    @Column(name = "charid", nullable = false)
-    private Integer charid;
-
-    @Column(name = "SkillID", nullable = false)
-    private Integer skillID;
-
-    @Column(name = "length", nullable = false)
-    private Long length;
-
-    @Column(name = "StartTime", nullable = false)
-    private Long startTime;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharid(Integer charid) {
-        this.charid = charid;
-    }
-
-    public Integer getCharid() {
-        return charid;
-    }
-
-    public void setSkillID(Integer skillID) {
-        this.skillID = skillID;
-    }
-
-    public Integer getSkillID() {
-        return skillID;
-    }
-
-    public void setLength(Long length) {
-        this.length = length;
-    }
-
-    public Long getLength() {
-        return length;
-    }
-
-    public void setStartTime(Long startTime) {
-        this.startTime = startTime;
-    }
-
-    public Long getStartTime() {
-        return startTime;
-    }
-
-    @Override
-    public String toString() {
-        return "DSkillCooldown{" +
-                "id=" + id + '\'' +
-                "charid=" + charid + '\'' +
-                "skillID=" + skillID + '\'' +
-                "length=" + length + '\'' +
-                "startTime=" + startTime + '\'' +
-                '}';
-    }
 }

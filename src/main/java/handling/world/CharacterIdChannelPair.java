@@ -17,7 +17,6 @@ public class CharacterIdChannelPair implements Externalizable, Comparable<Charac
     }
 
     public CharacterIdChannelPair(int charid, int channel) {
-        super();
         this.charid = charid;
         this.channel = channel;
     }

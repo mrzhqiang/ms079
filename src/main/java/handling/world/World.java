@@ -3,40 +3,25 @@ package handling.world;
 import client.*;
 import client.BuddyList.BuddyAddResult;
 import client.BuddyList.BuddyOperation;
-
-import java.rmi.RemoteException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.PetDataFactory;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.DFamily;
+import com.github.mrzhqiang.maplestory.domain.DGuild;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDFamily;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.channel.PlayerStorage;
 import handling.world.family.MapleFamily;
 import handling.world.family.MapleFamilyCharacter;
-import handling.world.guild.MapleBBSThread;
-import handling.world.guild.MapleGuild;
-import handling.world.guild.MapleGuildAlliance;
-import handling.world.guild.MapleGuildCharacter;
-import handling.world.guild.MapleGuildSummary;
-
-import java.util.Collection;
-
+import handling.world.guild.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.Timer.WorldTimer;
@@ -45,6 +30,10 @@ import server.maps.MapleMapItem;
 import tools.CollectionUtil;
 import tools.MaplePacketCreator;
 import tools.packet.PetPacket;
+
+import java.rmi.RemoteException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class World {
 
@@ -170,18 +159,12 @@ public class World {
         private static final AtomicInteger RUNNING_PARTY_ID = new AtomicInteger();
 
         public static void init() {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps;
-            try {
-                ps = con.prepareStatement("SELECT MAX(party)+2 FROM characters");
-                ResultSet rs = ps.executeQuery();
-                rs.next();
-                RUNNING_PARTY_ID.set(rs.getInt(1));
-                rs.close();
-                ps.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            int party = new QDCharacter().select("MAX(party)")
+                    .findOneOrEmpty()
+                    .map(character -> character.party)
+                    .map(integer -> integer + 2)
+                    .orElse(1);
+            RUNNING_PARTY_ID.set(party);
         }
 
         public static void partyChat(int partyid, String chattext, String namefrom) {
@@ -335,7 +318,7 @@ public class World {
             }
         }
 
-        public static void buddyChanged(int cid, int cidFrom, String name, int channel, BuddyOperation operation, int level, int job, String group) {
+        public static void buddyChanged(int cid, DCharacter character, int channel, BuddyOperation operation, String group) {
             int ch = Find.findChannel(cid);
             if (ch > 0) {
                 final MapleCharacter addChar = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterById(cid);
@@ -343,15 +326,15 @@ public class World {
                     final BuddyList buddylist = addChar.getBuddylist();
                     switch (operation) {
                         case ADDED:
-                            if (buddylist.contains(cidFrom)) {
-                                buddylist.put(new BuddyEntry(name, cidFrom, group, channel, true, level, job));
-                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(cidFrom, channel - 1));
+                            if (buddylist.contains(character.id)) {
+                                buddylist.put(new BuddyEntry(character, group, channel, true));
+                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.id, channel - 1));
                             }
                             break;
                         case DELETED:
-                            if (buddylist.contains(cidFrom)) {
-                                buddylist.put(new BuddyEntry(name, cidFrom, group, -1, buddylist.get(cidFrom).isVisible(), level, job));
-                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(cidFrom, -1));
+                            if (buddylist.contains(character.id)) {
+                                buddylist.put(new BuddyEntry(character, group, -1, buddylist.get(character.id).isVisible()));
+                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.id, -1));
                             }
                             break;
                     }
@@ -359,18 +342,18 @@ public class World {
             }
         }
 
-        public static BuddyAddResult requestBuddyAdd(String addName, int channelFrom, int cidFrom, String nameFrom, int levelFrom, int jobFrom) {
-            int ch = Find.findChannel(cidFrom);
+        public static BuddyAddResult requestBuddyAdd(String addName, int channelFrom, DCharacter character) {
+            int ch = Find.findChannel(character.id);
             if (ch > 0) {
-                final MapleCharacter addChar = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(addName);
+                MapleCharacter addChar = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(addName);
                 if (addChar != null) {
                     final BuddyList buddylist = addChar.getBuddylist();
                     if (buddylist.isFull()) {
                         return BuddyAddResult.BUDDYLIST_FULL;
                     }
-                    if (!buddylist.contains(cidFrom)) {
-                        buddylist.addBuddyRequest(addChar.getClient(), cidFrom, nameFrom, channelFrom, levelFrom, jobFrom);
-                    } else if (buddylist.containsVisible(cidFrom)) {
+                    if (!buddylist.contains(character.id)) {
+                        buddylist.addBuddyRequest(addChar.getClient(), channelFrom, character);
+                    } else if (buddylist.containsVisible(character.id)) {
                         return BuddyAddResult.ALREADY_ON_LIST;
                     }
                 }
@@ -562,11 +545,10 @@ public class World {
         public static void init() {
             LOGGER.info(">>> 初始化 [家族系统]");
             Stopwatch started = Stopwatch.createStarted();
-            Collection<MapleGuild> allGuilds = MapleGuild.loadAll();
-            for (MapleGuild g : allGuilds) {
-                if (g.isProper()) {
-                    ID_GUILD_CACHED.put(g.getId(), g);
-                    NAME_GUILD_CACHED.put(g.getName(), g);
+            for (MapleGuild guild : MapleGuild.loadAll()) {
+                if (guild.isProper()) {
+                    ID_GUILD_CACHED.put(guild.getId(), guild);
+                    NAME_GUILD_CACHED.put(guild.getName(), guild);
                 }
             }
             LOGGER.info("<<< [家族系统] 初始化完毕，耗时：{}", started.stop());
@@ -582,7 +564,12 @@ public class World {
                 return ret;
             }
 
-            ret = new MapleGuild(id);
+            Optional<DGuild> optional = new QDGuild().id.eq(id).findOneOrEmpty();
+            if (!optional.isPresent()) {
+                return null;
+            }
+
+            ret = new MapleGuild(optional.get());
             if (ret.getId() <= 0 || !ret.isProper()) { //failed to load
                 return null;
             }
@@ -611,9 +598,9 @@ public class World {
         }
 
         public static void setGuildMemberOnline(MapleGuildCharacter mc, boolean bOnline, int channel) {
-            MapleGuild g = getGuild(mc.getGuildId());
+            MapleGuild g = getGuild(mc.character.guild.id);
             if (g != null) {
-                g.setOnline(mc.getId(), bOnline, channel);
+                g.setOnline(mc.character.id, bOnline, channel);
             }
         }
 
@@ -625,7 +612,7 @@ public class World {
         }
 
         public static int addGuildMember(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.getGuildId());
+            MapleGuild g = getGuild(mc.character.guild.id);
             if (g != null) {
                 return g.addGuildMember(mc);
             }
@@ -633,7 +620,7 @@ public class World {
         }
 
         public static void leaveGuild(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.getGuildId());
+            MapleGuild g = getGuild(mc.character.guild.id);
             if (g != null) {
                 g.leaveGuild(mc);
             }
@@ -654,7 +641,7 @@ public class World {
         }
 
         public static void expelMember(MapleGuildCharacter initiator, String name, int cid) {
-            MapleGuild g = getGuild(initiator.getGuildId());
+            MapleGuild g = getGuild(initiator.character.guild.id);
             if (g != null) {
                 g.expelMember(initiator, name, cid);
             }
@@ -668,7 +655,7 @@ public class World {
         }
 
         public static void memberLevelJobUpdate(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.getGuildId());
+            MapleGuild g = getGuild(mc.character.guild.id);
             if (g != null) {
                 g.memberLevelJobUpdate(mc);
             }
@@ -704,7 +691,7 @@ public class World {
             if (g != null) {
                 MapleGuildCharacter mc = g.getMGC(charid);
                 if (mc != null) {
-                    if (mc.getGuildRank() > 1) //not leader
+                    if (mc.character.guildRank > 1) //not leader
                     {
                         g.leaveGuild(mc);
                     } else {
@@ -1254,10 +1241,9 @@ public class World {
         public static void init() {
             LOGGER.info(">>> 初始化 [学院系统]");
             Stopwatch started = Stopwatch.createStarted();
-            Collection<MapleFamily> allGuilds = MapleFamily.loadAll();
-            for (MapleFamily g : allGuilds) {
-                if (g.isProper()) {
-                    FAMILY_CACHED.put(g.getId(), g);
+            for (MapleFamily family : MapleFamily.loadAll()) {
+                if (family.isProper()) {
+                    FAMILY_CACHED.put(family.getId(), family);
                 }
             }
             LOGGER.info("<<< [学院系统]初始化完毕，耗时：{}", started.stop());
@@ -1266,10 +1252,11 @@ public class World {
         public static MapleFamily getFamily(Integer id) {
             MapleFamily ret = FAMILY_CACHED.get(id);
             if (ret == null) {
-                ret = new MapleFamily(id);
-                if (ret.getId() <= 0 || !ret.isProper()) { //failed to load
+                DFamily one = new QDFamily().id.eq(id).findOne();
+                if (one == null) {
                     return null;
                 }
+                ret = new MapleFamily(one);
                 FAMILY_CACHED.put(id, ret);
             }
             return ret;

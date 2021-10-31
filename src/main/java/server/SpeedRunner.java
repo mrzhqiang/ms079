@@ -1,12 +1,13 @@
 package server;
 
-import database.DatabaseConnection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import com.github.mrzhqiang.maplestory.domain.query.QDSpeedRun;
+
 import java.sql.SQLException;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import server.maps.SpeedRunType;
 import tools.Pair;
 import tools.StringUtil;
@@ -45,28 +46,25 @@ public class SpeedRunner {
         }
     }
 
-    public final void loadSpeedRunData(SpeedRunType type) throws SQLException {
-        PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE); //or should we do less
-        ps.setString(1, type.name());
-        StringBuilder ret = new StringBuilder("#rThese are the speedrun times for " + StringUtil.makeEnumHumanReadable(type.name()) + ".#k\r\n\r\n");
-        Map<Integer, String> rett = new LinkedHashMap<Integer, String>();
-        ResultSet rs = ps.executeQuery();
-        int rank = 1;
-        boolean cont = rs.first();
-        boolean changed = cont;
-        while (cont) {
-            addSpeedRunData(ret, rett, rs.getString("members"), rs.getString("leader"), rank, rs.getString("timestring"));
-            rank++;
-            cont = rs.next();
-        }
-        rs.close();
-        ps.close();
-        if (changed) {
-            speedRunData.put(type, new Pair<String, Map<Integer, String>>(ret.toString(), rett));
-        }
+    public final void loadSpeedRunData(SpeedRunType type) {
+        AtomicInteger rank = new AtomicInteger(1);
+        StringBuilder ret = new StringBuilder("#r这是速度运行时间 " + StringUtil.makeEnumHumanReadable(type.name()) + ".#k\r\n\r\n");
+        Map<Integer, String> rett = new LinkedHashMap<>();
+        new QDSpeedRun().type.eq(type.name()).orderBy().type.asc().setMaxRows(25)
+                .findEach(it -> {
+                    addSpeedRunData(ret, rett, it.members, it.leader, rank.get(), it.timestring);
+                    rank.set(rank.get() + 1);
+                });
+
+        speedRunData.put(type, new Pair<>(ret.toString(), rett));
     }
 
-    public final Pair<StringBuilder, Map<Integer, String>> addSpeedRunData(StringBuilder ret, Map<Integer, String> rett, String members, String leader, int rank, String timestring) {
+    public Pair<StringBuilder, Map<Integer, String>> addSpeedRunData(StringBuilder ret,
+                                                                     Map<Integer, String> rett,
+                                                                     String members,
+                                                                     String leader,
+                                                                     int rank,
+                                                                     String timestring) {
         StringBuilder rettt = new StringBuilder();
 
         String[] membrz = members.split(",");
@@ -95,6 +93,6 @@ public class SpeedRunner {
             ret.append("#l");
         }
         ret.append("\r\n");
-        return new Pair<StringBuilder, Map<Integer, String>>(ret, rett);
+        return new Pair<>(ret, rett);
     }
 }

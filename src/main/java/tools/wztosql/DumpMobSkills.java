@@ -1,18 +1,16 @@
 package tools.wztosql;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.DWzMobSkillData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzMobSkillData;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +21,6 @@ public class DumpMobSkills {
     protected boolean hadError = false;
     protected boolean update;
     protected int id = 0;
-    private Connection con = DatabaseConnection.getConnection();
 
     public DumpMobSkills(boolean update) {
         this.update = update;
@@ -33,40 +30,10 @@ public class DumpMobSkills {
         return hadError;
     }
 
-    public void dumpMobSkills() throws Exception {
-        if (!hadError) {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO wz_mobskilldata(skillid, `level`, hp, mpcon, x, y, time, prop, `limit`, spawneffect,`interval`, summons, ltx, lty, rbx, rby, once) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            try {
-                dumpMobSkills(ps);
-            } catch (Exception e) {
-                LOGGER.debug(id + " skill.", e);
-                hadError = true;
-            } finally {
-                ps.executeBatch();
-                ps.close();
-            }
-        }
-    }
-
-    public void delete(String sql) throws Exception {
-        PreparedStatement ps = con.prepareStatement(sql);
-        ps.executeUpdate();
-        ps.close();
-    }
-
-    public boolean doesExist(String sql) throws Exception {
-        PreparedStatement ps = con.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery();
-        boolean ret = rs.next();
-        rs.close();
-        ps.close();
-        return ret;
-    }
-
     //kinda inefficient
-    public void dumpMobSkills(PreparedStatement ps) throws Exception {
+    public void dumpMobSkills() {
         if (!update) {
-            delete("DELETE FROM wz_mobskilldata");
+            new QDWzMobSkillData().delete();
             LOGGER.debug("Deleted wz_mobskilldata successfully.");
         }
         LOGGER.debug("Adding into wz_mobskilldata.....");
@@ -79,20 +46,21 @@ public class DumpMobSkills {
                             .ifPresent(wzElementStream -> wzElementStream.forEach(lvlz -> {
                                 int lvl = Numbers.ofInt(lvlz.name());
                                 try {
-                                    if (update && doesExist("SELECT * FROM wz_mobskilldata WHERE skillid = " + id + " AND level = " + lvl)) {
+                                    if (update && new QDWzMobSkillData().skillid.eq(id).level.eq(lvl).exists()) {
                                         return;
                                     }
-                                    ps.setInt(1, id);
-                                    ps.setInt(2, lvl);
-                                    ps.setInt(3, Elements.findInt(lvlz, "hp", 100));
-                                    ps.setInt(4, Elements.findInt(lvlz, "mpCon", 0));
-                                    ps.setInt(5, Elements.findInt(lvlz, "x", 1));
-                                    ps.setInt(6, Elements.findInt(lvlz, "y", 1));
-                                    ps.setInt(7, Elements.findInt(lvlz, "time", 0)); // * 1000
-                                    ps.setInt(8, Elements.findInt(lvlz, "prop", 100)); // / 100.0
-                                    ps.setInt(9, Elements.findInt(lvlz, "limit", 0));
-                                    ps.setInt(10, Elements.findInt(lvlz, "summonEffect", 0));
-                                    ps.setInt(11, Elements.findInt(lvlz, "interval", 0)); // * 1000
+                                    DWzMobSkillData skillData = new DWzMobSkillData();
+                                    skillData.id = id;
+                                    skillData.level = lvl;
+                                    skillData.hp = Elements.findInt(lvlz, "hp", 100);
+                                    skillData.mpcon = Elements.findInt(lvlz, "mpCon", 0);
+                                    skillData.x = Elements.findInt(lvlz, "x", 1);
+                                    skillData.y = Elements.findInt(lvlz, "y", 1);
+                                    skillData.time = Elements.findInt(lvlz, "time", 0);
+                                    skillData.prop = Elements.findInt(lvlz, "prop", 100);
+                                    skillData.limit = Elements.findInt(lvlz, "limit", 0);
+                                    skillData.spawneffect = Elements.findInt(lvlz, "summonEffect", 0);
+                                    skillData.interval = Elements.findInt(lvlz, "interval", 0);
 
                                     StringBuilder summ = new StringBuilder();
                                     List<Integer> toSummon = new ArrayList<>();
@@ -109,26 +77,26 @@ public class DumpMobSkills {
                                         }
                                         summ.append(summon);
                                     }
-                                    ps.setString(12, summ.toString());
+                                    skillData.summons = summ.toString();
                                     if (lvlz.find("lt") != null) {
                                         Vector lt = Elements.findVector(lvlz, "lt");
-                                        ps.setInt(13, lt.x);
-                                        ps.setInt(14, lt.y);
+                                        skillData.ltx = lt.x;
+                                        skillData.lty = lt.y;
                                     } else {
-                                        ps.setInt(13, 0);
-                                        ps.setInt(14, 0);
+                                        skillData.ltx = 0;
+                                        skillData.lty = 0;
                                     }
                                     if (lvlz.find("rb") != null) {
                                         Vector rb = Elements.findVector(lvlz, "rb");
-                                        ps.setInt(15, rb.x);
-                                        ps.setInt(16, rb.y);
+                                        skillData.rbx = rb.x;
+                                        skillData.rby = rb.y;
                                     } else {
-                                        ps.setInt(15, 0);
-                                        ps.setInt(16, 0);
+                                        skillData.rbx = 0;
+                                        skillData.rby = 0;
                                     }
-                                    ps.setByte(17, (byte) (Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0));
+                                    skillData.once = (Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0);
                                     LOGGER.debug("Added skill: " + id + " level " + lvl);
-                                    ps.addBatch();
+                                    skillData.save();
                                 } catch (Exception ignore) {
                                 }
                             }));

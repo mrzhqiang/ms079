@@ -1,89 +1,38 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
 @Table(name = "cheatlog")
-public class DCheatLog {
+public class DCheatLog extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "characterid")
+    public DCharacter character;
+    @NotNull
+    @Column(name = "offense")
+    public String offense;
+    @NotNull
+    @Column(name = "count")
+    public Integer count;
+    @NotNull
+    @Column(name = "lastoffensetime")
+    public LocalDateTime lastoffensetime;
+    @NotNull
+    @Column(name = "param")
+    public String param;
 
-    @Column(name = "characterid", nullable = false)
-    private Integer characterid;
-
-    @Column(name = "offense", nullable = false)
-    private String offense;
-
-    @Column(name = "count", nullable = false)
-    private Integer count;
-
-    @Column(name = "lastoffensetime", nullable = false)
-    private Date lastoffensetime;
-
-    @Column(name = "param", nullable = false)
-    private String param;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharacterid(Integer characterid) {
-        this.characterid = characterid;
-    }
-
-    public Integer getCharacterid() {
-        return characterid;
-    }
-
-    public void setOffense(String offense) {
-        this.offense = offense;
-    }
-
-    public String getOffense() {
-        return offense;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-
-    public void setLastoffensetime(Date lastoffensetime) {
-        this.lastoffensetime = lastoffensetime;
-    }
-
-    public Date getLastoffensetime() {
-        return lastoffensetime;
-    }
-
-    public void setParam(String param) {
-        this.param = param;
-    }
-
-    public String getParam() {
-        return param;
-    }
-
-    @Override
-    public String toString() {
-        return "DCheatLog{" +
-                "id=" + id + '\'' +
-                "characterid=" + characterid + '\'' +
-                "offense=" + offense + '\'' +
-                "count=" + count + '\'' +
-                "lastoffensetime=" + lastoffensetime + '\'' +
-                "param=" + param + '\'' +
-                '}';
-    }
 }

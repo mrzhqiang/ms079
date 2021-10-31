@@ -230,7 +230,7 @@ public class MapleMiniGame extends AbstractPlayerStore {
         for (int i = 0; i < slots; i++) {
             if (exitAfter[i]) {
                 exitAfter[i] = false;
-                exit(i == 0 ? getMCOwner() : chrs[i - 1].get());
+                exit(i == 0 ? getMCOwner() : chrs.get(i - 1).get());
             }
         }
     }

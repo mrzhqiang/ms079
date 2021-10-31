@@ -6,7 +6,9 @@ import client.inventory.IItem;
 import client.MapleClient;
 import client.inventory.MapleInventoryType;
 import constants.ServerConstants;
-import java.util.Calendar;
+
+import java.time.LocalDateTime;
+
 import server.MTSCart;
 import server.MTSStorage;
 import server.MTSStorage.MTSItemInfo;
@@ -86,7 +88,8 @@ public class MTSOperation {
             if (quantity >= 50 && GameConstants.isUpgradeScroll(item.getItemId())) {
                 c.setMonitored(true); //hack check
             }
-            final long expiration = (System.currentTimeMillis() + (7L * 24 * 60 * 60 * 1000));
+            // (System.currentTimeMillis() + (7L * 24 * 60 * 60 * 1000))
+            LocalDateTime expiration = LocalDateTime.now().plusDays(7);
             item.setQuantity(quantity);
             MTSStorage.getInstance().addToBuyNow(cart, item, price, c.getPlayer().getId(), c.getPlayer().getName(), expiration);
             MapleInventoryManipulator.removeFromSlot(c, type, slot, quantity, false);
@@ -113,7 +116,7 @@ public class MTSOperation {
             //LOGGER.debug("NumItems: " + cart.getInventory().size() + ", ID: " + id + ", ItemExists?: " + (item != null));
             if (item != null && item.getQuantity() > 0 && MapleInventoryManipulator.checkSpace(c, item.getItemId(), item.getQuantity(), item.getOwner())) {
                 IItem item_ = item.copy();
-                short pos = MapleInventoryManipulator.addbyItem(c, item_, true);
+                int pos = MapleInventoryManipulator.addbyItem(c, item_, true);
                 if (pos >= 0) {
                     if (item_.getPet() != null) {
                         item_.getPet().setInventoryPosition(pos);

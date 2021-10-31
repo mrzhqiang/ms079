@@ -1,6 +1,7 @@
 package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
+import io.ebean.annotation.NotNull;
 
 import javax.persistence.*;
 
@@ -9,70 +10,18 @@ import javax.persistence.*;
 public class DMountData extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @OneToOne
+    @JoinColumn(name = "characterid")
+    public DCharacter character;
+    @NotNull
+    @Column(name = "Level")
+    public Integer level;
+    @NotNull
+    @Column(name = "Exp")
+    public Integer exp;
+    @NotNull
+    @Column(name = "Fatigue")
+    public Integer fatigue;
 
-    @Column(name = "characterid")
-    private Integer characterid;
-
-    @Column(name = "Level", nullable = false)
-    private Integer level;
-
-    @Column(name = "Exp", nullable = false)
-    private Integer exp;
-
-    @Column(name = "Fatigue", nullable = false)
-    private Integer fatigue;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharacterid(Integer characterid) {
-        this.characterid = characterid;
-    }
-
-    public Integer getCharacterid() {
-        return characterid;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setExp(Integer exp) {
-        this.exp = exp;
-    }
-
-    public Integer getExp() {
-        return exp;
-    }
-
-    public void setFatigue(Integer fatigue) {
-        this.fatigue = fatigue;
-    }
-
-    public Integer getFatigue() {
-        return fatigue;
-    }
-
-    @Override
-    public String toString() {
-        return "DMountData{" +
-                "id=" + id + '\'' +
-                "characterid=" + characterid + '\'' +
-                "level=" + level + '\'' +
-                "exp=" + exp + '\'' +
-                "fatigue=" + fatigue + '\'' +
-                '}';
-    }
 }

@@ -20,32 +20,27 @@
  */
 package scripting;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import client.MapleClient;
+import com.github.mrzhqiang.maplestory.domain.query.QDReactorDrop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import server.maps.MapleReactor;
+import server.maps.ReactorDropEntry;
+import tools.FileoutputUtil;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
-
-import client.MapleClient;
-import database.DatabaseConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import server.maps.ReactorDropEntry;
-import server.maps.MapleReactor;
-import tools.FileoutputUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ReactorScriptManager extends AbstractScriptManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorScriptManager.class);
 
     private static final ReactorScriptManager instance = new ReactorScriptManager();
-    private final Map<Integer, List<ReactorDropEntry>> drops = new HashMap<Integer, List<ReactorDropEntry>>();
+    private final Map<Integer, List<ReactorDropEntry>> drops = new HashMap<>();
 
     public static final ReactorScriptManager getInstance() {
         return instance;
@@ -78,37 +73,10 @@ public class ReactorScriptManager extends AbstractScriptManager {
         if (ret != null) {
             return ret;
         }
-        ret = new LinkedList<ReactorDropEntry>();
+        ret = new QDReactorDrop().reactorid.eq(rid).findStream()
+                .map(it -> new ReactorDropEntry(it.itemid, it.chance, it.questid))
+                .collect(Collectors.toList());
 
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("SELECT * FROM reactordrops WHERE reactorid = ?");
-            ps.setInt(1, rid);
-            rs = ps.executeQuery();
-
-            while (rs.next()) {
-                ret.add(new ReactorDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("questid")));
-            }
-            rs.close();
-            ps.close();
-        } catch (final SQLException e) {
-            LOGGER.error("Could not retrieve drops for reactor " + rid + e);
-            return ret;
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException ignore) {
-                return ret;
-            }
-        }
         drops.put(rid, ret);
         return ret;
     }

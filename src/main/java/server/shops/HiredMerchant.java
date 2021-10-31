@@ -76,11 +76,11 @@ public class HiredMerchant extends AbstractPlayerStore {
         MaplePlayerShopItem pItem = (MaplePlayerShopItem) this.items.get(item);
         IItem shopItem = pItem.item;
         IItem newItem = shopItem.copy();
-        short perbundle = newItem.getQuantity();
+        int perbundle = newItem.getQuantity();
         int theQuantity = pItem.price * quantity;
         newItem.setQuantity((short) (quantity * perbundle));
 
-        byte flag = newItem.getFlag();
+        int flag = newItem.getFlag();
 
         if (ItemFlag.KARMA_EQ.check(flag)) {
             newItem.setFlag((byte) (flag - ItemFlag.KARMA_EQ.getValue()));

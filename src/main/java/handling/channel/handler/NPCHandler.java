@@ -301,7 +301,7 @@ public class NPCHandler {
             case 5: { // Store
                 final byte slot = (byte) slea.readShort();
                 final int itemId = slea.readInt();
-                short quantity = slea.readShort();
+                int quantity = slea.readShort();
                 if (quantity < 1) {
                     //AutobanManager.getInstance().autoban(c, "Trying to store " + quantity + " of " + itemId);
                     return;
@@ -325,7 +325,7 @@ public class NPCHandler {
                         c.getSession().write(MaplePacketCreator.enableActions());
                         return;
                     }
-                    final byte flag = item.getFlag();
+                    final int flag = item.getFlag();
                     if (ii.isPickupRestricted(item.getItemId()) && storage.findById(item.getItemId()) != null) {
                         c.getSession().write(MaplePacketCreator.enableActions());
                         return;

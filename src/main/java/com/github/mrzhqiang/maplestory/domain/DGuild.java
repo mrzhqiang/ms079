@@ -1,56 +1,92 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
 import io.ebean.annotation.DbForeignKey;
 import io.ebean.annotation.Length;
+import io.ebean.annotation.NotNull;
 
 import javax.persistence.*;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "guilds")
-public class DGuild {
+public class DGuild extends Model {
 
     @Id
-    public Integer guildid;
+    @Column(name = "guildid")
+    public Integer id;
     @OneToOne
     @DbForeignKey(noConstraint = true)
     @JoinColumn(name = "leader")
     public DCharacter leader;
-    @Column(name = "GP", nullable = false)
+    @NotNull
+    @Column(name = "GP")
     public Integer GP;
     @Column(name = "logo")
     public Integer logo;
-    @Column(name = "logoColor", nullable = false)
+    @NotNull
+    @Column(name = "logoColor")
     public Integer logoColor;
+    @NotNull
     @Length(45)
-    @Column(name = "name", nullable = false)
+    @Column(name = "name")
     public String name;
+    @NotNull
     @Length(45)
-    @Column(name = "rank1title", nullable = false)
+    @Column(name = "rank1title")
     public String rank1title;
+    @NotNull
     @Length(45)
-    @Column(name = "rank2title", nullable = false)
+    @Column(name = "rank2title")
     public String rank2title;
+    @NotNull
     @Length(45)
-    @Column(name = "rank3title", nullable = false)
+    @Column(name = "rank3title")
     public String rank3title;
+    @NotNull
     @Length(45)
-    @Column(name = "rank4title", nullable = false)
+    @Column(name = "rank4title")
     public String rank4title;
+    @NotNull
     @Length(45)
-    @Column(name = "rank5title", nullable = false)
+    @Column(name = "rank5title")
     public String rank5title;
-    @Column(name = "capacity", nullable = false)
+    @NotNull
+    @Column(name = "capacity")
     public Integer capacity;
     @Column(name = "logoBG")
     public Integer logoBG;
-    @Column(name = "logoBGColor", nullable = false)
+    @NotNull
+    @Column(name = "logoBGColor")
     public Integer logoBGColor;
     @Length(101)
     @Column(name = "notice")
     public String notice;
-    @Column(name = "signature", nullable = false)
+    @NotNull
+    @Column(name = "signature")
     public Integer signature;
-    @Column(name = "alliance", nullable = false)
+    @NotNull
+    @Column(name = "alliance")
     public Integer alliance;
 
+    @OneToMany(mappedBy = "guild", cascade = CascadeType.ALL)
+    public List<DBbsThread> threads;
+    @OneToMany(mappedBy = "guild", cascade = CascadeType.ALL)
+    public List<DBbsReply> replies;
+    @OneToMany(mappedBy = "guild")
+    public List<DCharacter> characters;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DGuild dGuild = (DGuild) o;
+        return Objects.equals(id, dGuild.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

@@ -1,5 +1,8 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -7,18 +10,21 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_oxdata")
-public class DWzOxData {
+public class DWzOxData extends Model {
 
     @EmbeddedId
     public PKQuestion pkQuestion;
 
-    @Column(name = "question", nullable = false)
+    @NotNull
+    @Column(name = "question")
     public String question;
 
-    @Column(name = "display", nullable = false)
+    @NotNull
+    @Column(name = "display")
     public String display;
 
-    @Column(name = "answer", nullable = false)
+    @NotNull
+    @Column(name = "answer")
     public String answer;
 
 }

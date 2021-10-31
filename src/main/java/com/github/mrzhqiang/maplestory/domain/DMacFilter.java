@@ -1,40 +1,22 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "macfilters")
-public class DMacFilter {
+public class DMacFilter extends Model {
 
     @Id
-    @Column(name = "macfilterid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer macfilterid;
+    @Column(name = "macfilterid")
+    public Integer id;
+    @NotNull
+    @Column(name = "filter")
+    public String filter;
 
-    @Column(name = "filter", nullable = false)
-    private String filter;
-
-    public void setMacfilterid(Integer macfilterid) {
-        this.macfilterid = macfilterid;
-    }
-
-    public Integer getMacfilterid() {
-        return macfilterid;
-    }
-
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    public String getFilter() {
-        return filter;
-    }
-
-    @Override
-    public String toString() {
-        return "DMacFilter{" +
-                "macfilterid=" + macfilterid + '\'' +
-                "filter=" + filter + '\'' +
-                '}';
-    }
 }

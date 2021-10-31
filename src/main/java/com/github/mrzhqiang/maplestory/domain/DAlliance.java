@@ -1,6 +1,7 @@
 package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
+import io.ebean.annotation.NotNull;
 
 import javax.persistence.*;
 
@@ -10,33 +11,53 @@ public class DAlliance extends Model {
 
     @Id
     public Integer id;
-    @Column(name = "name", nullable = false)
+    @NotNull
+    @Column(name = "name")
     public String name;
-    @Column(name = "leaderid", nullable = false)
-    public Integer leaderid;
-    @Column(name = "guild1", nullable = false)
-    public Integer guild1;
-    @Column(name = "guild2", nullable = false)
-    public Integer guild2;
-    @Column(name = "guild3", nullable = false)
-    public Integer guild3;
-    @Column(name = "guild4", nullable = false)
-    public Integer guild4;
-    @Column(name = "guild5", nullable = false)
-    public Integer guild5;
-    @Column(name = "rank1", nullable = false)
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "leaderid")
+    public DCharacter leader;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "guild1")
+    public DGuild guild1;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "guild2")
+    public DGuild guild2;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "guild3")
+    public DGuild guild3;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "guild4")
+    public DGuild guild4;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "guild5")
+    public DGuild guild5;
+    @NotNull
+    @Column(name = "rank1")
     public String rank1;
-    @Column(name = "rank2", nullable = false)
+    @NotNull
+    @Column(name = "rank2")
     public String rank2;
-    @Column(name = "rank3", nullable = false)
+    @NotNull
+    @Column(name = "rank3")
     public String rank3;
-    @Column(name = "rank4", nullable = false)
+    @NotNull
+    @Column(name = "rank4")
     public String rank4;
-    @Column(name = "rank5", nullable = false)
+    @NotNull
+    @Column(name = "rank5")
     public String rank5;
-    @Column(name = "capacity", nullable = false)
+    @NotNull
+    @Column(name = "capacity")
     public Integer capacity;
-    @Column(name = "notice", nullable = false)
+    @NotNull
+    @Column(name = "notice")
     public String notice;
 
 }

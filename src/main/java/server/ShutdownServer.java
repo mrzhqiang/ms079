@@ -2,7 +2,6 @@ package server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import database.DatabaseConnection;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
@@ -10,6 +9,7 @@ import handling.world.World.Alliance;
 import handling.world.World.Broadcast;
 import handling.world.World.Family;
 import handling.world.World.Guild;
+import io.ebean.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
@@ -122,7 +122,7 @@ public class ShutdownServer implements Runnable {
         } catch (Exception ignored) {
         }
         try {
-            DatabaseConnection.closeAll();
+            DB.getDefault().shutdown();
         } catch (Exception ignored) {
         }
         //Timer.PingTimer.getInstance().stop();

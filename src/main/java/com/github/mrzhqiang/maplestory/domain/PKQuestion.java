@@ -1,5 +1,7 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.util.Objects;
@@ -7,10 +9,11 @@ import java.util.Objects;
 @Embeddable
 public class PKQuestion {
 
-    @Column(name = "questionset", nullable = false)
+    @NotNull
+    @Column(name = "questionset")
     public Integer questionset;
-
-    @Column(name = "questionid", nullable = false)
+    @NotNull
+    @Column(name = "questionid")
     public Integer questionid;
 
     @Override

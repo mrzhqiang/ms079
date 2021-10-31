@@ -15,7 +15,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     private final AtomicInteger slotLimit;
     private final MapleInventoryType type;
 
-    private final Map<Short, IItem> inventory = Maps.newLinkedHashMap();
+    private final Map<Integer, IItem> inventory = Maps.newLinkedHashMap();
 
     /**
      * Creates a new instance of MapleInventory
@@ -33,8 +33,8 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
         }
     }
 
-    public byte getSlotLimit() {
-        return slotLimit.byteValue();
+    public int getSlotLimit() {
+        return slotLimit.intValue();
     }
 
     public void setSlotLimit(int slot) {
@@ -77,7 +77,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     }
 
     public List<IItem> listById(int itemId) {
-        List<IItem> ret = new ArrayList<IItem>();
+        List<IItem> ret = new ArrayList<>();
         for (IItem item : inventory.values()) {
             if (item.getItemId() == itemId) {
                 ret.add(item);
@@ -99,8 +99,8 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     /**
      * Adds the item to the inventory and returns the assigned slot id
      */
-    public short addItem(IItem item) {
-        short slotId = getNextFreeSlot();
+    public int addItem(IItem item) {
+        int slotId = getNextFreeSlot();
         if (slotId < 0) {
             return -1;
         }
@@ -111,23 +111,23 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
 
     public void addFromDB(IItem item) {
         if (item.getPosition() < 0 && !type.equals(MapleInventoryType.EQUIPPED)) {
-            // This causes a lot of stuck problem, until we are done with position checking
+            // 这会导致很多卡住问题，直到我们完成位置检查
             return;
         }
         inventory.put(item.getPosition(), item);
     }
 
-    public boolean move2(byte sSlot, byte dSlot, short slotMax) {
+    public boolean move2(int sSlot, int dSlot, int slotMax) {
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        IItem source = (Item) this.inventory.get(Byte.valueOf(sSlot));
-        IItem target = (Item) this.inventory.get(Byte.valueOf(dSlot));
+        IItem source = this.inventory.get(sSlot);
+        IItem target = this.inventory.get(dSlot);
         if (source == null) {
             throw new InventoryException("Trying to move empty slot");
         }
         if (target == null) {
             source.setPosition(dSlot);
-            this.inventory.put(Short.valueOf(dSlot), source);
-            this.inventory.remove(Byte.valueOf(sSlot));
+            this.inventory.put(dSlot, source);
+            this.inventory.remove(sSlot);
         } else if ((target.getItemId() == source.getItemId()) && (!GameConstants.isThrowingStar(source.getItemId())) && (!GameConstants.isBullet(source.getItemId()))) {
             if (this.type.getType() == MapleInventoryType.EQUIP.getType()) {
                 swap(target, source);
@@ -141,7 +141,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
                 target.setQuantity(slotMax);
             } else {
                 target.setQuantity((short) (source.getQuantity() + target.getQuantity()));
-                this.inventory.remove(Byte.valueOf(sSlot));
+                this.inventory.remove(sSlot);
             }
         } else {
             swap(target, source);
@@ -149,7 +149,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
         return true;
     }
 
-    public void move(short sSlot, short dSlot, short slotMax) {
+    public void move(int sSlot, int dSlot, int slotMax) {
         if (dSlot > slotLimit.get()) {
             return;
         }
@@ -180,26 +180,26 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     private void swap(IItem source, IItem target) {
         inventory.remove(source.getPosition());
         inventory.remove(target.getPosition());
-        short swapPos = source.getPosition();
+        int swapPos = source.getPosition();
         source.setPosition(target.getPosition());
         target.setPosition(swapPos);
         inventory.put(source.getPosition(), source);
         inventory.put(target.getPosition(), target);
     }
 
-    public IItem getItem(short slot) {
+    public IItem getItem(int slot) {
         return inventory.get(slot);
     }
 
-    public void removeItem(short slot) {
-        removeItem(slot, (short) 1, false);
+    public void removeItem(int slot) {
+        removeItem(slot, 1, false);
     }
 
-    public void removeItem(short slot, short quantity, boolean allowZero) {
+    public void removeItem(int slot, int quantity, boolean allowZero) {
         removeItem(slot, quantity, allowZero, null);
     }
 
-    public void removeItem(short slot, short quantity, boolean allowZero, MapleCharacter chr) {
+    public void removeItem(int slot, int quantity, boolean allowZero, MapleCharacter chr) {
         IItem item = inventory.get(slot);
         if (item == null) { // TODO is it ok not to throw an exception here?
             return;
@@ -217,7 +217,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
         }
     }
 
-    public void removeSlot(short slot) {
+    public void removeSlot(int slot) {
         inventory.remove(slot);
     }
 
@@ -232,25 +232,25 @@ public class MapleInventory implements Iterable<IItem>, Serializable {
     /**
      * Returns the next empty slot id, -1 if the inventory is full
      */
-    public short getNextFreeSlot() {
+    public int getNextFreeSlot() {
         if (isFull()) {
             return -1;
         }
-        for (short i = 1; i <= slotLimit.get(); i++) {
-            if (!inventory.keySet().contains(i)) {
+        for (int i = 1; i <= slotLimit.get(); i++) {
+            if (!inventory.containsKey(i)) {
                 return i;
             }
         }
         return -1;
     }
 
-    public short getNumFreeSlot() {
+    public int getNumFreeSlot() {
         if (isFull()) {
             return 0;
         }
-        byte free = 0;
-        for (short i = 1; i <= slotLimit.get(); i++) {
-            if (!inventory.keySet().contains(i)) {
+        int free = 0;
+        for (int i = 1; i <= slotLimit.get(); i++) {
+            if (!inventory.containsKey(i)) {
                 free++;
             }
         }

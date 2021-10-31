@@ -1,5 +1,6 @@
 package client.inventory;
 
+import javax.annotation.Nullable;
 
 /**
  * 背包类型。
@@ -14,13 +15,13 @@ public enum MapleInventoryType {
     CASH(5),// 特殊
     EQUIPPED(-1); // 已装备
 
-    private final byte type;
+    private final int type;
 
     MapleInventoryType(int type) {
         this.type = (byte) type;
     }
 
-    public byte getType() {
+    public int getType() {
         return type;
     }
 
@@ -28,7 +29,8 @@ public enum MapleInventoryType {
         return (short) (2 << type);
     }
 
-    public static MapleInventoryType getByType(byte type) {
+    @Nullable
+    public static MapleInventoryType getByType(int type) {
         for (MapleInventoryType value : MapleInventoryType.values()) {
             if (value.getType() == type) {
                 return value;

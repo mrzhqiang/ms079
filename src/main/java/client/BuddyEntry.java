@@ -1,23 +1,19 @@
 package client;
 
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+
 public class BuddyEntry {
 
-    private final String name;
+    public final DCharacter character;
     private String group;
-    private final int characterId;
-    private final int level;
-    private final int job;
     private boolean visible;
     private int channel;
 
-    public BuddyEntry(String name, int characterId, String group, int channel, boolean visible, int level, int job) {
-        this.name = name;
-        this.characterId = characterId;
+    public BuddyEntry(DCharacter character, String group, int channel, boolean visible) {
+        this.character = character;
         this.group = group;
         this.channel = channel;
         this.visible = visible;
-        this.level = level;
-        this.job = job;
     }
 
     public int getChannel() {
@@ -37,19 +33,19 @@ public class BuddyEntry {
     }
 
     public String getName() {
-        return name;
+        return character.name;
     }
 
     public int getCharacterId() {
-        return characterId;
+        return character.id;
     }
 
     public int getLevel() {
-        return level;
+        return character.level;
     }
 
     public int getJob() {
-        return job;
+        return character.job;
     }
 
     public void setVisible(boolean visible) {
@@ -72,7 +68,7 @@ public class BuddyEntry {
     public final int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + characterId;
+        result = prime * result + character.id;
         return result;
     }
 
@@ -88,6 +84,6 @@ public class BuddyEntry {
             return false;
         }
         final BuddyEntry other = (BuddyEntry) obj;
-        return characterId == other.characterId;
+        return character.id == other.character.id;
     }
 }

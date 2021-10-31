@@ -10,12 +10,11 @@ import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.ImgdirElement;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
+import com.google.common.collect.Lists;
 import constants.GameConstants;
 import constants.ServerConstants;
-import database.DatabaseConnection;
-import database.DatabaseException;
 import handling.MaplePacket;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
@@ -50,7 +49,12 @@ import tools.packet.*;
 import java.awt.*;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
-import java.sql.*;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -66,7 +70,30 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleCharacter.class);
 
-    private DCharacter character;
+    /*
+     * // SEA 102 final int[] array1 = {2, 3, 4, 5, 6, 7, 16, 17, 18,
+     * 19, 23, 25, 26, 27, 31, 34, 37, 38, 41, 44, 45, 46, 50, 57, 59,
+     * 60, 61, 62, 63, 64, 65, 8, 9, 24, 30}; final int[] array2 = {4,
+     * 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 4,
+     * 5, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4}; final int[] array3 = {10,
+     * 12, 13, 18, 6, 11, 8, 5, 0, 4, 1, 19, 14, 15, 3, 17, 9, 20, 22,
+     * 50, 51, 52, 7, 53, 100, 101, 102, 103, 104, 105, 106, 16, 23, 24,
+     * 2};
+     */
+    private static final int[] array1 = {//keymap key
+            2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 23, 25, 26, 27,
+            29, 31, 34, 35, 37, 38, 40, 41, 43, 44, 45, 46, 48,
+            50, 56, 57, 59, 60, 61, 62, 63, 64, 65};
+    private static final int[] array2 = {// keymap type
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4,
+            4, 4, 4, 4, 4, 4, 5, 5, 4, 4, 4, 5, 5, 6, 6, 6, 6,
+            6, 6, 6};
+    private static final int[] array3 = {// keymap action
+            10, 12, 13, 18, 24, 21, 8, 5, 0, 4, 1, 19, 14, 15,
+            52, 2, 17, 11, 3, 20, 16, 23, 9, 50, 51, 6, 22, 7,
+            53, 54, 100, 101, 102, 103, 104, 105, 106};
+
+    public DCharacter character;
 
     private String name, chalktext, BlessOfFairy_Origin, charmessage;
     private long lastCombo, lastfametime, keydown_skill;
@@ -209,7 +236,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public static MapleCharacter getDefault(final MapleClient client, final int type) {
+    public static MapleCharacter getDefault(MapleClient client, final int type) {
         MapleCharacter ret = new MapleCharacter(false);
         ret.client = client;
         ret.map = null;
@@ -249,7 +276,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public static MapleCharacter ReconstructChr(final CharacterTransfer ct, final MapleClient client, final boolean isChannel) {
-        final MapleCharacter ret = new MapleCharacter(true); // Always true, it's change channel
+        MapleCharacter ret = new MapleCharacter(true); // Always true, it's change channel
         ret.client = client;
         if (!isChannel) {
             ret.client.setChannel(ct.channel);
@@ -332,7 +359,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.day = ct.day;
         ret.makeMFC(ct.familyid, ct.seniorid, ct.junior1, ct.junior2);
         if (ret.guildid > 0) {
-            ret.mgc = new MapleGuildCharacter(ret);
+            ret.mgc = new MapleGuildCharacter(ret.character, client.getChannel(), true);
         }
         ret.buddylist = new BuddyList(ct.buddysize);
         ret.subcategory = ct.subcategory;
@@ -462,45 +489,44 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             for (int i = 0; i < ret.petStore.length; i++) {
                 ret.petStore[i] = Byte.parseByte(pets[i]);
             }
-            new QDAchievement().accountid
-                    .eq(one.account.id)
+            new QDAchievement().account.eq(one.account)
                     .findEach(it -> ret.finishedAchievements.add(it.achievement.achievementid));
         }
         boolean compensate_previousEvans = false;
-        for (DQuestStatus status : new QDQuestStatus().characterid.eq(charid).findList()) {
-            int id = status.getQuest();
+        for (DQuestStatus status : new QDQuestStatus().character.eq(one).findList()) {
+            int id = status.quest;
             if (id == 170000) {
                 compensate_previousEvans = true;
             }
             MapleQuest q = MapleQuest.getInstance(id);
-            MapleQuestStatus questStatus = new MapleQuestStatus(q, status.getStatus());
-            long cTime = status.getTime();
+            MapleQuestStatus questStatus = new MapleQuestStatus(q, status.status);
+            long cTime = status.time;
             if (cTime > -1) {
                 questStatus.setCompletionTime(cTime * 1000);
             }
-            questStatus.setForfeited(status.getForfeited());
-            questStatus.setCustomData(status.getCustomData());
+            questStatus.setForfeited(status.forfeited);
+            questStatus.setCustomData(status.customData);
             ret.quests.put(q, questStatus);
-            for (DQuestStatusMob mob : new QDQuestStatusMob().queststatusid.eq(status.getQueststatusid()).findList()) {
-                questStatus.setMobKills(mob.getMob(), mob.getCount());
+            for (DQuestStatusMob mob : new QDQuestStatusMob().questStatus.eq(status).findList()) {
+                questStatus.setMobKills(mob.mob, mob.count);
             }
         }
         if (channelserver) {
             ret.CRand = new PlayerRandomStream();
             ret.monsterbook = MonsterBook.loadCards(charid);
 
-            Optional<DInventorySlot> optional = new QDInventorySlot().characterid.eq(charid).findOneOrEmpty();
-            Verify.verify(optional.isPresent(), "No Inventory slot column found in SQL. [inventoryslot]*********************");
+            Optional<DInventorySlot> optional = new QDInventorySlot().character.eq(one).findOneOrEmpty();
+            Preconditions.checkState(optional.isPresent(), "No Inventory slot column found in SQL. [inventoryslot]*********************");
 
             DInventorySlot slot = optional.get();
 
-            ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(slot.getEquip());
-            ret.getInventory(MapleInventoryType.USE).setSlotLimit(slot.getUse());
-            ret.getInventory(MapleInventoryType.SETUP).setSlotLimit(slot.getSetup());
-            ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.getEtc());
-            ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.getCash());
+            ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(slot.equip);
+            ret.getInventory(MapleInventoryType.USE).setSlotLimit(slot.use);
+            ret.getInventory(MapleInventoryType.SETUP).setSlotLimit(slot.setup);
+            ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.etc);
+            ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.cash);
 
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.INVENTORY.loadItems(false, charid).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, false, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
                 if (mit.getLeft().getPet() != null) {
                     ret.pets.add(mit.getLeft().getPet());
@@ -520,19 +546,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 account.save();
             }
 
-            List<DQuestInfo> infos = new QDQuestInfo().characterid.eq(charid).findList();
+            List<DQuestInfo> infos = new QDQuestInfo().character.eq(one).findList();
             for (DQuestInfo info : infos) {
-                ret.questinfo.put(info.getQuest(), info.getCustomData());
+                ret.questinfo.put(info.quest, info.customData);
             }
 
-            List<DSkill> skills = new QDSkill().characterid.eq(charid).findList();
+            List<DSkill> skills = new QDSkill().character.eq(one).findList();
             ISkill skil;
             for (DSkill skill : skills) {
-                skil = SkillFactory.getSkill(skill.getSkillid());
-                if (skil != null && GameConstants.isApplicableSkill(skill.getSkillid())) {
-                    ret.skills.put(skil, new SkillEntry(skill.getSkilllevel().byteValue(), skill.getMasterlevel().byteValue(), skill.getExpiration()));
+                skil = SkillFactory.getSkill(skill.skillid);
+                if (skil != null && GameConstants.isApplicableSkill(skill.skillid)) {
+                    ret.skills.put(skil, new SkillEntry(skill.skilllevel.byteValue(), skill.masterlevel.byteValue(), skill.expiration));
                 } else if (skil == null) { //doesnt. exist. e.g. bb
-                    ret.remainingSp[GameConstants.getSkillBookForSkill(skill.getSkillid())] += skill.getSkilllevel();
+                    ret.remainingSp[GameConstants.getSkillBookForSkill(skill.skillid)] += skill.skilllevel;
                 }
             }
 
@@ -563,47 +589,47 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ret.skills.put(SkillFactory.getSkill(GameConstants.getBOF_ForJob(ret.job)), new SkillEntry(maxlevel_, (byte) 0, -1));
             // END
 
-            List<DSkillMacro> macros = new QDSkillMacro().characterid.eq(charid).findList();
+            List<DSkillMacro> macros = new QDSkillMacro().character.eq(one).findList();
             int position;
             for (DSkillMacro macro : macros) {
-                position = macro.getPosition();
-                SkillMacro skillMacro = new SkillMacro(macro.getSkill1(), macro.getSkill2(),
-                        macro.getSkill3(), macro.getName(), macro.getShout(), position);
+                position = macro.position;
+                SkillMacro skillMacro = new SkillMacro(macro.skill1, macro.skill2,
+                        macro.skill3, macro.name, macro.shout, position);
                 ret.skillMacros[position] = skillMacro;
             }
 
-            List<DKeyMap> maps = new QDKeyMap().characterid.eq(charid).findList();
-            Map<Integer, Pair<Byte, Integer>> keyb = ret.keylayout.Layout();
+            List<DKeyMap> maps = new QDKeyMap().character.eq(one).findList();
+            Map<Integer, Pair<Integer, Integer>> keyb = ret.keylayout.Layout();
             for (DKeyMap map : maps) {
-                keyb.put(map.getKey(), new Pair<>(map.getType().byteValue(), map.getAction()));
+                keyb.put(map.key, new Pair<>(map.type, map.action));
             }
 
-            List<DSavedLocation> locations = new QDSavedLocation().characterid.eq(charid).findList();
+            List<DSavedLocation> locations = new QDSavedLocation().character.eq(one).findList();
             for (DSavedLocation location : locations) {
-                ret.savedLocations[location.getLocationtype()] = location.getMap();
+                ret.savedLocations[location.locationtype] = location.map;
             }
 
             // DATEDIFF(NOW(),`when`) < 30 表示：when 距离现在的时间在 30 天之内（不超过），因此换成日期就是 when > now - 30
             List<DFameLog> logs = new QDFameLog()
-                    .characterid.eq(charid)
+                    .character.eq(one)
                     .and()
                     .when.gt(LocalDateTime.now().minusDays(30))
                     .findList();
             ret.lastfametime = 0;
             ret.lastmonthfameids = new ArrayList<>(31);
             for (DFameLog log : logs) {
-                ret.lastfametime = Math.max(ret.lastfametime, log.getWhen().toInstant(ZoneOffset.UTC).toEpochMilli());
-                ret.lastmonthfameids.add(log.getCharacteridTo());
+                ret.lastfametime = Math.max(ret.lastfametime, log.when.toInstant(ZoneOffset.UTC).toEpochMilli());
+                ret.lastmonthfameids.add(log.to.id);
             }
 
             ret.buddylist.loadFromDb(one);
             ret.storage = MapleStorage.loadStorage(ret.accountid);
             ret.cs = new CashShop(ret.accountid, charid, ret.getJob());
 
-            List<DWishList> lists = new QDWishList().characterid.eq(charid).findList();
+            List<DWishList> lists = new QDWishList().character.eq(one).findList();
             int i = 0;
             for (DWishList list : lists) {
-                ret.wishlist[i] = list.getSn();
+                ret.wishlist[i] = list.sn;
                 i++;
             }
             while (i < 10) {
@@ -611,10 +637,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 i++;
             }
 
-            List<DTrockLocation> locationList = new QDTrockLocation().characterid.eq(charid).findList();
+            List<DTrockLocation> locationList = new QDTrockLocation().character.eq(one).findList();
             int r = 0;
             for (DTrockLocation location : locationList) {
-                ret.rocks[r] = location.getMapid();
+                ret.rocks[r] = location.mapid;
                 r++;
             }
             while (r < 10) {
@@ -622,10 +648,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 r++;
             }
 
-            List<DRegrockLocation> regrockLocations = new QDRegrockLocation().characterid.eq(charid).findList();
+            List<DRegrockLocation> regrockLocations = new QDRegrockLocation().character.eq(one).findList();
             r = 0;
             for (DRegrockLocation regrockLocation : regrockLocations) {
-                ret.regrocks[r] = regrockLocation.getMapid();
+                ret.regrocks[r] = regrockLocation.mapid;
                 r++;
             }
             while (r < 5) {
@@ -634,19 +660,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
 
             DMountData mountData = new QDMountData()
-                    .characterid.eq(charid)
+                    .character.eq(one)
                     .findOneOrEmpty()
                     .orElseThrow(() -> new RuntimeException("No mount data found on SQL column"));
             IItem mount = ret.getInventory(MapleInventoryType.EQUIPPED).getItem((byte) -18);
             ret.mount = new MapleMount(ret,
                     mount != null ? mount.getItemId() : 0,
                     ret.job > 1000 && ret.job < 2000 ? 10001004 : (ret.job >= 2000 ? (ret.job == 2001 || ret.job >= 2200 ? 20011004 : (ret.job >= 3000 ? 30001004 : 20001004)) : 1004),
-                    mountData.getFatigue(),
-                    mountData.getLevel(),
-                    mountData.getExp());
+                    mountData.fatigue,
+                    mountData.level,
+                    mountData.exp);
             ret.stats.recalcLocalStats(true);
         } else { // Not channel server
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.INVENTORY.loadItems(true, charid).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, true, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
             }
         }
@@ -687,14 +713,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.mapid = one.map;
         this.initialSpawnPoint = one.spawnPoint;
         this.world = one.world;
-        this.guildid = one.guild.guildid;
+        this.guildid = one.guild.id;
         this.guildrank = one.guildRank;
         this.allianceRank = one.allianceRank;
         this.currentrep = one.currentRep;
         this.totalrep = one.totalRep;
-        this.makeMFC(one.family.getFamilyid(), one.senior.id, one.junior1.id, one.junior2.id);
+        this.makeMFC(one.family.id, one.senior.id, one.junior1.id, one.junior2.id);
         if (this.guildid > 0) {
-            this.mgc = new MapleGuildCharacter(this);
+            this.mgc = new MapleGuildCharacter(this.character, client.getChannel(), true);
         }
         this.buddylist = new BuddyList(one.buddyCapacity);
         this.subcategory = one.subcategory;
@@ -735,176 +761,106 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.prefix = one.prefix.intValue();
     }
 
-    public static void saveNewCharToDB(final MapleCharacter chr, final int type, final boolean db) {
-        Connection con = DatabaseConnection.getConnection();
+    public static void saveNewCharToDB(MapleCharacter chr, int type, boolean db) {
+        DAccount account = new QDAccount().id.eq(chr.accountid).findOne();
+        DCharacter character = new DCharacter();
+        character.account = account;
+        character.name = chr.name;
+        character.level = 1;
+        character.fame = 0;
+        character.str = chr.stats.str;
+        character.dex = chr.stats.dex;
+        character.luk = chr.stats.luk;
+        character.intelligence = chr.stats.int_;
+        character.exp = 0;
+        character.hp = chr.stats.hp;
+        character.mp = chr.stats.mp;
+        character.maxHP = chr.stats.maxhp;
+        character.maxMP = chr.stats.maxmp;
+        character.sp = "0,0,0,0,0,0,0,0,0,0";
+        character.ap = 0;
+        character.gm = chr.getClient().gm ? 5 : 0;
+        character.skinColor = chr.skinColor;
+        character.gender = chr.gender;
+        character.job = chr.job;
+        character.hair = chr.hair;
+        character.face = chr.face;
+        character.map = type == 1 ? 0 : (type == 0 ? 130030000 : (type == 2 ? 914000000 : 910000000));
+        character.meso = chr.meso;
+        character.hpApUsed = 0;
+        character.spawnPoint = 0;
+        character.party = -1;
+        character.buddyCapacity = chr.buddylist.getCapacity();
+        character.monsterBookCover = 0;
+        character.dojoPts = 0;
+        character.dojoRecord = 0;
+        character.pets = "-1,-1,-1";
+        character.subcategory = 0;
+        character.marriage = null;
+        character.currentRep = 0;
+        character.totalRep = 0;
+        character.prefix = BigDecimal.valueOf(chr.prefix);
+        character.djjl = chr.djjl;
+        character.qiandao = chr.qiandao;
+        character.world = chr.world;
+        character.mountid = chr.mount_id;
+        character.sg = chr.sg;
+        chr.character = character;
+        character.save();
 
-        PreparedStatement ps = null;
-        PreparedStatement pse = null;
-        ResultSet rs = null;
-        try {
-            con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-            con.setAutoCommit(false);
+        chr.quests.forEach((mapleQuest, mapleQuestStatus) -> {
+            DQuestStatus questStatus = new DQuestStatus();
+            questStatus.character = character;
+            questStatus.quest = mapleQuestStatus.getQuest().getId();
+            questStatus.status = mapleQuestStatus.getStatus();
+            questStatus.time = (int) (mapleQuestStatus.getCompletionTime() / 1000);
+            questStatus.forfeited = mapleQuestStatus.getForfeited();
+            questStatus.customData = mapleQuestStatus.getCustomData();
+            questStatus.save();
 
-            ps = con.prepareStatement("INSERT INTO characters (level, fame, str, dex, luk, `int`, exp, hp, mp, maxhp, maxmp, sp, ap, gm, skincolor, gender, job, hair, face, map, meso, hpApUsed, spawnpoint, party, buddyCapacity, monsterbookcover, dojo_pts, dojoRecord, pets, subcategory, marriageId, currentrep, totalrep, prefix, djjl, qiandao, accountid, name, world, mountid, sg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-
-            ps.setInt(1, 1); // Level
-            ps.setShort(2, (short) 0); // Fame
-            final PlayerStats stat = chr.stats;
-            ps.setShort(3, stat.getStr()); // Str
-            ps.setShort(4, stat.getDex()); // Dex
-            ps.setShort(5, stat.getInt()); // Int
-            ps.setShort(6, stat.getLuk()); // Luk
-            ps.setInt(7, 0); // EXP
-            ps.setShort(8, stat.getHp()); // HP
-            ps.setShort(9, stat.getMp());
-            ps.setShort(10, stat.getMaxHp()); // MP
-            ps.setShort(11, stat.getMaxMp());
-            ps.setString(12, "0,0,0,0,0,0,0,0,0,0"); // Remaining SP
-            ps.setShort(13, (short) 0); // Remaining AP
-            ps.setInt(14, chr.getClient().gm ? 5 : 0); // GM Level
-            ps.setByte(15, (byte) chr.skinColor);
-            ps.setByte(16, (byte) chr.gender);
-            ps.setShort(17, (short) chr.job);
-            ps.setInt(18, chr.hair);
-            ps.setInt(19, chr.face);
-            ps.setInt(20, type == 1 ? 0 : (type == 0 ? 130030000 : (type == 2 ? 914000000 : 910000000)));
-            ps.setInt(21, chr.meso); // Meso
-            ps.setShort(22, (short) 0); // HP ap used
-            ps.setByte(23, (byte) 0); // Spawnpoint
-            ps.setInt(24, -1); // Party
-            ps.setByte(25, chr.buddylist.getCapacity()); // Buddylist
-            ps.setInt(26, 0); // Monster book cover
-            ps.setInt(27, 0); // Dojo
-            ps.setInt(28, 0); // Dojo record
-            ps.setString(29, "-1,-1,-1");
-            ps.setInt(30, 0); //for now
-            ps.setInt(31, 0); //marriage ID
-            ps.setInt(32, 0); //current reps
-            ps.setInt(33, 0); //total reps
-            ps.setInt(34, chr.prefix);
-            ps.setInt(35, chr.djjl);
-            ps.setInt(36, chr.qiandao);
-            ps.setInt(37, chr.getAccountID());
-            ps.setString(38, chr.name);
-            ps.setByte(39, (byte) chr.world);
-            ps.setInt(40, chr.mount_id);
-            ps.setInt(41, chr.sg);
-            ps.executeUpdate();
-
-            rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                chr.id = rs.getInt(1);
-            } else {
-                throw new DatabaseException("Inserting char failed.");
+            if (mapleQuestStatus.hasMobKills()) {
+                mapleQuestStatus.getMobKills().forEach((integer, mob) -> {
+                    DQuestStatusMob statusMob = new DQuestStatusMob();
+                    statusMob.questStatus = questStatus;
+                    statusMob.mob = mob;
+                    statusMob.count = mapleQuestStatus.getMobKills(mob);
+                    statusMob.save();
+                });
             }
-            ps.close();
-            rs.close();
-            ps = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `forfeited`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-            pse = con.prepareStatement("INSERT INTO queststatusmobs VALUES (DEFAULT, ?, ?, ?)");
-            ps.setInt(1, chr.id);
-            for (final MapleQuestStatus q : chr.quests.values()) {
-                ps.setInt(2, q.getQuest().getId());
-                ps.setInt(3, q.getStatus());
-                ps.setInt(4, (int) (q.getCompletionTime() / 1000));
-                ps.setInt(5, q.getForfeited());
-                ps.setString(6, q.getCustomData());
-                ps.executeUpdate();
-                rs = ps.getGeneratedKeys();
-                rs.next();
+        });
 
-                if (q.hasMobKills()) {
-                    for (int mob : q.getMobKills().keySet()) {
-                        pse.setInt(1, rs.getInt(1));
-                        pse.setInt(2, mob);
-                        pse.setInt(3, q.getMobKills(mob));
-                        pse.executeUpdate();
-                    }
-                }
-                rs.close();
+        DInventorySlot inventorySlot = new DInventorySlot();
+        inventorySlot.character = character;
+        inventorySlot.equip = 32;
+        inventorySlot.use = 32;
+        inventorySlot.setup = 32;
+        inventorySlot.etc = 32;
+        inventorySlot.cash = 60;
+        inventorySlot.save();
+
+        DMountData mountData = new DMountData();
+        mountData.character = character;
+        mountData.level = 1;
+        mountData.exp = 0;
+        mountData.fatigue = 0;
+        mountData.save();
+
+        // todo 优化代码
+        List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<>();
+        for (final MapleInventory iv : chr.inventory) {
+            for (final IItem item : iv.list()) {
+                listing.add(new Pair<>(item, iv.getType()));
             }
-            ps.close();
-            pse.close();
+        }
+        ItemLoader.saveItems(listing);
 
-            ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, chr.id);
-            ps.setByte(2, (byte) 32); // Eq
-            ps.setByte(3, (byte) 32); // Use
-            ps.setByte(4, (byte) 32); // Setup
-            ps.setByte(5, (byte) 32); // ETC
-            ps.setByte(6, (byte) 60); // Cash
-            ps.execute();
-            ps.close();
-
-            ps = con.prepareStatement("INSERT INTO mountdata (characterid, `Level`, `Exp`, `Fatigue`) VALUES (?, ?, ?, ?)");
-            ps.setInt(1, chr.id);
-            ps.setByte(2, (byte) 1);
-            ps.setInt(3, 0);
-            ps.setByte(4, (byte) 0);
-            ps.execute();
-            ps.close();
-
-            List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<>();
-            for (final MapleInventory iv : chr.inventory) {
-                for (final IItem item : iv.list()) {
-                    listing.add(new Pair<>(item, iv.getType()));
-                }
-            }
-            ItemLoader.INVENTORY.saveItems(listing, con, chr.id);
-
-            /*
-             * // SEA 102 final int[] array1 = {2, 3, 4, 5, 6, 7, 16, 17, 18,
-             * 19, 23, 25, 26, 27, 31, 34, 37, 38, 41, 44, 45, 46, 50, 57, 59,
-             * 60, 61, 62, 63, 64, 65, 8, 9, 24, 30}; final int[] array2 = {4,
-             * 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 4,
-             * 5, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4}; final int[] array3 = {10,
-             * 12, 13, 18, 6, 11, 8, 5, 0, 4, 1, 19, 14, 15, 3, 17, 9, 20, 22,
-             * 50, 51, 52, 7, 53, 100, 101, 102, 103, 104, 105, 106, 16, 23, 24,
-             * 2};
-             */
-            int[] array1 = {2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 23, 25, 26, 27, 29, 31, 34, 35, 37, 38, 40, 41, 43, 44, 45, 46, 48, 50, 56, 57, 59, 60, 61, 62, 63, 64, 65};
-            int[] array2 = {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 4, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 6};
-            int[] array3 = {10, 12, 13, 18, 24, 21, 8, 5, 0, 4, 1, 19, 14, 15, 52, 2, 17, 11, 3, 20, 16, 23, 9, 50, 51, 6, 22, 7, 53, 54, 100, 101, 102, 103, 104, 105, 106};
-
-            ps = con.prepareStatement("INSERT INTO keymap (characterid, `key`, `type`, `action`) VALUES (?, ?, ?, ?)");
-            ps.setInt(1, chr.id);
-            for (int i = 0; i < array1.length; i++) {
-                ps.setInt(2, array1[i]);
-                ps.setInt(3, array2[i]);
-                ps.setInt(4, array3[i]);
-                ps.execute();
-            }
-            ps.close();
-
-            con.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            FileoutputUtil.outputFileError("日志\\log\\Packet_Except.log", e);
-            LOGGER.error("[charsave] Error saving character data");
-            try {
-                con.rollback();
-            } catch (SQLException ex) {
-                e.printStackTrace();
-                FileoutputUtil.outputFileError("日志\\log\\Packet_Except.log", ex);
-                LOGGER.error("[charsave] Error Rolling Back");
-            }
-        } finally {
-            try {
-                if (pse != null) {
-                    pse.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-                con.setAutoCommit(true);
-                con.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                FileoutputUtil.outputFileError("日志\\log\\Packet_Except.log", e);
-                LOGGER.error("[charsave] Error going back to autocommit mode");
-            }
+        for (int i = 0; i < array1.length; i++) {
+            DKeyMap keyMap = new DKeyMap();
+            keyMap.character = character;
+            keyMap.key = array1[i];
+            keyMap.type = array2[i];
+            keyMap.action = array3[i];
+            keyMap.save();
         }
     }
 
@@ -912,354 +868,222 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (isClone()) {
             return;
         }
-        Connection con = DatabaseConnection.getConnection();
 
-        PreparedStatement ps = null;
-        PreparedStatement pse = null;
-        ResultSet rs = null;
-
-        try {
-            con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-            con.setAutoCommit(false);
-
-            ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, day = ?, beans = ?, prefix = ?, skillzq = ?, bosslog = ?, grname = ?,djjl = ?, qiandao = ?, jzname = ?, mrfbrw = ?, mrsjrw = ?, mrsgrw = ?, mrsbossrw = ?, hythd = ?, mrsgrwa = ?, mrfbrwa = ?, mrsbossrwa = ?, mrsgrws = ?,  mrsbossrws = ?, mrfbrws = ?, mrsgrwas = ?,  mrsbossrwas = ?, mrfbrwas = ?, ddj = ?, vip = ?, sg = ?, name = ? WHERE id = ?", Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, level);
-            ps.setShort(2, (short) fame);
-            ps.setShort(3, stats.getStr());
-            ps.setShort(4, stats.getDex());
-            ps.setShort(5, stats.getLuk());
-            ps.setShort(6, stats.getInt());
-            ps.setInt(7, exp);
-            ps.setShort(8, stats.getHp() < 1 ? 50 : stats.getHp());
-            ps.setShort(9, stats.getMp());
-            ps.setShort(10, stats.getMaxHp());
-            ps.setShort(11, stats.getMaxMp());
-            final StringBuilder sps = new StringBuilder();
-            for (int i = 0; i < remainingSp.length; i++) {
-                sps.append(remainingSp[i]);
-                sps.append(",");
-            }
-            final String sp = sps.toString();
-            ps.setString(12, sp.substring(0, sp.length() - 1));
-            ps.setShort(13, (short) remainingAp);
-            ps.setByte(14, (byte) gmLevel);
-            ps.setByte(15, (byte) skinColor);
-            ps.setByte(16, (byte) gender);
-            ps.setShort(17, (short) job);
-            ps.setInt(18, hair);
-            ps.setInt(19, face);
-            if (!fromcs && map != null) {
-                if (map.getForcedReturnId() != 999999999) {
-                    ps.setInt(20, map.getForcedReturnId());
-                } else {
-                    ps.setInt(20, stats.getHp() < 1 ? map.getReturnMapId() : map.getId());
-                }
+        if (character.hp < 1) {
+            character.hp = 50;
+        }
+        character.sp = Joiner.on(',').join(Lists.newArrayList(remainingSp));
+        if (!fromcs && map != null) {
+            if (map.getForcedReturnId() != 999999999) {
+                character.map = map.getForcedReturnId();
             } else {
-                ps.setInt(20, mapid);
+                character.map = stats.getHp() < 1 ? map.getReturnMapId() : map.getId();
             }
-            ps.setInt(21, meso);
-            ps.setShort(22, (short) hpApUsed);
-            if (map == null) {
-                ps.setByte(23, (byte) 0);
-            } else {
-                final MaplePortal closest = map.findClosestSpawnpoint(getPosition());
-                ps.setByte(23, (byte) (closest != null ? closest.getId() : 0));
-            }
-            ps.setInt(24, party != null ? party.getId() : -1);
-            ps.setShort(25, buddylist.getCapacity());
-            ps.setInt(26, bookCover);
-            ps.setInt(27, dojo);
-            ps.setInt(28, dojoRecord);
-            final StringBuilder petz = new StringBuilder();
-            int petLength = 0;
-            for (final MaplePet pet : pets) {
-                pet.saveToDb();
-                if (pet.getSummoned()) {
-
-                    petz.append(pet.getInventoryPosition());
-                    petz.append(",");
-                    petLength++;
-                }
-            }
-            while (petLength < 3) {
-                petz.append("-1,");
+        } else {
+            character.map = mapid;
+        }
+        if (map == null) {
+            character.spawnPoint = 0;
+        } else {
+            MaplePortal closest = map.findClosestSpawnpoint(getPosition());
+            character.spawnPoint = (closest != null ? closest.getId() : 0);
+        }
+        character.party = party != null ? party.getId() : -1;
+        character.buddyCapacity = buddylist.getCapacity();
+        StringBuilder petz = new StringBuilder();
+        int petLength = 0;
+        for (MaplePet pet : pets) {
+            pet.saveToDb();
+            if (pet.getSummoned()) {
+                petz.append(pet.getInventoryPosition());
+                petz.append(",");
                 petLength++;
             }
-            final String petstring = petz.toString();
-            ps.setString(29, petstring.substring(0, petstring.length() - 1));
-            ps.setByte(30, (byte) subcategory);
-            ps.setInt(31, marriageId);
-            ps.setInt(32, currentrep);
-            ps.setInt(33, totalrep);
-            ps.setString(34, charmessage);
-            ps.setInt(35, expression);
-            ps.setInt(36, constellation);
-            ps.setInt(37, blood);
-            ps.setInt(38, month);
-            ps.setInt(39, day);
-            ps.setInt(40, beans);
-            ps.setInt(41, prefix);
-            ps.setInt(42, skillzq);
-            ps.setInt(43, bosslog);
-            ps.setInt(44, grname);
-            ps.setInt(45, djjl);
-            ps.setInt(46, qiandao);
-            ps.setInt(47, jzname);
-            ps.setInt(48, mrfbrw);
-            ps.setInt(49, mrsjrw);
-            ps.setInt(50, mrsgrw);
-            ps.setInt(51, mrsbossrw);
-            ps.setInt(52, hythd);
-            ps.setInt(53, mrsgrwa);
-            ps.setInt(54, mrfbrwa);
-            ps.setInt(55, mrsbossrwa);
-            ps.setInt(56, mrsgrws);
-            ps.setInt(57, mrsbossrws);
-            ps.setInt(58, mrfbrws);
-            ps.setInt(59, mrsgrwas);
-            ps.setInt(60, mrsbossrwas);
-            ps.setInt(61, mrfbrwas);
-            ps.setInt(62, ddj);
-            ps.setInt(63, vip);
-            ps.setInt(64, sg);
-            ps.setString(65, name);
-            ps.setInt(66, id);
+        }
+        while (petLength < 3) {
+            petz.append("-1,");
+            petLength++;
+        }
+        String petstring = petz.toString();
+        character.pets = petstring.substring(0, petstring.length() - 1);
+        character.save();
 
-            if (ps.executeUpdate() < 1) {
-                ps.close();
-                throw new DatabaseException("Character not in database (" + id + ")");
+        new QDSkillMacro().character.eq(character).delete();
+        for (int i = 0; i < 5; i++) {
+            SkillMacro macro = skillMacros[i];
+            if (macro != null) {
+                DSkillMacro skillMacro = new DSkillMacro();
+                skillMacro.character = character;
+                skillMacro.skill1 = macro.getSkill1();
+                skillMacro.skill2 = macro.getSkill2();
+                skillMacro.skill3 = macro.getSkill3();
+                skillMacro.name = macro.getName();
+                skillMacro.shout = macro.getShout();
+                skillMacro.position = i;
             }
-            ps.close();
+        }
 
-            deleteWhereCharacterId(con, "DELETE FROM skillmacros WHERE characterid = ?");
-            for (int i = 0; i < 5; i++) {
-                final SkillMacro macro = skillMacros[i];
-                if (macro != null) {
-                    ps = con.prepareStatement("INSERT INTO skillmacros (characterid, skill1, skill2, skill3, name, shout, position) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    ps.setInt(1, id);
-                    ps.setInt(2, macro.getSkill1());
-                    ps.setInt(3, macro.getSkill2());
-                    ps.setInt(4, macro.getSkill3());
-                    ps.setString(5, macro.getName());
-                    ps.setInt(6, macro.getShout());
-                    ps.setInt(7, i);
-                    ps.execute();
-                    ps.close();
+        new QDInventorySlot().character.eq(character).delete();
+
+        DInventorySlot inventorySlot = new DInventorySlot();
+        inventorySlot.character = character;
+        inventorySlot.equip = getInventory(MapleInventoryType.EQUIP).getSlotLimit();
+        inventorySlot.use = getInventory(MapleInventoryType.USE).getSlotLimit();
+        inventorySlot.setup = getInventory(MapleInventoryType.SETUP).getSlotLimit();
+        inventorySlot.etc = getInventory(MapleInventoryType.ETC).getSlotLimit();
+        inventorySlot.cash = getInventory(MapleInventoryType.CASH).getSlotLimit();
+        inventorySlot.save();
+
+        saveInventory();
+
+        new QDQuestInfo().character.eq(character).delete();
+
+        for (final Entry<Integer, String> q : questinfo.entrySet()) {
+            DQuestInfo questInfo = new DQuestInfo();
+            questInfo.character = character;
+            questInfo.quest = q.getKey();
+            questInfo.customData = q.getValue();
+            questInfo.save();
+        }
+
+        new QDQuestStatus().character.eq(character).delete();
+        for (MapleQuestStatus q : quests.values()) {
+            DQuestStatus questStatus = new DQuestStatus();
+            questStatus.character = character;
+            questStatus.quest = q.getQuest().getId();
+            questStatus.status = q.getStatus();
+            questStatus.time = (int) (q.getCompletionTime() / 1000);
+            questStatus.forfeited = q.getForfeited();
+            questStatus.customData = q.getCustomData();
+            questStatus.save();
+
+            if (q.hasMobKills()) {
+                for (int mob : q.getMobKills().keySet()) {
+                    DQuestStatusMob questStatusMob = new DQuestStatusMob();
+                    questStatusMob.questStatus = questStatus;
+                    questStatusMob.mob = mob;
+                    questStatusMob.count = q.getMobKills(mob);
+                    questStatusMob.save();
                 }
             }
+        }
 
-            deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, id);
-            ps.setByte(2, getInventory(MapleInventoryType.EQUIP).getSlotLimit());
-            ps.setByte(3, getInventory(MapleInventoryType.USE).getSlotLimit());
-            ps.setByte(4, getInventory(MapleInventoryType.SETUP).getSlotLimit());
-            ps.setByte(5, getInventory(MapleInventoryType.ETC).getSlotLimit());
-            ps.setByte(6, getInventory(MapleInventoryType.CASH).getSlotLimit());
-            ps.execute();
-            ps.close();
+        new QDSkill().character.eq(character).delete();
 
-            saveInventory(con);
-
-            deleteWhereCharacterId(con, "DELETE FROM questinfo WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO questinfo (`characterid`, `quest`, `customData`) VALUES (?, ?, ?)");
-            ps.setInt(1, id);
-            for (final Entry<Integer, String> q : questinfo.entrySet()) {
-                ps.setInt(2, q.getKey());
-                ps.setString(3, q.getValue());
-                ps.execute();
+        for (Entry<ISkill, SkillEntry> entryEntry : skills.entrySet()) {
+            if (GameConstants.isApplicableSkill(entryEntry.getKey().getId())) { //do not save additional skills
+                DSkill skill = new DSkill();
+                skill.character = character;
+                skill.skillid = entryEntry.getKey().getId();
+                skill.skilllevel = entryEntry.getValue().skillevel;
+                skill.masterlevel = entryEntry.getValue().masterlevel;
+                skill.expiration = entryEntry.getValue().expiration;
+                skill.save();
             }
-            ps.close();
+        }
 
-            deleteWhereCharacterId(con, "DELETE FROM queststatus WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `forfeited`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-            pse = con.prepareStatement("INSERT INTO queststatusmobs VALUES (DEFAULT, ?, ?, ?)");
-            ps.setInt(1, id);
-            for (final MapleQuestStatus q : quests.values()) {
-                ps.setInt(2, q.getQuest().getId());
-                ps.setInt(3, q.getStatus());
-                ps.setInt(4, (int) (q.getCompletionTime() / 1000));
-                ps.setInt(5, q.getForfeited());
-                ps.setString(6, q.getCustomData());
-                ps.executeUpdate();
-                rs = ps.getGeneratedKeys();
-                rs.next();
-
-                if (q.hasMobKills()) {
-                    for (int mob : q.getMobKills().keySet()) {
-                        pse.setInt(1, rs.getInt(1));
-                        pse.setInt(2, mob);
-                        pse.setInt(3, q.getMobKills(mob));
-                        pse.executeUpdate();
-                    }
-                }
-                rs.close();
+        List<MapleCoolDownValueHolder> cd = getCooldowns();
+        if (dc && cd.size() > 0) {
+            for (final MapleCoolDownValueHolder cooling : cd) {
+                DSkillCooldown skillCooldown = new DSkillCooldown();
+                skillCooldown.skillID = cooling.skillId;
+                skillCooldown.startTime = cooling.startTime;
+                skillCooldown.length = cooling.length;
+                skillCooldown.save();
             }
-            ps.close();
-            pse.close();
+        }
 
-            deleteWhereCharacterId(con, "DELETE FROM skills WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO skills (characterid, skillid, skilllevel, masterlevel, expiration) VALUES (?, ?, ?, ?, ?)");
-            ps.setInt(1, id);
-
-            for (final Entry<ISkill, SkillEntry> skill : skills.entrySet()) {
-                if (GameConstants.isApplicableSkill(skill.getKey().getId())) { //do not save additional skills
-                    ps.setInt(2, skill.getKey().getId());
-                    ps.setByte(3, skill.getValue().skillevel);
-                    ps.setByte(4, skill.getValue().masterlevel);
-                    ps.setLong(5, skill.getValue().expiration);
-                    ps.execute();
-                }
+        new QDSavedLocation().character.eq(character).delete();
+        for (SavedLocationType savedLocationType : SavedLocationType.values()) {
+            if (savedLocations[savedLocationType.getValue()] != -1) {
+                DSavedLocation savedLocation = new DSavedLocation();
+                savedLocation.character = character;
+                savedLocation.locationtype = savedLocationType.getValue();
+                savedLocation.map = savedLocations[savedLocationType.getValue()];
+                savedLocation.save();
             }
-            ps.close();
+        }
 
-            List<MapleCoolDownValueHolder> cd = getCooldowns();
-            if (dc && cd.size() > 0) {
-                ps = con.prepareStatement("INSERT INTO skills_cooldowns (charid, SkillID, StartTime, length) VALUES (?, ?, ?, ?)");
-                ps.setInt(1, getId());
-                for (final MapleCoolDownValueHolder cooling : cd) {
-                    ps.setInt(2, cooling.skillId);
-                    ps.setLong(3, cooling.startTime);
-                    ps.setLong(4, cooling.length);
-                    ps.execute();
-                }
-                ps.close();
+        new QDAchievement().account.eq(character.account).delete();
+
+        for (Integer achid : finishedAchievements) {
+            DAchievement achievement = new DAchievement();
+            achievement.account = character.account;
+            achievement.achievement.charid = character.id;
+            achievement.achievement.achievementid = achid;
+            achievement.save();
+        }
+
+        /*
+         * deleteWhereCharacterId(con, "DELETE FROM buddies WHERE
+         * characterid = ? AND pending = 0"); ps =
+         * con.prepareStatement("INSERT INTO buddies (characterid,
+         * `buddyid`, `pending`) VALUES (?, ?, 0)"); ps.setInt(1, id); for
+         * (BuddylistEntry entry : buddylist.getBuddies()) { if
+         * (entry.isVisible()) { ps.setInt(2, entry.getCharacterId());
+         * ps.execute(); } } ps.close();
+         */
+        // if (buddylist.changed()) {
+        new QDBuddy().owner.eq(character).delete();
+        for (BuddyEntry entry : buddylist.getBuddies()) {
+            if (entry != null) {
+                DBuddy buddy = new DBuddy();
+                buddy.buddies = entry.getCharacterId();
+                buddy.pending = entry.isVisible() ? 0 : 1;
+                buddy.save();
             }
+        }
 
-            deleteWhereCharacterId(con, "DELETE FROM savedlocations WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO savedlocations (characterid, `locationtype`, `map`) VALUES (?, ?, ?)");
-            ps.setInt(1, id);
-            for (final SavedLocationType savedLocationType : SavedLocationType.values()) {
-                if (savedLocations[savedLocationType.getValue()] != -1) {
-                    ps.setInt(2, savedLocationType.getValue());
-                    ps.setInt(3, savedLocations[savedLocationType.getValue()]);
-                    ps.execute();
-                }
-            }
-            ps.close();
+        new QDAccount().id.eq(client.getAccID())
+                .asUpdate()
+                .set("ACash", acash)
+                .set("mPoints", maplepoints)
+                .set("points", points)
+                .set("vpoints", vpoints)
+                .set("lastGainHM", lastGainHM)
+                .update();
 
-            ps = con.prepareStatement("DELETE FROM achievements WHERE accountid = ?");
-            ps.setInt(1, accountid);
-            ps.executeUpdate();
-            ps.close();
-            ps = con.prepareStatement("INSERT INTO achievements(charid, achievementid, accountid) VALUES(?, ?, ?)");
-            for (Integer achid : finishedAchievements) {
-                ps.setInt(1, id);
-                ps.setInt(2, achid);
-                ps.setInt(3, accountid);
-                ps.executeUpdate();
-            }
-            ps.close();
+        if (storage != null) {
+            storage.saveToDB();
+        }
 
-            /*
-             * deleteWhereCharacterId(con, "DELETE FROM buddies WHERE
-             * characterid = ? AND pending = 0"); ps =
-             * con.prepareStatement("INSERT INTO buddies (characterid,
-             * `buddyid`, `pending`) VALUES (?, ?, 0)"); ps.setInt(1, id); for
-             * (BuddylistEntry entry : buddylist.getBuddies()) { if
-             * (entry.isVisible()) { ps.setInt(2, entry.getCharacterId());
-             * ps.execute(); } } ps.close();
-             */
-            // if (buddylist.changed()) {
-            deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`) VALUES (?, ?, ?)");
-            ps.setInt(1, id);
-            for (BuddyEntry entry : buddylist.getBuddies()) {
-                if (entry != null) {
-                    ps.setInt(2, entry.getCharacterId());
-                    ps.setInt(3, entry.isVisible() ? 0 : 1);
-                    ps.execute();
-                }
-            }
-            ps.close();
-
-            ps = con.prepareStatement("UPDATE accounts SET `ACash` = ?, `mPoints` = ?, `points` = ?, `vpoints` = ? WHERE id = ?");
-            ps.setInt(1, acash);
-            ps.setInt(2, maplepoints);
-            ps.setInt(3, points);
-            ps.setInt(4, vpoints);
-            ps.setInt(5, client.getAccID());
-            ps.execute();
-            ps.close();
-
-            if (storage != null) {
-                storage.saveToDB();
-            }
-
-            ps = con.prepareStatement("UPDATE accounts SET `lastGainHM` = ? WHERE id = ?");
-            ps.setLong(1, lastGainHM);
-            ps.setInt(2, client.getAccID());
-            ps.execute();
-            ps.close();
-
-            if (cs != null) {
+        if (cs != null) {
+            try {
                 cs.save();
-            }
-            PlayerNPC.updateByCharId(this);
-            keylayout.saveKeys(id);
-            mount.saveMount(id);
-            monsterbook.saveCards(id);
-
-            deleteWhereCharacterId(con, "DELETE FROM wishlist WHERE characterid = ?");
-            for (int i = 0; i < getWishlistSize(); i++) {
-                ps = con.prepareStatement("INSERT INTO wishlist(characterid, sn) VALUES(?, ?) ");
-                ps.setInt(1, getId());
-                ps.setInt(2, wishlist[i]);
-                ps.execute();
-                ps.close();
-            }
-
-            deleteWhereCharacterId(con, "DELETE FROM trocklocations WHERE characterid = ?");
-            for (int i = 0; i < rocks.length; i++) {
-                if (rocks[i] != 999999999) {
-                    ps = con.prepareStatement("INSERT INTO trocklocations(characterid, mapid) VALUES(?, ?) ");
-                    ps.setInt(1, getId());
-                    ps.setInt(2, rocks[i]);
-                    ps.execute();
-                    ps.close();
-                }
-            }
-
-            deleteWhereCharacterId(con, "DELETE FROM regrocklocations WHERE characterid = ?");
-            for (int i = 0; i < regrocks.length; i++) {
-                if (regrocks[i] != 999999999) {
-                    ps = con.prepareStatement("INSERT INTO regrocklocations(characterid, mapid) VALUES(?, ?) ");
-                    ps.setInt(1, getId());
-                    ps.setInt(2, regrocks[i]);
-                    ps.execute();
-                    ps.close();
-                }
-            }
-
-            con.commit();
-        } catch (SQLException | DatabaseException | UnsupportedOperationException e) {
-            //e.printStackTrace();
-            FileoutputUtil.outputFileError(FileoutputUtil.PacketEx_Log, e);
-            // LOGGER.error(MapleClient.getLogMessage(this, "[charsave] Error saving character data") + e);
-            try {
-                if (con != null) {
-                    con.rollback();
-                }
-            } catch (SQLException ex) {
-                FileoutputUtil.outputFileError(FileoutputUtil.PacketEx_Log, ex);
-                //     LOGGER.error(MapleClient.getLogMessage(this, "[charsave] Error Rolling Back") + e);
-            }
-        } finally {
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-                if (pse != null) {
-                    pse.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-                con.setAutoCommit(true);
-                con.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+                PlayerNPC.updateByCharId(this);
+                keylayout.saveKeys(id);
+                mount.saveMount(id);
+                monsterbook.saveCards(id);
             } catch (SQLException e) {
-                FileoutputUtil.outputFileError(FileoutputUtil.PacketEx_Log, e);
-                //    LOGGER.error(MapleClient.getLogMessage(this, "[charsave] Error going back to autocommit mode") + e);
+                e.printStackTrace();
+            }
+        }
+
+        new QDWishList().character.eq(character).delete();
+        for (int i = 0; i < getWishlistSize(); i++) {
+            DWishList dWishList = new DWishList();
+            dWishList.character = character;
+            dWishList.sn = wishlist[i];
+            dWishList.save();
+        }
+
+        new QDTrockLocation().character.eq(character).delete();
+        for (int rock : rocks) {
+            if (rock != 999999999) {
+                DTrockLocation trockLocation = new DTrockLocation();
+                trockLocation.character = character;
+                trockLocation.mapid = rock;
+                trockLocation.save();
+            }
+        }
+
+        new QDRegrockLocation().character.eq(character).delete();
+        for (int regrock : regrocks) {
+            if (regrock != 999999999) {
+                DTrockLocation trockLocation = new DTrockLocation();
+                trockLocation.character = character;
+                trockLocation.mapid = regrock;
+                trockLocation.save();
             }
         }
     }
@@ -1275,18 +1099,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ps.close();
     }
 
-    public void saveInventory(final Connection con) throws SQLException {
-        List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<>();
-        for (final MapleInventory iv : inventory) {
-            for (final IItem item : iv.list()) {
+    public void saveInventory() {
+        List<Pair<IItem, MapleInventoryType>> listing = Lists.newArrayList();
+        for (MapleInventory iv : inventory) {
+            for (IItem item : iv.list()) {
                 listing.add(new Pair<>(item, iv.getType()));
             }
         }
-        if (con != null) {
-            ItemLoader.INVENTORY.saveItems(listing, con, id);
-        } else {
-            ItemLoader.INVENTORY.saveItems(listing, id);
-        }
+        ItemLoader.saveItems(listing);
     }
 
     public final PlayerStats getStat() {
@@ -1328,7 +1148,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return i;
     }
 
-    public final byte getQuestStatus(final int quest) {
+    public int getQuestStatus(int quest) {
         return getQuest(MapleQuest.getInstance(quest)).getStatus();
     }
 
@@ -2262,8 +2082,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.hpApUsed = hpApUsed;
     }
 
-    public byte getSkinColor() {
-        return (byte) skinColor;
+    public int getSkinColor() {
+        return skinColor;
     }
 
     public void setSkinColor(byte skinColor) {
@@ -2274,8 +2094,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return job;
     }
 
-    public byte getGender() {
-        return (byte) gender;
+    public int getGender() {
+        return gender;
     }
 
     public int getHair() {
@@ -2343,7 +2163,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.remainingSp[skillbook] = remainingSp;
     }
 
-    public void setGender(byte gender) {
+    public void setGender(int gender) {
         this.gender = gender;
     }
 
@@ -2678,14 +2498,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return rett;
     }
 
-    public void changeSkillLevel(final ISkill skill, byte newLevel, byte newMasterlevel) { //1 month
+    public void changeSkillLevel(final ISkill skill, int newLevel, int newMasterlevel) { //1 month
         if (skill == null) {
             return;
         }
         changeSkillLevel(skill, newLevel, newMasterlevel, skill.isTimeLimited() ? (System.currentTimeMillis() + (long) (30L * 24L * 60L * 60L * 1000L)) : -1);
     }
 
-    public void changeSkillLevel(final ISkill skill, byte newLevel, byte newMasterlevel, long expiration) {
+    public void changeSkillLevel(final ISkill skill, int newLevel, int newMasterlevel, long expiration) {
         if (skill == null || (!GameConstants.isApplicableSkill(skill.getId()) && !GameConstants.isApplicableSkill_(skill.getId()))) {
             return;
         }
@@ -2707,7 +2527,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     }
 
-    public void changeSkillLevel_Skip(final ISkill skill, byte newLevel, byte newMasterlevel) {
+    public void changeSkillLevel_Skip(final ISkill skill, int newLevel, int newMasterlevel) {
         if (skill == null) {
             return;
         }
@@ -3363,11 +3183,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return (byte) Math.min(skill.getMaxLevel(), ret.skillevel + (skill.isBeginnerSkill() ? 0 : stats.incAllskill));
     }
 
-    public byte getMasterLevel(final int skill) {
+    public int getMasterLevel(int skill) {
         return getMasterLevel(SkillFactory.getSkill(skill));
     }
 
-    public byte getMasterLevel(final ISkill skill) {
+    public int getMasterLevel(final ISkill skill) {
         final SkillEntry ret = skills.get(skill);
         if (ret == null) {
             return 0;
@@ -3578,11 +3398,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         //}
     }
 
-    public void changeKeybinding(int key, byte type, int action) {
+    public void changeKeybinding(int key, int type, int action) {
         if (type != 0) {
-            keylayout.Layout().put(Integer.valueOf(key), new Pair<Byte, Integer>(type, action));
+            keylayout.Layout().put(key, new Pair<>(type, action));
         } else {
-            keylayout.Layout().remove(Integer.valueOf(key));
+            keylayout.Layout().remove(key);
         }
     }
 
@@ -3608,26 +3428,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             client.banMacs();
         }
 
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
-            ps.setString(1, client.getSession().getRemoteAddress().toString().split(":")[0]);
-            ps.execute();
-            ps.close();
+        DIPBans bans = new DIPBans();
+        bans.ip = client.getSession().getRemoteAddress().toString().split(":")[0];
+        bans.save();
 
-            client.getSession().close();
+        client.getSession().close(true);
 
-            ps = con.prepareStatement("UPDATE accounts SET tempban = ?, banreason = ?, greason = ? WHERE id = ?");
-            Timestamp TS = new Timestamp(duration.getTimeInMillis());
-            ps.setTimestamp(1, TS);
-            ps.setString(2, reason);
-            ps.setInt(3, greason);
-            ps.setInt(4, accountid);
-            ps.execute();
-            ps.close();
-        } catch (SQLException ex) {
-            LOGGER.error("Error while tempbanning" + ex);
-        }
+        character.account.tempBan = LocalDateTime.now();
+        character.account.banReason = reason;
+        character.account.gReason = greason;
+        character.account.save();
 
     }
 
@@ -3636,16 +3446,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (lastmonthfameids == null) {
             throw new RuntimeException("Trying to ban a non-loaded character (testhack)");
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts SET banned = ?, banreason = ? WHERE id = ?");
-            ps.setInt(1, autoban ? 2 : 1);
-            ps.setString(2, reason);
-            ps.setInt(3, accountid);
-            ps.execute();
-            ps.close();
 
-            client.banMacs();
+        character.account.banned = autoban ? 2 : 1;
+        character.account.banReason = reason;
+        character.account.save();
+
+        client.banMacs();
 //            String ip = client.getSessionIPAddress();
 //            if (!"/127.0.0.1".equals(ip)) {
 //                ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
@@ -3654,102 +3460,69 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 //                ps.close();
 //            }
 
-            if (hellban) {
-                PreparedStatement psa = con.prepareStatement("SELECT * FROM accounts WHERE id = ?");
-                psa.setInt(1, accountid);
-                ResultSet rsa = psa.executeQuery();
-                if (rsa.next()) {
-                    PreparedStatement pss = con.prepareStatement("UPDATE accounts SET banned = ?, banreason = ? WHERE email = ? ");
-                    pss.setInt(1, autoban ? 2 : 1);
-                    pss.setString(2, reason);
-                    pss.setString(3, rsa.getString("email"));
-                    pss.execute();
-                    pss.close();
-                }
-                rsa.close();
-                psa.close();
-            }
-
-        } catch (SQLException ex) {
-            LOGGER.error("Error while banning" + ex);
-            return false;
+        if (hellban) {
+            new QDAccount().email.eq(character.account.email)
+                    .asUpdate()
+                    .set("banned", autoban ? 2 : 1)
+                    .set("banreason", reason)
+                    .update();
         }
-        client.getSession().close();
+
+        client.getSession().close(true);
         return true;
     }
 
     public static boolean ban(String id, String reason, boolean accountId, int gmlevel, boolean hellban) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps;
-
-            if (id.matches("/[0-9]{1,3}\\..*")) {
-                if (id != "/127.0.0.1") {
+        if (id.matches("/[0-9]{1,3}\\..*")) {
+            if (!"/127.0.0.1".equals(id)) {
 //                    ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
 //                    ps.setString(1, id);
 //                    ps.execute();
 //                    ps.close();
-                }
-                return true;
             }
-            if (accountId) {
-                ps = con.prepareStatement("SELECT id FROM accounts WHERE name = ?");
-            } else {
-                ps = con.prepareStatement("SELECT accountid FROM characters WHERE name = ?");
-            }
-            boolean ret = false;
-            ps.setString(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                int z = rs.getInt(1);
-                PreparedStatement psb = con.prepareStatement("UPDATE accounts SET banned = 1, banreason = ? WHERE id = ? AND gm < ?");
-                psb.setString(1, reason);
-                psb.setInt(2, z);
-                psb.setInt(3, gmlevel);
-                psb.execute();
-                psb.close();
-
-                if (gmlevel > 100) { //admin ban
-                    PreparedStatement psa = con.prepareStatement("SELECT * FROM accounts WHERE id = ?");
-                    psa.setInt(1, z);
-                    ResultSet rsa = psa.executeQuery();
-                    if (rsa.next()) {
-                        String sessionIP = rsa.getString("sessionIP");
-                        if (sessionIP != null && sessionIP.matches("/[0-9]{1,3}\\..*")) {
-                            PreparedStatement psz = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
-                            psz.setString(1, sessionIP);
-                            psz.execute();
-                            psz.close();
-                        }
-                        if (rsa.getString("macs") != null) {
-                            String[] macData = rsa.getString("macs").split(", ");
-                            if (macData.length > 0) {
-                                MapleClient.banMacs(macData);
-                            }
-                        }
-                        if (hellban) {
-                            PreparedStatement pss = con.prepareStatement("UPDATE accounts SET banned = 1, banreason = ? WHERE email = ?" + (sessionIP == null ? "" : " OR SessionIP = ?"));
-                            pss.setString(1, reason);
-                            pss.setString(2, rsa.getString("email"));
-                            if (sessionIP != null) {
-                                pss.setString(3, sessionIP);
-                            }
-                            pss.execute();
-                            pss.close();
-                        }
-                    }
-                    rsa.close();
-                    psa.close();
-                }
-                ret = true;
-            }
-            rs.close();
-            ps.close();
-            return ret;
-        } catch (SQLException ex) {
-            LOGGER.error("Error while banning" + ex);
+            return true;
         }
-        return false;
+
+        Optional<DAccount> optional = new QDCharacter()
+                .name.eq(id)
+                .findOneOrEmpty()
+                // todo gm < ?  --- gmLevel
+                .map(it -> it.account);
+
+        boolean ret = false;
+        if (optional.isPresent()) {
+            DAccount account = optional.get();
+            account.banned = 1;
+            account.banReason = reason;
+            account.save();
+
+            if (gmlevel > 100) { //admin ban
+                String ip = account.sessionIP;
+                if (ip != null && ip.matches("/[0-9]{1,3}\\..*")) {
+                    DIPBans bans = new DIPBans();
+                    bans.ip = ip;
+                    bans.save();
+                }
+                if (account.mac != null) {
+                    String[] macData = account.mac.split(", ");
+                    if (macData.length > 0) {
+                        MapleClient.banMacs(macData);
+                    }
+                }
+                if (hellban) {
+                    QDAccount qdAccount = new QDAccount().email.eq(account.email);
+                    if (account.sessionIP != null) {
+                        qdAccount.sessionIP.eq(account.sessionIP);
+                    }
+                    qdAccount.asUpdate()
+                            .set("banned", 1)
+                            .set("banreason", reason)
+                            .update();
+                }
+            }
+            ret = true;
+        }
+        return ret;
     }
 
     /**
@@ -3946,7 +3719,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return -1;
     }
 
-    public final List<MaplePet> getPets() {
+    public List<MaplePet> getPets() {
         return this.pets;
     }
 
@@ -3997,17 +3770,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void hasGivenFame(MapleCharacter to) {
         lastfametime = System.currentTimeMillis();
-        lastmonthfameids.add(Integer.valueOf(to.getId()));
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO famelog (characterid, characterid_to) VALUES (?, ?)");
-            ps.setInt(1, getId());
-            ps.setInt(2, to.getId());
-            ps.execute();
-            ps.close();
-        } catch (SQLException e) {
-            LOGGER.error("ERROR writing famelog for char " + getName() + " to " + to.getName() + e);
-        }
+        lastmonthfameids.add(to.getId());
+
+        DFameLog fameLog = new DFameLog();
+        fameLog.character = character;
+        fameLog.to = to.character;
+        fameLog.save();
     }
 
     public final MapleKeyLayout getKeyLayout() {
@@ -4022,8 +3790,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return (party != null ? party.getId() : -1);
     }
 
-    public byte getWorld() {
-        return (byte) world;
+    public int getWorld() {
+        return world;
     }
 
     public void setWorld(byte world) {
@@ -4164,20 +3932,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         guildid = _id;
         if (guildid > 0) {
             if (mgc == null) {
-                mgc = new MapleGuildCharacter(this);
+                mgc = new MapleGuildCharacter(this.character, -1, false);
 
             } else {
-                mgc.setGuildId(guildid);
+                mgc.character.guild.id = (guildid);
             }
         } else {
             mgc = null;
         }
     }
 
-    public void setGuildRank(byte _rank) {
+    public void setGuildRank(int _rank) {
         guildrank = _rank;
         if (mgc != null) {
-            mgc.setGuildRank(_rank);
+            mgc.character.guildRank = (_rank);
         }
     }
 
@@ -4185,10 +3953,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return mgc;
     }
 
-    public void setAllianceRank(byte rank) {
+    public void setAllianceRank(int rank) {
         allianceRank = rank;
         if (mgc != null) {
-            mgc.setAllianceRank(rank);
+            mgc.character.allianceRank = (rank);
         }
     }
 
@@ -4207,8 +3975,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (guildid <= 0) {
             return;
         }
-        mgc.setLevel((short) level);
-        mgc.setJobId(job);
+        mgc.character.level = level;
+        mgc.character.job = (job);
         World.Guild.memberLevelJobUpdate(mgc);
     }
 
@@ -4224,7 +3992,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void saveFamilyStatus() {
-        try {
+        /*try {
             Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("UPDATE characters SET familyid = ?, seniorid = ?, junior1 = ?, junior2 = ? WHERE id = ?");
             if (mfc == null) {
@@ -4244,7 +4012,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         } catch (SQLException se) {
             LOGGER.debug("SQLException: " + se.getLocalizedMessage());
             se.printStackTrace();
-        }
+        }*/
         //MapleFamily.setOfflineFamilyStatus(familyid, seniorid, junior1, junior2, currentrep, totalrep, id);
     }
 
@@ -4427,46 +4195,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGamePointsPS() {//跑商
-        try {
-            int gamePointsRQ = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID())
+                .worldId.eq(getWorld())
+                .findOneOrEmpty()
+                .orElse(new DAccountsInfo());
+        int gamePointsRQ = one.gamePointsps != null ? one.gamePointsps : 0;
+        LocalDate updateTime = one.updateTime != null ? one.updateTime : LocalDate.now();
 
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                gamePointsRQ = rs.getInt("gamePointsps");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    gamePointsRQ = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePointsps = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePointsps) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
-            }
-            rs.close();
-            ps.close();
-            return gamePointsRQ;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        if (updateTime.isBefore(LocalDate.now())) {
+            gamePointsRQ = 0;
+            one.gamePointsps = 0;
+            one.updateTime = LocalDate.now();
+        } else {
+            one.gamePointsps = 0;
         }
-        return -1;
+        one.accId = getClient().getAccID();
+        one.worldId = getWorld();
+        one.save();
+        return gamePointsRQ;
     }
 
     public void gainGamePointsPS(int amount) {//跑商
@@ -4479,18 +4225,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsPS(int amount) {//跑商
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointsps = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
-        }
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID())
+                .worldId.eq(getWorld())
+                .findOneOrEmpty()
+                .orElse(new DAccountsInfo());
+        one.gamePointsps = 0;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     public static enum FameStatus {
@@ -4498,7 +4239,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         OK, NOT_TODAY, NOT_THIS_MONTH
     }
 
-    public byte getBuddyCapacity() {
+    public int getBuddyCapacity() {
         return buddylist.getCapacity();
     }
 
@@ -4534,30 +4275,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void giveCoolDowns(final List<MapleCoolDownValueHolder> cooldowns) {
-        int time;
         if (cooldowns != null) {
             for (MapleCoolDownValueHolder cooldown : cooldowns) {
                 coolDowns.put(cooldown.skillId, cooldown);
             }
         } else {
-            try {
-                Connection con = DatabaseConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement("SELECT SkillID,StartTime,length FROM skills_cooldowns WHERE charid = ?");
-                ps.setInt(1, getId());
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    if (rs.getLong("length") + rs.getLong("StartTime") - System.currentTimeMillis() <= 0) {
-                        continue;
-                    }
-                    giveCoolDowns(rs.getInt("SkillID"), rs.getLong("StartTime"), rs.getLong("length"));
+            new QDSkillCooldown().character.eq(character).findEach(it -> {
+                if (it.length + it.startTime - System.currentTimeMillis() > 0) {
+                    giveCoolDowns(it.skillID, it.startTime, it.length);
                 }
-                ps.close();
-                rs.close();
-                deleteWhereCharacterId(con, "DELETE FROM skills_cooldowns WHERE charid = ?");
-
-            } catch (SQLException e) {
-                LOGGER.error("Error while retriving cooldown from SQL storage");
-            }
+            });
+            new QDSkillCooldown().character.eq(character).delete();
         }
     }
 
@@ -4676,43 +4404,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void showNote() {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM notes WHERE `to`=?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            ps.setString(1, getName());
-            ResultSet rs = ps.executeQuery();
-            rs.last();
-            int count = rs.getRow();
-            rs.first();
-            client.getSession().write(MTSCSPacket.showNotes(rs, count));
-            rs.close();
-            ps.close();
-        } catch (SQLException e) {
-            LOGGER.error("Unable to show note" + e);
-        }
+        List<DNote> notes = new QDNote().to.eq(getName()).findList();
+        client.getSession().write(MTSCSPacket.showNotes(notes, notes.size()));
     }
 
     public void deleteNote(int id, int fame) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT gift FROM notes WHERE `id`=?");
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                if (rs.getInt("gift") == fame && fame > 0) { //not exploited! hurray
-                    addFame(fame);
-                    updateSingleStat(MapleStat.FAME, getFame());
-                    client.getSession().write(MaplePacketCreator.getShowFameGain(fame));
-                }
+        DNote one = new QDNote().id.eq(id).findOne();
+        if (one != null) {
+            if (one.gift == fame && fame > 0) {
+                addFame(fame);
+                updateSingleStat(MapleStat.FAME, getFame());
+                client.getSession().write(MaplePacketCreator.getShowFameGain(fame));
             }
-            rs.close();
-            ps.close();
-            ps = con.prepareStatement("DELETE FROM notes WHERE `id`=?");
-            ps.setInt(1, id);
-            ps.execute();
-            ps.close();
-        } catch (SQLException e) {
-            LOGGER.error("Unable to delete note" + e);
+            one.delete();
         }
     }
 
@@ -4971,112 +4675,41 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getOneTimeLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            int ret_count = 0;
-            PreparedStatement ps;
-            ps = con1.prepareStatement("select count(*) from onetimelog where characterid = ? and log = ?");
-            ps.setInt(1, id);
-            ps.setString(2, bossid);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ret_count = rs.getInt(1);
-            } else {
-                ret_count = -1;
-            }
-            rs.close();
-            ps.close();
-            return ret_count;
-        } catch (Exception Ex) {
-            //log.error("Error while read bosslog.", Ex);
-            return -1;
-        }
+        return new QDOneTimeLog().character.eq(character).log.eq(bossid).findCount();
     }
 
     public void setOneTimeLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps;
-            ps = con1.prepareStatement("insert into onetimelog (characterid, log) values (?,?)");
-            ps.setInt(1, id);
-            ps.setString(2, bossid);
-            ps.executeUpdate();
-            ps.close();
-        } catch (Exception Ex) {
-            //   log.error("Error while insert bosslog.", Ex);
-        }
+        DOneTimeLog log = new DOneTimeLog();
+        log.character = character;
+        log.log = bossid;
+        log.save();
     }
 
     public int getBossLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            int ret_count = 0;
-            PreparedStatement ps;
-            ps = con1.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ? and lastattempt >= subtime(current_timestamp, '1 0:0:0.0')");
-            ps.setInt(1, id);
-            ps.setString(2, bossid);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ret_count = rs.getInt(1);
-            } else {
-                ret_count = -1;
-            }
-            rs.close();
-            ps.close();
-            return ret_count;
-        } catch (Exception Ex) {
-            //log.error("Error while read bosslog.", Ex);
-            return -1;
-        }
+        return new QDBossLog()
+                .character.eq(character)
+                .bossid.eq(bossid)
+                // lastattempt >= subtime(current_timestamp, '1 0:0:0.0')
+                .lastattempt.ge(LocalDateTime.now().minus(Duration.ofDays(1)))
+                .findCount();
     }
 
     public void setBossLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps;
-            ps = con1.prepareStatement("insert into bosslog (characterid, bossid) values (?,?)");
-            ps.setInt(1, id);
-            ps.setString(2, bossid);
-            ps.executeUpdate();
-            ps.close();
-        } catch (Exception Ex) {
-            //   log.error("Error while insert bosslog.", Ex);
-        }
+        DBossLog log = new DBossLog();
+        log.character = character;
+        log.bossid = bossid;
+        log.save();
     }
 
     public void setPrizeLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps;
-            ps = con1.prepareStatement("insert into Prizelog (accid, bossid) values (?,?)");
-            ps.setInt(1, getClient().getAccID());
-            ps.setString(2, bossid);
-            ps.executeUpdate();
-            ps.close();
-        } catch (Exception Wx) {
-        }
+        DPrizeLog log = new DPrizeLog();
+        log.accid = getClient().getAccID();
+        log.bossid = bossid;
+        log.save();
     }
 
     public int getPrizeLog(String bossid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
-            int ret_count = 0;
-            PreparedStatement ps;
-            ps = con1.prepareStatement("select count(*) from Prizelog where accid = ? and bossid = ?");
-            ps.setInt(1, getClient().getAccID());
-            ps.setString(2, bossid);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ret_count = rs.getInt(1);
-            } else {
-                ret_count = -1;
-            }
-            rs.close();
-            ps.close();
-            return ret_count;
-        } catch (Exception Wx) {
-            return -1;
-        }
+        return new QDPrizeLog().accid.eq(getClient().getAccID()).bossid.eq(bossid).findCount();
     }
 
     public void dropMessage(int type, String message) {
@@ -5458,7 +5091,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         addPet(pet);
                         if (broadcast) {
                             getMap().broadcastMessage(this, PetPacket.showPet(this, pet, false, false), true);
-                            client.getSession().write(PetPacket.updatePet(pet, getInventory(MapleInventoryType.CASH).getItem(pet.getInventoryPosition()), true));
+                            client.getSession().write(PetPacket.updatePet(pet, getInventory(MapleInventoryType.CASH)
+                                    .getItem(pet.getInventoryPosition()), true));
                             client.getSession().write(PetPacket.petStatUpdate(this));
                         }
                     }
@@ -5602,7 +5236,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 map.addPlayer(newp);
                 map.broadcastMessage(MaplePacketCreator.updateCharLook(newp));
                 map.movePlayer(newp, getPosition());
-                clones[i] = new WeakReference<MapleCharacter>(newp);
+                clones[i] = new WeakReference<>(newp);
                 return;
             }
         }
@@ -6376,190 +6010,117 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getHyPay(int type) {
-        int pay = 0;
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("select * from hypay where accname = ?");
-            ps.setString(1, getClient().getAccountName());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                if (type == 1) {
-                    pay = rs.getInt("pay");
-                } else if (type == 2) {
-                    pay = rs.getInt("payUsed");
-                } else if (type == 3) {
-                    pay = rs.getInt("pay") + rs.getInt("payUsed");
-                } else if (type == 4) {
-                    pay = rs.getInt("payReward");
-                } else {
-                    pay = 0;
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("insert into hypay (accname, pay, payUsed, payReward) VALUES (?, ?, ?, ?)");
-                psu.setString(1, getClient().getAccountName());
-                psu.setInt(2, 0);
-                psu.setInt(3, 0);
-                psu.setInt(4, 0);
-                psu.executeUpdate();
-                psu.close();
+        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            switch (type) {
+                case 1:
+                    return one.pay;
+                case 2:
+                    return one.payUsed;
+                case 3:
+                    return one.pay + one.payUsed;
+                case 4:
+                    return one.payReward;
+                default:
+                    break;
             }
-            ps.close();
-            rs.close();
-        } catch (SQLException ex) {
-            LOGGER.error("获取充值信息发生错误: " + ex);
+        } else {
+            one = new DHyPay();
+            one.accname = getClient().getAccountName();
+            one.pay = 0;
+            one.payUsed = 0;
+            one.payReward = 0;
+            one.save();
         }
-        return pay;
+        return 0;
     }
 
     public int gainHyPay(int hypay) {
-        int pay = getHyPay(1);
-        int payUsed = getHyPay(2);
-        int payReward = getHyPay(4);
         if (hypay <= 0) {
             return 0;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
-            ps.setInt(1, pay + hypay);
-            ps.setInt(2, payUsed);
-            ps.setInt(3, payReward);
-            ps.setString(4, getClient().getAccountName());
-            ps.executeUpdate();
-            ps.close();
+        // todo 删除这些垃圾代码
+        int pay = getHyPay(1);
+        int payUsed = getHyPay(2);
+        int payReward = getHyPay(4);
+        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            one.pay = pay + hypay;
+            one.payUsed = payUsed;
+            one.payReward = payReward;
+            one.save();
             return 1;
-        } catch (SQLException ex) {
-            LOGGER.error("加减充值信息发生错误: " + ex);
         }
         return 0;
     }
 
     public int addHyPay(int hypay) {
         int pay = getHyPay(1);
-        int payUsed = getHyPay(2);
-        int payReward = getHyPay(4);
         if (hypay > pay) {
             return -1;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
-            ps.setInt(1, pay - hypay);
-            ps.setInt(2, payUsed + hypay);
-            ps.setInt(3, payReward + hypay);
-            ps.setString(4, getClient().getAccountName());
-            ps.executeUpdate();
-            ps.close();
+        int payUsed = getHyPay(2);
+        int payReward = getHyPay(4);
+        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            one.pay = pay - hypay;
+            one.payUsed = payUsed + hypay;
+            one.payReward = payReward + hypay;
+            one.save();
             return 1;
-        } catch (SQLException ex) {
-            LOGGER.error("加减充值信息发生错误: " + ex);
         }
         return -1;
     }
 
     public int delPayReward(int pay) {
-        int payReward = getHyPay(4);
         if (pay <= 0) {
             return -1;
         }
+        int payReward = getHyPay(4);
         if (pay > payReward) {
             return -1;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE hypay SET payReward = ? where accname = ?");
-            ps.setInt(1, payReward - pay);
-            ps.setString(2, getClient().getAccountName());
-            ps.executeUpdate();
-            ps.close();
+        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            one.payReward = payReward - pay;
+            one.save();
             return 1;
-        } catch (SQLException ex) {
-            LOGGER.error("加减消费奖励信息发生错误: " + ex);
         }
         return -1;
     }
 
     public int getGamePoints() {
-        try {
-            int gamePoints = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
-                ps.setInt(1, getClient().getAccID());
-                ps.setInt(2, getWorld());
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    gamePoints = rs.getInt("gamePoints");
-                    Timestamp updateTime = rs.getTimestamp("updateTime");
-                    Calendar sqlcal = Calendar.getInstance();
-                    if (updateTime != null) {
-                        sqlcal.setTimeInMillis(updateTime.getTime());
-                    }
-                    if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                        gamePoints = 0;
-                        PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePoints = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                        psu.setInt(1, getClient().getAccID());
-                        psu.setInt(2, getWorld());
-                        psu.executeUpdate();
-                        psu.close();
-                    }
-                } else {
-                    PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePoints) VALUES (?, ?, ?)");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.setInt(3, 0);
-                    psu.executeUpdate();
-                    psu.close();
-                }
-                rs.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.gamePoints = 0;
+                one.updateTime = LocalDate.now();
             }
-            return gamePoints;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败1" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.gamePoints = 0;
         }
-        return -1;
+        one.save();
+        return one.gamePoints;
     }
 
     public int getGamePointsPD() {
-        try {
-            int gamePointsPD = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
-                ps.setInt(1, getClient().getAccID());
-                ps.setInt(2, getWorld());
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    gamePointsPD = rs.getInt("gamePointspd");
-                    Timestamp updateTime = rs.getTimestamp("updateTime");
-                    Calendar sqlcal = Calendar.getInstance();
-                    if (updateTime != null) {
-                        sqlcal.setTimeInMillis(updateTime.getTime());
-                    }
-                    if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                        gamePointsPD = 0;
-                        PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePointspd = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                        psu.setInt(1, getClient().getAccID());
-                        psu.setInt(2, getWorld());
-                        psu.executeUpdate();
-                        psu.close();
-                    }
-                } else {
-                    try (PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePointspd) VALUES (?, ?, ?)")) {
-                        psu.setInt(1, getClient().getAccID());
-                        psu.setInt(2, getWorld());
-                        psu.setInt(3, 0);
-                        psu.executeUpdate();
-                    }
-                }
-                rs.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.gamePoints = 0;
+                one.updateTime = LocalDate.now();
             }
-            return gamePointsPD;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败2" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.gamePoints = 0;
         }
-        return -1;
+        one.save();
+        return one.gamePoints;
     }
 
     public void gainGamePoints(int amount) {
@@ -6577,18 +6138,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsPD(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointspd = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
-        }
+        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
+                .set("gamePointspd", amount)
+                .set("updateTime", LocalDate.now())
+                .update();
     }
 
     public void resetGamePoints() {
@@ -6596,57 +6149,27 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePoints(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePoints = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
-                ps.setInt(1, amount);
-                ps.setInt(2, getClient().getAccID());
-                ps.setInt(3, getWorld());
-                ps.executeUpdate();
-            }
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
-        }
+        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
+                .set("gamePoints", amount)
+                .set("updateTime", LocalDate.now())
+                .update();
     }
 
     public int getGamePointsRQ() {
-        try {
-            int gamePointsRQ = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
-                ps.setInt(1, getClient().getAccID());
-                ps.setInt(2, getWorld());
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        gamePointsRQ = rs.getInt("gamePointsrq");
-                        Timestamp updateTime = rs.getTimestamp("updateTime");
-                        Calendar sqlcal = Calendar.getInstance();
-                        if (updateTime != null) {
-                            sqlcal.setTimeInMillis(updateTime.getTime());
-                        }
-                        if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                            gamePointsRQ = 0;
-                            try (PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePointspd = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
-                                psu.setInt(1, getClient().getAccID());
-                                psu.setInt(2, getWorld());
-                                psu.executeUpdate();
-                            }
-                        }
-                    } else {
-                        try (PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePointspd) VALUES (?, ?, ?)")) {
-                            psu.setInt(1, getClient().getAccID());
-                            psu.setInt(2, getWorld());
-                            psu.setInt(3, 0);
-                            psu.executeUpdate();
-                        }
-                    }
-                }
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.gamePointspd = 0;
+                one.updateTime = LocalDate.now();
             }
-            return gamePointsRQ;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败3" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.gamePointspd = 0;
         }
-        return -1;
+        one.save();
+        return one.gamePointspd;
     }
 
     public void gainGamePointsRQ(int amount) {
@@ -6659,18 +6182,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsRQ(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointspd = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
-        }
+        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld())
+                .asUpdate()
+                .set("gamePointspd", amount)
+                .update();
     }
 
     public long getDeadtime() {
@@ -6994,46 +6509,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     //--------------------------------------------赏金任务
     public int getSJRW() {
-        try {
-            int sjrw = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sjrw = rs.getInt("sjrw");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    sjrw = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET sjrw = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, sjrw) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.sjrw = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return sjrw;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.sjrw = 0;
         }
-        return -1;
+        one.save();
+        return one.sjrw;
     }
 
     public void gainSJRW(int amount) {
@@ -7046,62 +6535,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSJRW(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET sjrw = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.sjrw = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     //--------------------------------------------每日副本任务
     public int getFBRW() {
-        try {
-            int fbrw = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                fbrw = rs.getInt("fbrw");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    fbrw = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET fbrw = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, fbrw) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.fbrw = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return fbrw;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.fbrw = 0;
         }
-        return -1;
+        one.save();
+        return one.fbrw;
     }
 
     public void gainFBRW(int amount) {
@@ -7114,61 +6574,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateFBRW(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET fbrw = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.fbrw = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     public int getFBRWA() {
-        try {
-            int fbrwa = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                fbrwa = rs.getInt("fbrwa");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    fbrwa = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET fbrwa = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, fbrwa) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.fbrwa = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return fbrwa;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.fbrwa = 0;
         }
-        return -1;
+        one.save();
+        return one.fbrwa;
     }
 
     public void gainFBRWA(int amount) {
@@ -7181,62 +6612,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateFBRWA(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET fbrwa = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.fbrwa = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     //--------------------------------------------每日杀怪任务
     public int getSGRW() {
-        try {
-            int sgrw = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sgrw = rs.getInt("sgrw");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    sgrw = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET sgrw = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, sgrw) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.sgrw = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return sgrw;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.sgrw = 0;
         }
-        return -1;
+        one.save();
+        return one.sgrw;
     }
 
     public void gainSGRW(int amount) {
@@ -7249,61 +6651,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSGRW(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET sgrw = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.sgrw = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     public int getSGRWA() {
-        try {
-            int sgrwa = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sgrwa = rs.getInt("sgrwa");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    sgrwa = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET sgrwa = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, sgrwa) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.sgrwa = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return sgrwa;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.sgrwa = 0;
         }
-        return -1;
+        one.save();
+        return one.sgrwa;
     }
 
     public void gainSGRWA(int amount) {
@@ -7316,62 +6689,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSGRWA(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET sgrwa = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.sgrwa = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     //--------------------------------------------每日杀BOSS任务
     public int getSBOSSRW() {
-        try {
-            int sbossrw = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sbossrw = rs.getInt("sbossrw");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    sbossrw = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET sbossrw = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, sbossrw) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.sbossrw = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return sbossrw;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.sbossrw = 0;
         }
-        return -1;
+        one.save();
+        return one.sbossrw;
     }
 
     public void gainSBOSSRW(int amount) {
@@ -7384,61 +6728,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSBOSSRW(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET sbossrw = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.sbossrw = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     public int getSBOSSRWA() {
-        try {
-            int sbossrwa = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sbossrwa = rs.getInt("sbossrwa");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    sbossrwa = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET sbossrwa = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, sbossrwa) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.sbossrwa = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return sbossrwa;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.sbossrwa = 0;
         }
-        return -1;
+        one.save();
+        return one.sbossrwa;
     }
 
     public void gainSBOSSRWA(int amount) {
@@ -7451,62 +6766,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSBOSSRWA(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET sbossrwa = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.sbossrwa = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     //-------------七天礼包判断日期函数
     public int getlb() {
-        try {
-            int lb = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, getClient().getAccID());
-            ps.setInt(2, getWorld());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                lb = rs.getInt("lb");
-                Timestamp updateTime = rs.getTimestamp("updateTime");
-                Calendar sqlcal = Calendar.getInstance();
-                if (updateTime != null) {
-                    sqlcal.setTimeInMillis(updateTime.getTime());
-                }
-                if ((sqlcal.get(5) + 1 <= Calendar.getInstance().get(5)) || (sqlcal.get(2) + 1 <= Calendar.getInstance().get(2)) || (sqlcal.get(1) + 1 <= Calendar.getInstance().get(1))) {
-                    lb = 0;
-                    PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET lb = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-                    psu.setInt(1, getClient().getAccID());
-                    psu.setInt(2, getWorld());
-                    psu.executeUpdate();
-                    psu.close();
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, lb) VALUES (?, ?, ?)");
-
-                psu.setInt(1, getClient().getAccID());
-                psu.setInt(2, getWorld());
-                psu.setInt(3, 0);
-                psu.executeUpdate();
-                psu.close();
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one != null) {
+            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
+                one.lb = 0;
+                one.updateTime = LocalDate.now();
             }
-            rs.close();
-            ps.close();
-            return lb;
-        } catch (SQLException Ex) {
-            LOGGER.error("获取角色帐号的在线时间点出现错误 - 数据库查询失败" + Ex);
+        } else {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
+            one.lb = 0;
         }
-        return -1;
+        one.save();
+        return one.lb;
     }
 
     public void gainlb(int amount) {
@@ -7519,18 +6805,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updatelb(int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET lb = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
-
-            ps.setInt(1, amount);
-            ps.setInt(2, getClient().getAccID());
-            ps.setInt(3, getWorld());
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException Ex) {
-            LOGGER.error("更新角色帐号的在线时间出现错误 - 数据库更新失败." + Ex);
+        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        if (one == null) {
+            one = new DAccountsInfo();
+            one.accId = getClient().getAccID();
+            one.worldId = getWorld();
         }
+        one.lb = amount;
+        one.updateTime = LocalDate.now();
+        one.save();
     }
 
     public int getmrsgrw() {
@@ -7702,81 +6985,61 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getFishingJF(int type) {
-        int jf = 0;
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("select * from fishingjf where accname = ?");
-            ps.setString(1, getClient().getAccountName());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                if (type == 1) {
-                    jf = rs.getInt("fishing");
-                } else if (type == 2) {
-                    jf = rs.getInt("XX");
-                } else if (type == 3) {
-                    jf = rs.getInt("XXX");
-                } else {
-                    jf = 0;
-                }
-            } else {
-                PreparedStatement psu = con.prepareStatement("insert into fishingjf (accname, fishing, XX, XXX) VALUES (?, ?, ?, ?)");
-                psu.setString(1, getClient().getAccountName());
-                psu.setInt(2, 0);
-                psu.setInt(3, 0);
-                psu.setInt(4, 0);
-                psu.executeUpdate();
-                psu.close();
+        DFishingJf one = new QDFishingJf().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            switch (type) {
+                case 1:
+                    return one.fishing;
+                case 2:
+                    return one.XX;
+                case 3:
+                    return one.XXX;
+                default:
+                    break;
             }
-            ps.close();
-            rs.close();
-        } catch (SQLException ex) {
-            LOGGER.error("获取钓鱼积分信息发生错误: " + ex);
+        } else {
+            one = new DFishingJf();
+            one.accname = getClient().getAccountName();
+            one.fishing = 0;
+            one.XX = 0;
+            one.XXX = 0;
+            one.save();
         }
-        return jf;
+        return 0;
     }
 
     public int gainFishingJF(int hypay) {
-        int jf = getFishingJF(1);
-        int XX = getFishingJF(2);
-        int XXX = getFishingJF(3);
         if (hypay <= 0) {
             return 0;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE fishingjf SET fishing = ? ,XX = ? ,XXX = ? where accname = ?");
-            ps.setInt(1, hypay + jf);
-            ps.setInt(2, XX);
-            ps.setInt(3, XXX);
-            ps.setString(4, getClient().getAccountName());
-            ps.executeUpdate();
-            ps.close();
+        int jf = getFishingJF(1);
+        int XX = getFishingJF(2);
+        int XXX = getFishingJF(3);
+        DFishingJf one = new QDFishingJf().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            one.fishing = hypay + jf;
+            one.XX = XX;
+            one.XXX = XXX;
+            one.save();
             return 1;
-        } catch (SQLException ex) {
-            LOGGER.error("加减钓鱼积分信息发生错误: " + ex);
         }
         return 0;
     }
 
     public int addFishingJF(int hypay) {
         int jf = getFishingJF(1);
-        int XX = getFishingJF(2);
-        int XXX = getFishingJF(3);
         if (hypay > jf) {
             return -1;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE fishingjf SET fishing = ? ,XX = ? ,XXX = ? where accname = ?");
-            ps.setInt(1, jf - hypay);
-            ps.setInt(2, XX);
-            ps.setInt(3, XXX);
-            ps.setString(4, getClient().getAccountName());
-            ps.executeUpdate();
-            ps.close();
+        int XX = getFishingJF(2);
+        int XXX = getFishingJF(3);
+        DFishingJf one = new QDFishingJf().accname.eq(getClient().getAccountName()).findOne();
+        if (one != null) {
+            one.fishing = jf - hypay;
+            one.XX = XX;
+            one.XXX = XXX;
+            one.save();
             return 1;
-        } catch (SQLException ex) {
-            LOGGER.error("加减钓鱼积分信息发生错误: " + ex);
         }
         return -1;
     }

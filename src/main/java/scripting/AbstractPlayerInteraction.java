@@ -22,7 +22,7 @@ package scripting;
 
 import KinMS.db.CherryMSLottery;
 import KinMS.db.CherryMScustomEventFactory;
-import java.awt.Point;
+
 import java.util.List;
 
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
@@ -37,7 +37,6 @@ import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.MapleQuestStatus;
 import client.inventory.*;
-import database.DatabaseConnection;
 import handling.channel.ChannelServer;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
@@ -57,19 +56,13 @@ import tools.MaplePacketCreator;
 import tools.packet.PetPacket;
 import tools.packet.UIPacket;
 import handling.world.World;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+
 import java.util.LinkedHashSet;
-import java.util.Map;
+
 import server.*;
 import server.events.MapleEvent;
 import server.events.MapleEventType;
 import server.life.OverrideMonsterStats;
-import server.shops.HiredMerchant;
-import tools.Pair;
 
 public abstract class AbstractPlayerInteraction {
 
@@ -414,7 +407,7 @@ public abstract class AbstractPlayerInteraction {
         return c.getPlayer().getQuestNAdd(MapleQuest.getInstance(id));
     }
 
-    public final byte getQuestStatus(final int id) {
+    public final int getQuestStatus(final int id) {
         return c.getPlayer().getQuestStatus(id);
     }
 
@@ -660,7 +653,7 @@ public abstract class AbstractPlayerInteraction {
                     item.setSpeed((short) yd);
                 }
                 if (suo > 0) {
-                    byte flag = item.getFlag();
+                    int flag = item.getFlag();
                     flag |= ItemFlag.LOCK.getValue();
                     item.setFlag(flag);
                 }

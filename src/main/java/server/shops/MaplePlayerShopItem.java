@@ -27,9 +27,9 @@ public class MaplePlayerShopItem {
     public IItem item;
     public short bundles;
     public int price;
-    public byte flag;
+    public int flag;
 
-    public MaplePlayerShopItem(IItem item, short bundles, int price, byte flag) {
+    public MaplePlayerShopItem(IItem item, short bundles, int price, int flag) {
         this.item = item;
         this.bundles = bundles;
         this.price = price;

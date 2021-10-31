@@ -3,14 +3,11 @@ package client.inventory;
 import client.MapleBuffStat;
 import client.MapleCharacter;
 import java.lang.ref.WeakReference;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.io.Serializable;
 
 import com.github.mrzhqiang.maplestory.domain.DMountData;
 import com.github.mrzhqiang.maplestory.domain.query.QDMountData;
-import database.DatabaseConnection;
 import server.Randomizer;
 import tools.MaplePacketCreator;
 
@@ -36,13 +33,13 @@ public class MapleMount implements Serializable {
         if (!changed) {
             return;
         }
-        DMountData data = new QDMountData().characterid.eq(charid).findOne();
+        DMountData data = new QDMountData().character.id.eq(charid).findOne();
         if (data == null) {
             return;
         }
-        data.setLevel(level);
-        data.setExp(exp);
-        data.setFatigue(fatigue);
+        data.level = (level);
+        data.exp = (exp);
+        data.fatigue = (fatigue);
         data.save();
     }
 

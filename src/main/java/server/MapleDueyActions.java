@@ -2,13 +2,15 @@ package server;
 
 import client.inventory.IItem;
 
+import java.time.LocalDateTime;
+
 public class MapleDueyActions {
 
     private String sender = null;
     private IItem item = null;
     private int mesos = 0;
     private int quantity = 1;
-    private long sentTime;
+    private LocalDateTime sentTime;
     private int packageId = 0;
 
     public MapleDueyActions(int pId, IItem item) {
@@ -62,11 +64,11 @@ public class MapleDueyActions {
      cal.set(year, month, day);
      return cal.getTimeInMillis();
      }*/
-    public void setSentTime(long sentTime) {
+    public void setSentTime(LocalDateTime sentTime) {
         this.sentTime = sentTime;
     }
 
-    public long getSentTime() {
+    public LocalDateTime getSentTime() {
         return sentTime;
     }
 }

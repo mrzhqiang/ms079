@@ -1,5 +1,8 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -7,36 +10,13 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cashshop_limit_sell")
-public class DCashShopLimitSell {
+public class DCashShopLimitSell extends Model {
 
     @Id
-    @Column(name = "serial", nullable = false)
-    private Integer serial;
+    @Column(name = "serial")
+    public Integer id;
+    @NotNull
+    @Column(name = "amount")
+    public Integer amount;
 
-    @Column(name = "amount", nullable = false)
-    private Integer amount;
-
-    public void setSerial(Integer serial) {
-        this.serial = serial;
-    }
-
-    public Integer getSerial() {
-        return serial;
-    }
-
-    public void setAmount(Integer amount) {
-        this.amount = amount;
-    }
-
-    public Integer getAmount() {
-        return amount;
-    }
-
-    @Override
-    public String toString() {
-        return "DCashShopLimitSell{" +
-                "serial=" + serial + '\'' +
-                "amount=" + amount + '\'' +
-                '}';
-    }
 }

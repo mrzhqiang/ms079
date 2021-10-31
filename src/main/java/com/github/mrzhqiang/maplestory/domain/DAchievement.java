@@ -1,16 +1,20 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "achievements")
-public class DAchievement {
+public class DAchievement extends Model {
 
     @EmbeddedId
     public PKAchievement achievement;
 
+    @NotNull
     @OneToOne
-    @Column(name = "accountid", nullable = false)
-    public Integer accountid;
+    @JoinColumn(name = "accountid")
+    public DAccount account;
 
 }

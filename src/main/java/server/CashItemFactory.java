@@ -1,19 +1,14 @@
 package server;
 
-import com.github.mrzhqiang.maplestory.domain.DCashShopModifiedItem;
 import com.github.mrzhqiang.maplestory.domain.query.QDCashShopModifiedItem;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.CashItemInfo.CashModInfo;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,7 +81,7 @@ public class CashItemFactory {
         final CashItemInfo stats = itemStats.get(sn);
         // final CashItemInfo stats = itemStats.get(Integer.valueOf(sn));
         final CashModInfo z = getModInfo(sn);
-        if (z != null && z.showUp) {
+        if (z != null && z.item.showup) {
             return z.toCItem(stats); //null doesnt matter
         }
         if (stats == null || !stats.onSale()) {
@@ -130,11 +125,9 @@ public class CashItemFactory {
                 return null;
             }
             ret = new QDCashShopModifiedItem()
-                    .serial.eq(sn)
+                    .id.eq(sn)
                     .findOneOrEmpty()
-                    .map(item -> new CashModInfo(sn, item.discountPrice, item.mark, item.showup,
-                            item.itemid, item.priority, item.packageField, item.period, item.gender, item.count,
-                            item.meso, item.unk1, item.unk2, item.unk3, item.extraFlags))
+                    .map(item -> new CashModInfo(sn, item))
                     .orElse(null);
             itemMods.put(sn, ret);
         }

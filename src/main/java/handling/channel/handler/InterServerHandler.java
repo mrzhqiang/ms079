@@ -280,8 +280,8 @@ public class InterServerHandler {
 
         final BuddyEntry pendingBuddyRequest = player.getBuddylist().pollPendingRequest();
         if (pendingBuddyRequest != null) {
-            player.getBuddylist().put(new BuddyEntry(pendingBuddyRequest.getName(), pendingBuddyRequest.getCharacterId(), "ETC", -1, false, pendingBuddyRequest.getLevel(), pendingBuddyRequest.getJob()));
-            c.sendPacket(MaplePacketCreator.requestBuddylistAdd(pendingBuddyRequest.getCharacterId(), pendingBuddyRequest.getName(), pendingBuddyRequest.getLevel(), pendingBuddyRequest.getJob()));
+            player.getBuddylist().put(new BuddyEntry(pendingBuddyRequest.character, "ETC", -1, false));
+            c.sendPacket(MaplePacketCreator.requestBuddylistAdd(pendingBuddyRequest.character));
         }
         if (player.getJob() == 132) { // DARKKNIGHT
             player.checkBerserk();

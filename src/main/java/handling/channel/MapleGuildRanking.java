@@ -2,12 +2,12 @@ package handling.channel;
 
 import java.util.List;
 import java.util.LinkedList;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.stream.Collectors;
 
-import database.DatabaseConnection;
+import com.github.mrzhqiang.maplestory.domain.DGuild;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
+import io.ebean.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.Timer;
@@ -62,74 +62,32 @@ public class MapleGuildRanking {
     private void reload() {
         ranks.clear();
 
-        Connection con = DatabaseConnection.getConnection();
-        ResultSet rs;
-        try (PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds ORDER BY `GP` DESC LIMIT 50")) {
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                final GuildRankingInfo rank = new GuildRankingInfo(
-                        rs.getString("name"),
-                        rs.getInt("GP"),
-                        rs.getInt("logo"),
-                        rs.getInt("logoColor"),
-                        rs.getInt("logoBG"),
-                        rs.getInt("logoBGColor"));
-
-                ranks.add(rank);
-            }
-
-            rs.close();
-        } catch (SQLException e) {
-            LOGGER.error("家族排行错误" + e);
-        }
+        new QDGuild().orderBy().GP.desc()
+                .setMaxRows(50)
+                .findEach(data -> ranks.add(new GuildRankingInfo(data)));
     }
 
     private void showLevelRank() {
         ranks1.clear();
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm < 1 ORDER BY `level` DESC LIMIT 100");
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                final levelRankingInfo rank1 = new levelRankingInfo(
-                        rs.getString("name"),
-                        rs.getInt("level"),
-                        rs.getInt("str"),
-                        rs.getInt("dex"),
-                        rs.getInt("int"),
-                        rs.getInt("luk"));
-                ranks1.add(rank1);
-            }
-            ps.close();
-            rs.close();
-        } catch (SQLException e) {
-            LOGGER.error("人物排行错误");
-        }
+        List<levelRankingInfo> infoList = new QDCharacter().gm.lt(1)
+                .orderBy().level.desc()
+                .setMaxRows(100)
+                .findStream()
+                .map(it -> new levelRankingInfo(it.name, it.level, it.str, it.dex, it.intelligence, it.luk))
+                .collect(Collectors.toList());
+        ranks1.addAll(infoList);
     }
 
     private void showMesoRank() {
         ranks2.clear();
 
-        Connection con = DatabaseConnection.getConnection();
-        ResultSet rs;
-        try (PreparedStatement ps = con.prepareStatement("SELECT *, ( chr.meso + s.meso ) as money FROM `characters` as chr , `storages` as s WHERE chr.gm < 1  AND s.accountid = chr.accountid ORDER BY money DESC LIMIT 20")) {
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                final mesoRankingInfo rank2 = new mesoRankingInfo(
-                        rs.getString("name"),
-                        rs.getLong("money"),
-                        rs.getInt("str"),
-                        rs.getInt("dex"),
-                        rs.getInt("int"),
-                        rs.getInt("luk"));
-                ranks2.add(rank2);
-            }
-
-            rs.close();
-        } catch (SQLException e) {
-            LOGGER.error("金币排行错误");
-        }
+        List<mesoRankingInfo> infos = DB.findNative(mesoRankingInfo.class,
+                        "SELECT *, ( chr.meso + s.meso ) as money " +
+                                "FROM `characters` as chr , `storages` as s " +
+                                "WHERE chr.gm < 1 AND s.accountid = chr.accountid " +
+                                "ORDER BY money DESC LIMIT 20")
+                .findList();
+        ranks2.addAll(infos);
     }
 
     public static class mesoRankingInfo {
@@ -213,40 +171,34 @@ public class MapleGuildRanking {
 
     public static class GuildRankingInfo {
 
-        private final String name;
-        private final int gp, logo, logocolor, logobg, logobgcolor;
+        public final DGuild guild;
 
-        public GuildRankingInfo(String name, int gp, int logo, int logocolor, int logobg, int logobgcolor) {
-            this.name = name;
-            this.gp = gp;
-            this.logo = logo;
-            this.logocolor = logocolor;
-            this.logobg = logobg;
-            this.logobgcolor = logobgcolor;
+        public GuildRankingInfo(DGuild dGuild) {
+            this.guild = dGuild;
         }
 
         public String getName() {
-            return name;
+            return guild.name;
         }
 
         public int getGP() {
-            return gp;
+            return guild.GP;
         }
 
         public int getLogo() {
-            return logo;
+            return guild.logo;
         }
 
         public int getLogoColor() {
-            return logocolor;
+            return guild.logoColor;
         }
 
         public int getLogoBg() {
-            return logobg;
+            return guild.logoBG;
         }
 
         public int getLogoBgColor() {
-            return logobgcolor;
+            return guild.logoBGColor;
         }
     }
 }

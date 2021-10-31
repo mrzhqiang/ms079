@@ -5,65 +5,57 @@ import client.inventory.IItem;
 import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DStorage;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import com.github.mrzhqiang.maplestory.domain.query.QDStorage;
 import constants.GameConstants;
-import database.DatabaseConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.Pair;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class MapleStorage implements Serializable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MapleStorage.class);
-
     private static final long serialVersionUID = 9179541993413738569L;
-    private int id;
-    private int accountId;
-    private List<IItem> items;
-    private int meso;
-    private int slots;
-    private boolean changed = false;
-    private Map<MapleInventoryType, List<IItem>> typeItems = new EnumMap<>(MapleInventoryType.class);
 
-    private MapleStorage(int id, int slots, int meso, int accountId) {
-        this.id = id;
-        this.slots = slots;
+    private final DStorage storage;
+    private final List<IItem> items;
+
+    private boolean changed = false;
+    private final Map<MapleInventoryType, List<IItem>> typeItems = new EnumMap<>(MapleInventoryType.class);
+
+    private MapleStorage(DStorage storage) {
+        this.storage = storage;
         this.items = new LinkedList<>();
-        this.meso = meso;
-        this.accountId = accountId;
     }
 
-    public static int create(int id) {
+    public static DStorage create(int id) {
         DStorage storage = new DStorage();
-        storage.setAccountid(id);
-        storage.setSlots(4);
-        storage.setMeso(0);
+        storage.account = new QDAccount().id.eq(id).findOne();
+        storage.slots = (4);
+        storage.meso = (0);
         storage.save();
-        return storage.getStorageid();
+        return storage;
     }
 
     public static MapleStorage loadStorage(int id) {
         MapleStorage ret;
-        int storeId;
-        Optional<DStorage> optional = new QDStorage().accountid.eq(id).findOneOrEmpty();
+        Optional<DStorage> optional = new QDStorage().account.id.eq(id).findOneOrEmpty();
         if (optional.isPresent()) {
             DStorage storage = optional.get();
-            storeId = storage.getStorageid();
-            ret = new MapleStorage(storeId, storage.getSlots(), storage.getMeso(), id);
+            ret = new MapleStorage(storage);
 
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.STORAGE.loadItems(false, id).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(1, false, id).values()) {
                 ret.items.add(mit.getLeft());
             }
         } else {
-            storeId = create(id);
-            ret = new MapleStorage(storeId, (byte) 4, 0, id);
+            ret = new MapleStorage(create(id));
         }
         return ret;
     }
@@ -72,24 +64,14 @@ public class MapleStorage implements Serializable {
         if (!changed) {
             return;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
 
-            PreparedStatement ps = con.prepareStatement("UPDATE storages SET slots = ?, meso = ? WHERE storageid = ?");
-            ps.setInt(1, slots);
-            ps.setInt(2, meso);
-            ps.setInt(3, id);
-            ps.executeUpdate();
-            ps.close();
+        storage.save();
 
-            List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<>();
-            for (final IItem item : items) {
-                listing.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
-            }
-            ItemLoader.STORAGE.saveItems(listing, accountId);
-        } catch (SQLException ex) {
-            LOGGER.error("Error saving storage" + ex);
+        List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<>();
+        for (IItem item : items) {
+            listing.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
+        ItemLoader.saveItems(listing);
     }
 
     public IItem takeOut(byte slot) {
@@ -143,7 +125,7 @@ public class MapleStorage implements Serializable {
 
     public void sendStorage(MapleClient c, int npcId) {
         // sort by inventorytype to avoid confusion
-        Collections.sort(items, (o1, o2) -> {
+        items.sort((o1, o2) -> {
             if (GameConstants.getInventoryType(o1.getItemId()).getType() < GameConstants.getInventoryType(o2.getItemId()).getType()) {
                 return -1;
             } else if (GameConstants.getInventoryType(o1.getItemId()) == GameConstants.getInventoryType(o2.getItemId())) {
@@ -155,19 +137,19 @@ public class MapleStorage implements Serializable {
         for (MapleInventoryType type : MapleInventoryType.values()) {
             typeItems.put(type, new ArrayList<>(items));
         }
-        c.getSession().write(MaplePacketCreator.getStorage(npcId, (byte) slots, items, meso));
+        c.getSession().write(MaplePacketCreator.getStorage(npcId, storage.slots, items, storage.meso));
     }
 
     public void sendStored(MapleClient c, MapleInventoryType type) {
-        c.getSession().write(MaplePacketCreator.storeStorage((byte) slots, type, typeItems.get(type)));
+        c.getSession().write(MaplePacketCreator.storeStorage(storage.slots, type, typeItems.get(type)));
     }
 
     public void sendTakenOut(MapleClient c, MapleInventoryType type) {
-        c.getSession().write(MaplePacketCreator.takeOutStorage((byte) slots, type, typeItems.get(type)));
+        c.getSession().write(MaplePacketCreator.takeOutStorage(storage.slots, type, typeItems.get(type)));
     }
 
     public int getMeso() {
-        return meso;
+        return storage.meso;
     }
 
     public IItem findById(int itemId) {
@@ -184,29 +166,29 @@ public class MapleStorage implements Serializable {
             return;
         }
         changed = true;
-        this.meso = meso;
+        this.storage.meso = meso;
     }
 
     public void sendMeso(MapleClient c) {
-        c.getSession().write(MaplePacketCreator.mesoStorage((byte) slots, meso));
+        c.getSession().write(MaplePacketCreator.mesoStorage(storage.slots, storage.meso));
     }
 
     public boolean isFull() {
-        return items.size() >= slots;
+        return items.size() >= storage.slots;
     }
 
     public int getSlots() {
-        return slots;
+        return storage.slots;
     }
 
-    public void increaseSlots(byte gain) {
+    public void increaseSlots(int gain) {
         changed = true;
-        this.slots += gain;
+        this.storage.slots += gain;
     }
 
-    public void setSlots(byte set) {
+    public void setSlots(int set) {
         changed = true;
-        this.slots = set;
+        this.storage.slots = set;
     }
 
     public void close() {

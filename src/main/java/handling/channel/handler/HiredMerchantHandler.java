@@ -20,31 +20,27 @@
  */
 package handling.channel.handler;
 
-import java.rmi.RemoteException;
 import java.util.List;
 import java.util.ArrayList;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import client.MapleClient;
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.domain.DHiredMerch;
+import com.github.mrzhqiang.maplestory.domain.query.QDHiredMerch;
 import constants.GameConstants;
 import client.inventory.ItemLoader;
-import database.DatabaseConnection;
 import handling.world.World;
+
 import java.util.Map;
-import scripting.NPCScriptManager;
+
 import server.MapleInventoryManipulator;
 import server.MerchItemPackage;
 import server.MapleItemInformationProvider;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
-import tools.StringUtil;
 import tools.packet.PlayerShopPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
 
@@ -79,25 +75,12 @@ public class HiredMerchantHandler {
         }
     }
 
-    private static final byte checkExistance(final int accid, final int charid) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where accountid = ? OR characterid = ?");
-            ps.setInt(1, accid);
-            ps.setInt(2, charid);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                ps.close();
-                rs.close();
-                return 1;
-            }
-            rs.close();
-            ps.close();
-            return 0;
-        } catch (SQLException se) {
-            return -1;
+    private static byte checkExistance(int accid, int charid) {
+        DHiredMerch one = new QDHiredMerch().account.id.eq(accid).character.id.eq(charid).findOne();
+        if (one != null) {
+            return 1;
         }
+        return 0;
     }
 
     public static void MerchantItemStore(final SeekableLittleEndianAccessor slea, final MapleClient c) {
@@ -139,7 +122,7 @@ public class HiredMerchantHandler {
                             c.getPlayer().setConversation(0);
                             c.getPlayer().dropMessage("领取金币" + pack.getMesos());
                             //     c.getSession().write(PlayerShopPacket.merchItem_Message((byte) 0x1d));
-                      //      c.getPlayer().setLastHM(System.currentTimeMillis());
+                            //      c.getPlayer().setLastHM(System.currentTimeMillis());
                         } else {
                             c.getPlayer().dropMessage(1, "发生未知错误。");
                         }
@@ -188,7 +171,7 @@ public class HiredMerchantHandler {
                     }
                     FileoutputUtil.logToFile_chr(c.getPlayer(), "日志/logs/Log_雇佣领取记录.txt", " 领回金币 " + pack.getMesos() + " 领回道具数量 " + pack.getItems().size() + " 道具 " + item_id);
                     FileoutputUtil.logToFile_chr(c.getPlayer(), "日志/logs/Log_雇佣领取记录2.txt", " 领回金币 " + pack.getMesos() + " 领回道具数量 " + pack.getItems().size() + " 道具 " + item_name);
-                //    c.getPlayer().setLastHM(System.currentTimeMillis());
+                    //    c.getPlayer().setLastHM(System.currentTimeMillis());
                 } else {
                     c.getPlayer().dropMessage(1, "发生未知错误.");
                 }
@@ -270,61 +253,31 @@ public class HiredMerchantHandler {
         return true;
     }
 
-    private static final boolean deletePackage(final int charid, final int accid, final int packageid) {
-        final Connection con = DatabaseConnection.getConnection();
-
-        try {
-            PreparedStatement ps = con.prepareStatement("DELETE from hiredmerch where characterid = ? OR accountid = ? OR packageid = ?");
-            ps.setInt(1, charid);
-            ps.setInt(2, accid);
-            ps.setInt(3, packageid);
-            ps.execute();
-            ps.close();
-            ItemLoader.HIRED_MERCHANT.saveItems(null, packageid, accid, charid);
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
+    private static boolean deletePackage(int charid, int accid, int packageid) {
+        new QDHiredMerch().character.id.eq(charid).account.id.eq(accid).id.eq(packageid).delete();
+        ItemLoader.deleteItems(5, packageid, accid, charid);
+        return true;
     }
 
-    private static final MerchItemPackage loadItemFrom_Database(final int charid, final int accountid) {
-        final Connection con = DatabaseConnection.getConnection();
-
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?");
-            ps.setInt(1, charid);
-            ps.setInt(2, accountid);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                ps.close();
-                rs.close();
-                return null;
-            }
-            final int packageid = rs.getInt("PackageId");
-
-            final MerchItemPackage pack = new MerchItemPackage();
-            pack.setPackageid(packageid);
-            pack.setMesos(rs.getInt("Mesos"));
-            pack.setSentTime(rs.getLong("time"));
-
-            ps.close();
-            rs.close();
-
-            Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.HIRED_MERCHANT.loadItems_hm(packageid, accountid);
-            if (items != null) {
-                List<IItem> iters = new ArrayList<IItem>();
-                for (Pair<IItem, MapleInventoryType> z : items.values()) {
-                    iters.add(z.left);
-                }
-                pack.setItems(iters);
-            }
-
-            return pack;
-        } catch (SQLException e) {
-            e.printStackTrace();
+    private static MerchItemPackage loadItemFrom_Database(int charid, int accountid) {
+        DHiredMerch one = new QDHiredMerch().character.id.eq(charid).account.id.eq(accountid).findOne();
+        if (one == null) {
             return null;
         }
+
+        MerchItemPackage pack = new MerchItemPackage();
+        pack.setPackageid(one.id);
+        pack.setMesos(one.mesos);
+        pack.setSentTime(one.time);
+
+        Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.loadItems_hm(5, one.id, accountid);
+        if (!items.isEmpty()) {
+            List<IItem> iters = new ArrayList<>();
+            for (Pair<IItem, MapleInventoryType> z : items.values()) {
+                iters.add(z.left);
+            }
+            pack.setItems(iters);
+        }
+        return pack;
     }
 }

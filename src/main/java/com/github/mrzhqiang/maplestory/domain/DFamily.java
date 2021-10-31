@@ -1,52 +1,26 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "families")
-public class DFamily {
+public class DFamily extends Model {
 
     @Id
-    @Column(name = "familyid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer familyid;
+    @Column(name = "familyid")
+    public Integer id;
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "leaderid")
+    public DCharacter leader;
+    @NotNull
+    @Column(name = "notice")
+    public String notice;
+    @OneToMany(mappedBy = "family")
+    public List<DCharacter> members;
 
-    @Column(name = "leaderid", nullable = false)
-    private Integer leaderid;
-
-    @Column(name = "notice", nullable = false)
-    private String notice;
-
-    public void setFamilyid(Integer familyid) {
-        this.familyid = familyid;
-    }
-
-    public Integer getFamilyid() {
-        return familyid;
-    }
-
-    public void setLeaderid(Integer leaderid) {
-        this.leaderid = leaderid;
-    }
-
-    public Integer getLeaderid() {
-        return leaderid;
-    }
-
-    public void setNotice(String notice) {
-        this.notice = notice;
-    }
-
-    public String getNotice() {
-        return notice;
-    }
-
-    @Override
-    public String toString() {
-        return "DFamily{" +
-                "familyid=" + familyid + '\'' +
-                "leaderid=" + leaderid + '\'' +
-                "notice=" + notice + '\'' +
-                '}';
-    }
 }

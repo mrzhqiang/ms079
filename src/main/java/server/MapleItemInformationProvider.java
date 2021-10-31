@@ -7,6 +7,14 @@ import client.inventory.IItem;
 import client.inventory.ItemFlag;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.DWzItemAddData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemEquipData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemRewardData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemAddData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemEquipData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemRewardData;
 import com.github.mrzhqiang.maplestory.util.Effects;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
@@ -14,16 +22,12 @@ import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.*;
 import com.google.common.collect.Maps;
 import constants.GameConstants;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Pair;
 import tools.Triple;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.*;
 import java.util.Map.Entry;
@@ -161,56 +165,19 @@ public class MapleItemInformationProvider {
     }
 
     public void runItems() {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        new QDWzItemData().findEach(this::initItemInformation);
+        new QDWzItemEquipData().order().itemid.asc().findEach(this::initItemEquipData);
+        new QDWzItemAddData().order().itemid.asc().findEach(this::initItemAddData);
+        new QDWzItemRewardData().order().itemid.asc().findEach(this::initItemRewardData);
 
-            // Load Item Data
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_itemdata");
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                initItemInformation(rs);
+        // Finalize all Equipments
+        for (Entry<Integer, ItemInformation> entry : dataCache.entrySet()) {
+            if (GameConstants.getInventoryType(entry.getKey()) == MapleInventoryType.EQUIP) {
+                finalizeEquipData(entry.getValue());
             }
-            rs.close();
-            ps.close();
-
-            // Load Item Equipment Data
-            ps = con.prepareStatement("SELECT * FROM wz_itemequipdata ORDER BY itemid");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                initItemEquipData(rs);
-            }
-            rs.close();
-            ps.close();
-
-            // Load Item Addition Data
-            ps = con.prepareStatement("SELECT * FROM wz_itemadddata ORDER BY itemid");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                initItemAddData(rs);
-            }
-            rs.close();
-            ps.close();
-
-            // Load Item Reward Data
-            ps = con.prepareStatement("SELECT * FROM wz_itemrewarddata ORDER BY itemid");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                initItemRewardData(rs);
-            }
-            rs.close();
-            ps.close();
-
-            // Finalize all Equipments
-            for (Entry<Integer, ItemInformation> entry : dataCache.entrySet()) {
-                if (GameConstants.getInventoryType(entry.getKey()) == MapleInventoryType.EQUIP) {
-                    finalizeEquipData(entry.getValue());
-                }
-            }
-        } catch (SQLException ex) {
-            LOGGER.error("加载道具数据出错" + ex);
         }
-        LOGGER.debug("共加载" + dataCache.size() + " 个道具信息");
+
+        LOGGER.debug("共加载 {} 个道具信息", dataCache.size());
     }
 
     public void finalizeEquipData(ItemInformation item) {
@@ -326,11 +293,11 @@ public class MapleItemInformationProvider {
         }
     }
 
-    public void initItemRewardData(ResultSet sqlRewardData) throws SQLException {
-        final int itemID = sqlRewardData.getInt("itemid");
+    public void initItemRewardData(DWzItemRewardData data) {
+        int itemID = data.itemid;
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                LOGGER.debug("[initItemRewardData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemRewardData] 尝试加载不在缓存中的项目： " + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);
@@ -341,21 +308,21 @@ public class MapleItemInformationProvider {
         }
 
         StructRewardItem add = new StructRewardItem();
-        add.itemid = sqlRewardData.getInt("item");
-        add.period = (add.itemid == 1122017 ? Math.max(sqlRewardData.getInt("period"), 7200) : sqlRewardData.getInt("period"));
-        add.prob = (short) sqlRewardData.getInt("prob");
-        add.quantity = sqlRewardData.getShort("quantity");
-        add.worldmsg = sqlRewardData.getString("worldMsg").length() <= 0 ? null : sqlRewardData.getString("worldMsg");
-        add.effect = sqlRewardData.getString("effect");
+        add.itemid = data.item;
+        add.period = (add.itemid == 1122017 ? Math.max(data.period, 7200) : data.period);
+        add.prob = data.prob;
+        add.quantity = data.quantity;
+        add.worldmsg = data.worldMsg.length() <= 0 ? null : data.worldMsg;
+        add.effect = data.effect;
 
         tmpInfo.rewardItems.add(add);
     }
 
-    public void initItemAddData(ResultSet sqlAddData) throws SQLException {
-        final int itemID = sqlAddData.getInt("itemid");
+    public void initItemAddData(DWzItemAddData data) {
+        int itemID = data.itemid;
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                LOGGER.debug("[initItemAddData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemAddData] 尝试加载不在缓存中的项目：" + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);
@@ -365,18 +332,16 @@ public class MapleItemInformationProvider {
             tmpInfo.equipAdditions = new LinkedList<>();
         }
 
-        while (sqlAddData.next()) {
-            tmpInfo.equipAdditions.add(new Triple<>(sqlAddData.getString("key"), sqlAddData.getString("subKey"), sqlAddData.getString("value")));
-        }
+        tmpInfo.equipAdditions.add(new Triple<>(data.key, data.subKey, data.value));
     }
 
     private ItemInformation tmpInfo = null;
 
-    public void initItemEquipData(ResultSet sqlEquipData) throws SQLException {
-        final int itemID = sqlEquipData.getInt("itemid");
+    public void initItemEquipData(DWzItemEquipData data) {
+        int itemID = data.itemid;
         if (tmpInfo == null || tmpInfo.itemId != itemID) {
             if (!dataCache.containsKey(itemID)) {
-                LOGGER.debug("[initItemEquipData] Tried to load an item while this is not in the cache: " + itemID);
+                LOGGER.debug("[initItemEquipData] 试图加载一个不在缓存中的项目: " + itemID);
                 return;
             }
             tmpInfo = dataCache.get(itemID);
@@ -386,42 +351,42 @@ public class MapleItemInformationProvider {
             tmpInfo.equipStats = new HashMap<>();
         }
 
-        final int itemLevel = sqlEquipData.getInt("itemLevel");
+        final int itemLevel = data.itemLevel;
         if (itemLevel == -1) {
-            tmpInfo.equipStats.put(sqlEquipData.getString("key"), sqlEquipData.getInt("value"));
+            tmpInfo.equipStats.put(data.key, data.value);
         } else {
             if (tmpInfo.equipIncs == null) {
                 tmpInfo.equipIncs = new HashMap<>();
             }
 
             Map<String, Integer> toAdd = tmpInfo.equipIncs.computeIfAbsent(itemLevel, k -> new HashMap<>());
-            toAdd.put(sqlEquipData.getString("key"), sqlEquipData.getInt("value"));
+            toAdd.put(data.key, data.value);
         }
     }
 
-    public void initItemInformation(ResultSet sqlItemData) throws SQLException {
-        final ItemInformation ret = new ItemInformation();
-        final int itemId = sqlItemData.getInt("itemid");
+    public void initItemInformation(DWzItemData data) {
+        ItemInformation ret = new ItemInformation();
+        int itemId = data.id;
         ret.itemId = itemId;
-        ret.slotMax = GameConstants.getSlotMax(itemId) > 0 ? GameConstants.getSlotMax(itemId) : sqlItemData.getShort("slotMax");
-        ret.price = Double.parseDouble(sqlItemData.getString("price"));
-        ret.wholePrice = sqlItemData.getInt("wholePrice");
-        ret.stateChange = sqlItemData.getInt("stateChange");
-        ret.name = sqlItemData.getString("name");
-        ret.desc = sqlItemData.getString("desc");
-        ret.msg = sqlItemData.getString("msg");
+        ret.slotMax = GameConstants.getSlotMax(itemId) > 0 ? GameConstants.getSlotMax(itemId) : data.slotMax;
+        ret.price = new BigDecimal(data.price);
+        ret.wholePrice = data.wholePrice;
+        ret.stateChange = data.stateChange;
+        ret.name = data.name;
+        ret.desc = data.desc;
+        ret.msg = data.msg;
 
-        ret.flag = sqlItemData.getInt("flags");
+        ret.flag = data.flags;
 
-        ret.karmaEnabled = sqlItemData.getByte("karma");
-        ret.meso = sqlItemData.getInt("meso");
-        ret.monsterBook = sqlItemData.getInt("monsterBook");
-        ret.itemMakeLevel = sqlItemData.getShort("itemMakeLevel");
-        ret.questId = sqlItemData.getInt("questId");
-        ret.create = sqlItemData.getInt("create");
-        ret.replaceItem = sqlItemData.getInt("replaceId");
-        ret.replaceMsg = sqlItemData.getString("replaceMsg");
-        ret.afterImage = sqlItemData.getString("afterImage");
+        ret.karmaEnabled = data.karma;
+        ret.meso = data.meso;
+        ret.monsterBook = data.monsterBook;
+        ret.itemMakeLevel = data.itemMakeLevel;
+        ret.questId = data.questId;
+        ret.create = data.create;
+        ret.replaceItem = data.replaceid;
+        ret.replaceMsg = data.replacemsg;
+        ret.afterImage = data.afterImage;
         ret.cardSet = 0;
         if (ret.monsterBook > 0 && itemId / 10000 == 238) {
             mobIds.put(ret.monsterBook, itemId);
@@ -433,20 +398,20 @@ public class MapleItemInformationProvider {
             }
         }
 
-        final String scrollRq = sqlItemData.getString("scrollReqs");
+        String scrollRq = data.scrollReqs;
         if (scrollRq.length() > 0) {
             ret.scrollReqs = new ArrayList<>();
-            final String[] scroll = scrollRq.split(",");
+            String[] scroll = scrollRq.split(",");
             for (String s : scroll) {
                 if (s.length() > 1) {
                     ret.scrollReqs.add(Integer.parseInt(s));
                 }
             }
         }
-        final String consumeItem = sqlItemData.getString("consumeItem");
+        String consumeItem = data.consumeItem;
         if (consumeItem.length() > 0) {
             ret.questItems = new ArrayList<>();
-            final String[] scroll = scrollRq.split(",");
+            String[] scroll = scrollRq.split(",");
             for (String s : scroll) {
                 if (s.length() > 1) {
                     ret.questItems.add(Integer.parseInt(s));
@@ -454,11 +419,11 @@ public class MapleItemInformationProvider {
             }
         }
 
-        ret.totalprob = sqlItemData.getInt("totalprob");
-        final String incRq = sqlItemData.getString("incSkill");
+        ret.totalprob = data.totalprob;
+        String incRq = data.incSkill;
         if (incRq.length() > 0) {
             ret.incSkill = new ArrayList<>();
-            final String[] scroll = incRq.split(",");
+            String[] scroll = incRq.split(",");
             for (String s : scroll) {
                 if (s.length() > 1) {
                     ret.incSkill.add(Integer.parseInt(s));
@@ -657,15 +622,16 @@ public class MapleItemInformationProvider {
         return pEntry;
     }
 
-    public final double getPrice(final int itemId) {
-
+    public double getPrice(int itemId) {
         if (priceCache.containsKey(itemId)) {
             return priceCache.get(itemId);
         }
-        final WzElement<?> item = getItemData(itemId);
+
+        WzElement<?> item = getItemData(itemId);
         if (item == null) {
             return -1;
         }
+
         double pEntry = item.findByName("info")
                 .map(element -> Elements.findDouble(element, "unitPrice"))
                 .orElseGet(() -> item.findByName("info")
@@ -674,6 +640,7 @@ public class MapleItemInformationProvider {
         if (itemId == 2070019 || itemId == 2330007) {
             pEntry = 1.0;
         }
+
         priceCache.put(itemId, pEntry);
         return pEntry;
     }
@@ -979,14 +946,14 @@ public class MapleItemInformationProvider {
                     }
                     case 2040727: // Spikes on shoe, prevents slip
                     {
-                        byte flag = nEquip.getFlag();
+                        int flag = nEquip.getFlag();
                         flag |= ItemFlag.SPIKES.getValue();
                         nEquip.setFlag(flag);
                         break;
                     }
                     case 2041058: // Cape for Cold protection
                     {
-                        byte flag = nEquip.getFlag();
+                        int flag = nEquip.getFlag();
                         flag |= ItemFlag.COLD.getValue();
                         nEquip.setFlag(flag);
                         break;
@@ -1174,8 +1141,8 @@ public class MapleItemInformationProvider {
         return getEquipById(equipId, -1);
     }
 
-    public final IItem getEquipById(final int equipId, final int ringId) {
-        final Equip nEquip = new Equip(equipId, (byte) 0, ringId, (byte) 0);
+    public final IItem getEquipById(int equipId, int ringId) {
+        Equip nEquip = new Equip(equipId, (byte) 0, ringId, (byte) 0);
         nEquip.setQuantity((short) 1);
         final Map<String, Integer> stats = getEquipStats(equipId);
         if (!stats.isEmpty()) {
@@ -1247,7 +1214,7 @@ public class MapleItemInformationProvider {
         return nEquip.copy();
     }
 
-    private short getRandStat(final short defaultValue, final int maxRange) {
+    private short getRandStat(final int defaultValue, final int maxRange) {
         if (defaultValue == 0) {
             return 0;
         }

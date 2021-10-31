@@ -29,7 +29,7 @@ import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
-import java.awt.Point;
+
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
@@ -39,7 +39,6 @@ import server.MapleItemInformationProvider;
 import server.MapleStatEffect;
 import server.Randomizer;
 import server.Timer.MobTimer;
-import server.maps.MapScriptMethods;
 import server.maps.MapleMap;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
@@ -1658,14 +1657,20 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             Collections.shuffle(dropEntry);
             IItem idrop;
             for (MonsterDropEntry d : dropEntry) {
-                if (d.itemId > 0 && d.questid == 0 && d.itemId / 10000 != 238 && Randomizer.nextInt(999999) < (int) (10 * d.chance * chServerrate * chr.getDropMod() * (chr.getStat().dropBuff / 100.0) * (showdown / 100.0))) { //kinda op
-                    if (GameConstants.getInventoryType(d.itemId) == MapleInventoryType.EQUIP) {
-                        Equip eq = (Equip) MapleItemInformationProvider.getInstance().getEquipById(d.itemId);
+                if (d.data.itemid > 0
+                        && d.data.questid == 0
+                        && d.data.itemid / 10000 != 238
+                        && Randomizer.nextInt(999999) < (int) (10 * d.data.chance * chServerrate * chr.getDropMod()
+                        * (chr.getStat().dropBuff / 100.0) * (showdown / 100.0))) { //kinda op
+                    if (GameConstants.getInventoryType(d.data.itemid) == MapleInventoryType.EQUIP) {
+                        Equip eq = (Equip) MapleItemInformationProvider.getInstance().getEquipById(d.data.itemid);
                         idrop = MapleItemInformationProvider.getInstance().randomizeStats(eq);
                     } else {
-                        idrop = new Item(d.itemId, (byte) 0, (short) (d.Maximum != 1 ? Randomizer.nextInt(d.Maximum - d.Minimum) + d.Minimum : 1), (byte) 0);
+                        idrop = new Item(d.data.itemid, (byte) 0, (short) (d.data.maxQuantity != 1
+                                ? Randomizer.nextInt(d.data.maxQuantity - d.data.minQuantity) + d.data.minQuantity
+                                : 1), (byte) 0);
                     }
-                    stolen = d.itemId;
+                    stolen = d.data.itemid;
                     map.spawnMobDrop(idrop, map.calcDropPos(getPosition(), getTruePosition()), this, chr, (byte) 0, (short) 0);
                     break;
                 }

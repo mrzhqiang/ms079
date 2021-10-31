@@ -1,76 +1,30 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_itemequipdata")
-public class DWzItemEquipData {
+public class DWzItemEquipData extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "itemid")
+    public Integer itemid;
+    @NotNull
+    @Column(name = "itemLevel")
+    public Integer itemLevel;
+    @NotNull
+    @Column(name = "key")
+    public String key;
+    @NotNull
+    @Column(name = "value")
+    public Integer value;
 
-    @Column(name = "itemid", nullable = false)
-    private Integer itemid;
-
-    @Column(name = "itemLevel", nullable = false)
-    private Integer itemLevel;
-
-    @Column(name = "key", nullable = false)
-    private String key;
-
-    @Column(name = "value", nullable = false)
-    private Integer value;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setItemid(Integer itemid) {
-        this.itemid = itemid;
-    }
-
-    public Integer getItemid() {
-        return itemid;
-    }
-
-    public void setItemLevel(Integer itemLevel) {
-        this.itemLevel = itemLevel;
-    }
-
-    public Integer getItemLevel() {
-        return itemLevel;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setValue(Integer value) {
-        this.value = value;
-    }
-
-    public Integer getValue() {
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        return "DWzItemEquipData{" +
-                "id=" + id + '\'' +
-                "itemid=" + itemid + '\'' +
-                "itemLevel=" + itemLevel + '\'' +
-                "key=" + key + '\'' +
-                "value=" + value + '\'' +
-                '}';
-    }
 }

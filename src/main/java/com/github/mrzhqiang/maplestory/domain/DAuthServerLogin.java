@@ -1,52 +1,25 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "auth_server_login")
-public class DAuthServerLogin {
+public class DAuthServerLogin extends Model {
 
     @Id
-    @Column(name = "loginserverid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer loginserverid;
+    @Column(name = "loginserverid")
+    public Integer id;
+    @NotNull
+    @Column(name = "key")
+    public String key;
+    @NotNull
+    @Column(name = "world")
+    public Integer world;
 
-    @Column(name = "key", nullable = false)
-    private String key;
-
-    @Column(name = "world", nullable = false)
-    private Integer world;
-
-    public void setLoginserverid(Integer loginserverid) {
-        this.loginserverid = loginserverid;
-    }
-
-    public Integer getLoginserverid() {
-        return loginserverid;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setWorld(Integer world) {
-        this.world = world;
-    }
-
-    public Integer getWorld() {
-        return world;
-    }
-
-    @Override
-    public String toString() {
-        return "DAuthServerLogin{" +
-                "loginserverid=" + loginserverid + '\'' +
-                "key=" + key + '\'' +
-                "world=" + world + '\'' +
-                '}';
-    }
 }

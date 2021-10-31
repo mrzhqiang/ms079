@@ -1,52 +1,22 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "onetimelog")
-public class DOneTimeLog {
+public class DOneTimeLog extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "characterid")
+    public DCharacter character;
+    @NotNull
+    @Column(name = "log")
+    public String log;
 
-    @Column(name = "characterid", nullable = false)
-    private Integer characterid;
-
-    @Column(name = "log", nullable = false)
-    private String log;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharacterid(Integer characterid) {
-        this.characterid = characterid;
-    }
-
-    public Integer getCharacterid() {
-        return characterid;
-    }
-
-    public void setLog(String log) {
-        this.log = log;
-    }
-
-    public String getLog() {
-        return log;
-    }
-
-    @Override
-    public String toString() {
-        return "DOneTimeLog{" +
-                "id=" + id + '\'' +
-                "characterid=" + characterid + '\'' +
-                "log=" + log + '\'' +
-                '}';
-    }
 }

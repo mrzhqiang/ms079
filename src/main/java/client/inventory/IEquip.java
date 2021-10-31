@@ -1,99 +1,77 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
-
-import server.MapleStatInfo;
 
 public interface IEquip extends IItem {
 
-    public static enum ScrollResult {
-
+    enum ScrollResult {
         SUCCESS, FAIL, CURSE
     }
-    public static final int ARMOR_RATIO = 350000;
-    public static final int WEAPON_RATIO = 700000;
 
-    byte getUpgradeSlots();
+    int ARMOR_RATIO = 350000;
+    int WEAPON_RATIO = 700000;
 
-    byte getLevel();
+    int getUpgradeSlots();
 
-    public byte getViciousHammer();
+    int getLevel();
 
-    public int getItemEXP();
+    int getViciousHammer();
 
-    public int getExpPercentage();
+    int getItemEXP();
 
-    public byte getEquipLevel();
+    int getExpPercentage();
 
-    public int getEquipLevels();
-    
-    public int getEquipExp();
+    int getEquipLevel();
 
-    public int getEquipExpForLevel();
+    int getEquipLevels();
 
-    public int getBaseLevel();
+    int getEquipExp();
 
-    public short getStr();
+    int getEquipExpForLevel();
 
-    public short getDex();
+    int getBaseLevel();
 
-    public short getInt();
+    int getStr();
 
-    public short getLuk();
+    int getDex();
 
-    public short getHp();
+    int getInt();
 
-    public short getMp();
+    int getLuk();
 
-    public short getWatk();
+    int getHp();
 
-    public short getMatk();
+    int getMp();
 
-    public short getWdef();
+    int getWatk();
 
-    public short getMdef();
+    int getMatk();
 
-    public short getAcc();
+    int getWdef();
 
-    public short getAvoid();
+    int getMdef();
 
-    public short getHands();
+    int getAcc();
 
-    public short getSpeed();
+    int getAvoid();
 
-    public short getJump();
+    int getHands();
 
-    public int getDurability();
+    int getSpeed();
 
-    public byte getEnhance();
+    int getJump();
 
-    public byte getState();
+    int getDurability();
 
-    public short getPotential1();
+    int getEnhance();
 
-    public short getPotential2();
+    int getState();
 
-    public short getPotential3();
+    int getPotential1();
 
-    public short getHpR();
+    int getPotential2();
 
-    public short getMpR();
+    int getPotential3();
+
+    int getHpR();
+
+    int getMpR();
 }

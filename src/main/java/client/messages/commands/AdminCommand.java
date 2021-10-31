@@ -4,6 +4,12 @@ import client.ISkill;
 import client.LoginCrypto;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
+import com.github.mrzhqiang.maplestory.domain.DWzCustomLife;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItem;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.ServerConstants.PlayerGMRank;
 import client.MapleClient;
@@ -20,10 +26,8 @@ import client.inventory.MaplePet;
 import client.inventory.MapleRing;
 
 import client.messages.CommandProcessorUtil;
-import java.sql.PreparedStatement;
 import constants.GameConstants;
 import constants.ServerConstants;
-import database.DatabaseConnection;
 import handling.RecvPacketOpcode;
 import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
@@ -81,8 +85,7 @@ import java.util.concurrent.ScheduledFuture;
 import scripting.NPCScriptManager;
 import handling.world.family.MapleFamily;
 import handling.world.guild.MapleGuild;
-import java.sql.Connection;
-import java.sql.ResultSet;
+
 import java.util.LinkedHashSet;
 import server.CashItemFactory;
 import server.events.MapleOxQuizFactory;
@@ -197,7 +200,7 @@ public class AdminCommand {
     public static class BanStatus extends CommandExecute {
 
         @Override
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 2) {
                 return 0;
             }
@@ -210,31 +213,17 @@ public class AdminCommand {
             boolean IPbanned = false;
             boolean MACbanned = false;
             String reason = null;
-            try {
-                Connection con = DatabaseConnection.getConnection();
-                PreparedStatement ps;
-                ps = (PreparedStatement) con.prepareStatement("select accountid from characters where name = ?");
-                ps.setString(1, name);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        acid = rs.getInt("accountid");
-                    }
-                }
-                ps = (PreparedStatement) con.prepareStatement("select banned, banreason, macs, Sessionip from accounts where id = ?");
-                ps.setInt(1, acid);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        Systemban = rs.getInt("banned") == 2;
-                        ACbanned = rs.getInt("banned") == 1 || rs.getInt("banned") == 2;
-                        reason = rs.getString("banreason");
-                        mac = rs.getString("macs");
-                        ip = rs.getString("Sessionip");
-                    }
-                }
-                ps.close();
-            } catch (Exception e) {
+
+            DCharacter one = new QDCharacter().name.eq(name).findOne();
+            if (one != null && one.account!=null) {
+                Systemban = one.account.banned == 2;
+                ACbanned = one.account.banned == 1 || one.account.banned == 2;
+                reason = one.account.banReason;
+                mac = one.account.mac;
+                ip = one.account.sessionIP;
             }
-            if (reason == null || reason == "") {
+
+            if (reason == null || "".equals(reason)) {
                 reason = "?";
             }
             if (c.isBannedIP(ip)) {
@@ -405,7 +394,7 @@ public class AdminCommand {
             if (splitted.length < 2) {
                 return 0;
             }
-            byte ret_ = MapleClient.unbanIPMacs(splitted[1]);
+            int ret_ = MapleClient.unbanIPMacs(splitted[1]);
             if (ret_ == -2) {
                 c.getPlayer().dropMessage(6, "[unbanip] SQL 错误.");
             } else if (ret_ == -1) {
@@ -2745,36 +2734,49 @@ public class AdminCommand {
 
     public static class MakePNPC extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 3) {
                 return 0;
             }
+
+            MapleCharacter player = c.getPlayer();
             try {
-                c.getPlayer().dropMessage(6, "Making playerNPC...");
+                player.dropMessage(6, "Making playerNPC...");
                 MapleCharacter chhr;
                 String name = splitted[1];
                 int ch = World.Find.findChannel(name);
                 if (ch <= 0) {
-                    c.getPlayer().dropMessage(6, "玩家必须在线");
+                    player.dropMessage(6, "玩家必须在线");
                     return 1;
                 }
                 chhr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
 
                 if (chhr == null) {
-                    c.getPlayer().dropMessage(6, splitted[1] + " is not online");
+                    player.dropMessage(6, splitted[1] + " 不在线");
                 } else {
                     int npcId = Integer.parseInt(splitted[2]);
                     MapleNPC npc_c = MapleLifeFactory.getNPC(npcId);
                     if (npc_c == null || npc_c.getName().equals("MISSINGNO")) {
-                        c.getPlayer().dropMessage(6, "NPC不存在");
+                        player.dropMessage(6, "NPC不存在");
                         return 1;
                     }
-                    PlayerNPC npc = new PlayerNPC(chhr, npcId, c.getPlayer().getMap(), c.getPlayer());
+
+                    DPlayerNPC playerNPC = new DPlayerNPC();
+                    playerNPC.name = chhr.getName();
+                    playerNPC.charid = chhr.getId();
+                    playerNPC.map = player.getMap().getId();
+                    playerNPC.scriptid = npcId;
+                    playerNPC.x = player.getPosition().x;
+                    playerNPC.y = player.getPosition().y;
+                    playerNPC.dir = 0;
+                    playerNPC.foothold = player.getFH();
+
+                    PlayerNPC npc = new PlayerNPC(playerNPC, chhr);
                     npc.addToServer();
-                    c.getPlayer().dropMessage(6, "Done");
+                    player.dropMessage(6, "Done");
                 }
             } catch (Exception e) {
-                c.getPlayer().dropMessage(6, "NPC failed... : " + e.getMessage());
+                player.dropMessage(6, "NPC failed... : " + e.getMessage());
 
             }
             return 1;
@@ -2787,21 +2789,33 @@ public class AdminCommand {
 
     public static class MakeOfflineP extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
+            MapleCharacter player = c.getPlayer();
             try {
-                c.getPlayer().dropMessage(6, "Making playerNPC...");
+                player.dropMessage(6, "Making playerNPC...");
                 MapleClient cs = new MapleClient(null, null, new MockIOSession());
                 MapleCharacter chhr = MapleCharacter.loadCharFromDB(MapleCharacterUtil.getIdByName(splitted[1]), cs, false);
                 if (chhr == null) {
-                    c.getPlayer().dropMessage(6, splitted[1] + " does not exist");
-
+                    player.dropMessage(6, splitted[1] + " 不存在");
                 } else {
-                    PlayerNPC npc = new PlayerNPC(chhr, Integer.parseInt(splitted[2]), c.getPlayer().getMap(), c.getPlayer());
+                    MapleMap map = player.getMap();
+                    int scriptId = Integer.parseInt(splitted[2]);
+                    DPlayerNPC playerNPC = new DPlayerNPC();
+                    playerNPC.name = chhr.getName();
+                    playerNPC.charid = chhr.getId();
+                    playerNPC.map = map.getId();
+                    playerNPC.scriptid = scriptId;
+                    playerNPC.x = player.getPosition().x;
+                    playerNPC.y = player.getPosition().y;
+                    playerNPC.dir = 0;
+                    playerNPC.foothold = player.getFH();
+
+                    PlayerNPC npc = new PlayerNPC(playerNPC, chhr);
                     npc.addToServer();
-                    c.getPlayer().dropMessage(6, "Done");
+                    player.dropMessage(6, "完毕");
                 }
             } catch (Exception e) {
-                c.getPlayer().dropMessage(6, "NPC failed... : " + e.getMessage());
+                player.dropMessage(6, "NPC 失败... : " + e.getMessage());
 
             }
             return 1;
@@ -3221,7 +3235,7 @@ public class AdminCommand {
 
             int npcId = Integer.parseInt(splitted[1]);
             MapleNPC npc = MapleLifeFactory.getNPC(npcId);
-            if (npc != null && !npc.getName().equals("MISSINGNO")) {
+            if (npc != null && !"MISSINGNO".equals(npc.getName())) {
                 final int xpos = c.getPlayer().getPosition().x;
                 final int ypos = c.getPlayer().getPosition().y;
                 final int fh = c.getPlayer().getMap().getFootholds().findBelow(c.getPlayer().getPosition()).getId();
@@ -3231,32 +3245,28 @@ public class AdminCommand {
                 npc.setRx1(xpos);
                 npc.setFh(fh);
                 npc.setCustom(true);
-                try {
-                    Connection con = DatabaseConnection.getConnection();
-                    try (PreparedStatement ps = con.prepareStatement("INSERT INTO wz_customlife (dataid, f, hide, fh, cy, rx0, rx1, type, x, y, mid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                        ps.setInt(1, npcId);
-                        ps.setInt(2, 0); // 1 = right , 0 = left
-                        ps.setInt(3, 0); // 1 = hide, 0 = show
-                        ps.setInt(4, fh);
-                        ps.setInt(5, ypos);
-                        ps.setInt(6, xpos);
-                        ps.setInt(7, xpos);
-                        ps.setString(8, "n");
-                        ps.setInt(9, xpos);
-                        ps.setInt(10, ypos);
-                        ps.setInt(11, c.getPlayer().getMapId());
-                        ps.executeUpdate();
-                    }
-                } catch (SQLException e) {
-                    c.getPlayer().dropMessage(6, "Failed to save NPC to the database");
-                }
+
+                DWzCustomLife life = new DWzCustomLife();
+                life.dataid = npcId;
+                life.f = 0;
+                life.hide = 0;
+                life.fh = fh;
+                life.cy = ypos;
+                life.rx0 = xpos;
+                life.rx1 = xpos;
+                life.type = "n";
+                life.x = xpos;
+                life.y = ypos;
+                life.mid = c.getPlayer().getMapId();
+                life.save();
+
                 for (ChannelServer cserv : ChannelServer.getAllInstances()) {
                     cserv.getMapFactory().getMap(c.getPlayer().getMapId()).addMapObject(npc);
                     cserv.getMapFactory().getMap(c.getPlayer().getMapId()).broadcastMessage(MaplePacketCreator.spawnNPC(npc, true));
 //                    c.getPlayer().getMap().addMapObject(npc);
 //                    c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.spawnNPC(npc, true));
                 }
-                c.getPlayer().dropMessage(6, "Please do not reload this map or else the NPC will disappear till the next restart.");
+                c.getPlayer().dropMessage(6, "请不要重新加载此地图，否则 NPC 将消失直到下次重新启动。");
             } else {
                 c.getPlayer().dropMessage(6, "查无此 Npc ");
             }
@@ -3342,36 +3352,24 @@ public class AdminCommand {
 
     public static class RemoveItemOff extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 2) {
                 return 0;
             }
-            Connection dcon = DatabaseConnection.getConnection();
-            try {
-                int id = 0, quantity = 0;
-                String name = splitted[2];
-                PreparedStatement ps = dcon.prepareStatement("select * from characters where name = ?");
-                ps.setString(1, name);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        id = rs.getInt("id");
-                    }
-                }
-                if (id == 0) {
+
+            int id = 0, quantity = 0;
+            DCharacter one = new QDCharacter().name.eq(splitted[2]).findOne();
+            if (one != null) {
+                if (one.id == 0) {
                     c.getPlayer().dropMessage(5, "角色不存在资料库。");
                     return 0;
                 }
-                PreparedStatement ps2 = dcon.prepareStatement("delete from inventoryitems WHERE itemid = ? and characterid = ?");
-                ps2.setInt(1, Integer.parseInt(splitted[1]));
-                ps2.setInt(2, id);
-                ps2.executeUpdate();
-                c.getPlayer().dropMessage(6, "所有ID为 " + splitted[1] + " 的道具" + quantity + "已经从 " + name + " 身上被移除了");
-                ps.close();
-                ps2.close();
+
+                new QDInventoryItem().itemid.eq(Integer.parseInt(splitted[1])).character.id.eq(id).delete();
+                c.getPlayer().dropMessage(6, "所有ID为 " + splitted[1] + " 的道具" + quantity + "已经从 " + one.name + " 身上被移除了");
                 return 1;
-            } catch (SQLException e) {
-                return 0;
             }
+            return 0;
         }
 
         public String getMessage() {
@@ -3720,7 +3718,7 @@ public class AdminCommand {
             try {
                 acc = splitted[1];
                 password = splitted[2];
-            } catch (Exception ex) {
+            } catch (Exception ignored) {
             }
             if (acc == null || password == null) {
                 c.getPlayer().dropMessage("账号或密码异常");
@@ -3736,25 +3734,10 @@ public class AdminCommand {
                 return 0;
             }
 
-            Connection con;
-            try {
-                con = (Connection) DatabaseConnection.getConnection();
-            } catch (Exception ex) {
-                LOGGER.debug("register错误1" + ex);
-                return 0;
-            }
-
-            try {
-                try (PreparedStatement ps = (PreparedStatement) con.prepareStatement("INSERT INTO accounts (name, password) VALUES (?, ?)")) {
-                    ps.setString(1, acc);
-                    ps.setString(2, LoginCrypto.hexSha1(password));
-                    ps.executeUpdate();
-                    ps.close();
-                }
-            } catch (SQLException ex) {
-                LOGGER.debug("register错误2" + ex);
-                return 0;
-            }
+            DAccount account = new DAccount();
+            account.name = acc;
+            account.password = LoginCrypto.hexSha1(password);
+            account.save();
             c.getPlayer().dropMessage("[注册完成]账号: " + acc + " 密码: " + password);
             return 1;
         }

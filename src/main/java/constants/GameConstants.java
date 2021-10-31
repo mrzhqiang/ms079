@@ -2788,7 +2788,7 @@ public class GameConstants {
 
     }
 
-    public static short getSlotMax(int itemId) {
+    public static int getSlotMax(int itemId) {
         switch (itemId) {
             case 4030003:
             case 4030004:

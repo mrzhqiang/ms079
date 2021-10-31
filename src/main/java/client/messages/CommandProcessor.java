@@ -7,14 +7,12 @@ import client.messages.commands.*;
 import client.messages.commands.PlayerCommand;
 import client.messages.commands.GMCommand;
 import client.messages.commands.InternCommand;
+import com.github.mrzhqiang.maplestory.domain.DGmLog;
 import constants.ServerConstants;
 import constants.ServerConstants.CommandType;
 import constants.ServerConstants.PlayerGMRank;
-import database.DatabaseConnection;
+
 import java.lang.reflect.Modifier;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -110,28 +108,13 @@ public class CommandProcessor {
     }
 
     private static void logGMCommandToDB(MapleCharacter player, String command) {
-
-        PreparedStatement ps = null;
-        try {
-            ps = DatabaseConnection.getConnection().prepareStatement("INSERT INTO gmlog (cid, name, command, mapid, ip) VALUES (?, ?, ?, ?, ?)");
-            ps.setInt(1, player.getId());
-            ps.setString(2, player.getName());
-            ps.setString(3, command);
-            ps.setInt(4, player.getMap().getId());
-            ps.setString(5, player.getClient().getSessionIPAddress());
-            ps.executeUpdate();
-        } catch (SQLException ex) {
-            FileoutputUtil.outputFileError(FileoutputUtil.PacketEx_Log, ex);
-            ex.printStackTrace();
-        } finally {
-            try {
-                ps.close();
-            } catch (SQLException e) {/*
-                 * Err.. Fuck?
-                 */
-
-            }
-        }
+        DGmLog log = new DGmLog();
+        log.cid = player.getId();
+        log.name = player.getName();
+        log.command = command;
+        log.mapid = player.getMap().getId();
+        log.ip = player.getClient().getSessionIPAddress();
+        log.save();
     }
 
     static {

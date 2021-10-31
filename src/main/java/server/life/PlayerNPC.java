@@ -1,68 +1,56 @@
 package server.life;
 
-import java.awt.Point;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.inventory.IItem;
+import client.inventory.MapleInventoryType;
+import client.inventory.MaplePet;
+import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
+import com.github.mrzhqiang.maplestory.domain.DPlayerNPCEquip;
+import com.github.mrzhqiang.maplestory.domain.query.QDPlayerNPC;
+import com.github.mrzhqiang.maplestory.domain.query.QDPlayerNPCEquip;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import handling.channel.ChannelServer;
+import handling.world.World;
+import tools.MaplePacketCreator;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import client.inventory.IItem;
-import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.MapleInventoryType;
-import client.inventory.MaplePet;
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import database.DatabaseConnection;
-import handling.channel.ChannelServer;
-import handling.world.World;
-import java.util.ArrayList;
-import server.maps.*;
-import tools.MaplePacketCreator;
+import java.util.stream.Collectors;
 
 public class PlayerNPC extends MapleNPC {
 
-    private Map<Byte, Integer> equips = new HashMap<Byte, Integer>();
-    private int mapid, face, hair, charId;
-    private byte skin, gender;
-    private int[] pets = new int[3];
+    public final DPlayerNPC npc;
+    private final Map<Integer, Integer> equips = new HashMap<>();
+    private final int[] pets = new int[3];
 
-    public PlayerNPC(ResultSet rs) throws Exception {
-        super(rs.getInt("ScriptId"), rs.getString("name"));
-        hair = rs.getInt("hair");
-        face = rs.getInt("face");
-        mapid = rs.getInt("map");
-        skin = rs.getByte("skin");
-        charId = rs.getInt("charid");
-        gender = rs.getByte("gender");
-        setCoords(rs.getInt("x"), rs.getInt("y"), rs.getInt("dir"), rs.getInt("Foothold"));
-        String[] pet = rs.getString("pets").split(",");
-        for (int i = 0; i < 3; i++) {
-            if (pet[i] != null) {
-                pets[i] = Integer.parseInt(pet[i]);
-            } else {
-                pets[i] = 0;
-            }
-        }
-
-        Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT * FROM playernpcs_equip WHERE NpcId = ?");
-        ps.setInt(1, getId());
-        ResultSet rs2 = ps.executeQuery();
-        while (rs2.next()) {
-            equips.put(rs2.getByte("equippos"), rs2.getInt("equipid"));
-        }
-        rs2.close();
-        ps.close();
+    public PlayerNPC(DPlayerNPC npc) {
+        this(npc, null);
     }
 
-    public PlayerNPC(MapleCharacter cid, int npc, MapleMap map, MapleCharacter base) {
-        super(npc, cid.getName());
-        this.charId = cid.getId();
-        this.mapid = map.getId();
-        setCoords(base.getPosition().x, base.getPosition().y, 0, base.getFH()); //0 = facing dir? no idea, but 1 dosnt work
-        update(cid);
+    public PlayerNPC(DPlayerNPC npc, MapleCharacter chr) {
+        super(npc.scriptid, npc.name);
+        this.npc = npc;
+        setCoords(npc.x, npc.y, npc.dir, npc.foothold);
+
+        if (chr != null) {
+            update(chr);
+        } else {
+            String[] pet = npc.pets.split(",");
+
+            for (int i = 0; i < 3; i++) {
+                if (pet[i] != null) {
+                    pets[i] = Integer.parseInt(pet[i]);
+                } else {
+                    pets[i] = 0;
+                }
+            }
+
+            new QDPlayerNPCEquip().npcid.eq(getId()).findEach(it ->
+                    equips.put(it.equippos, it.equipid));
+        }
     }
 
     public void setCoords(int x, int y, int f, int fh) {
@@ -75,19 +63,8 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public static void loadAll() {
-        List<PlayerNPC> toAdd = new ArrayList<PlayerNPC>();
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM playernpcs");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                toAdd.add(new PlayerNPC(rs));
-            }
-            rs.close();
-            ps.close();
-        } catch (Exception se) {
-            se.printStackTrace();
-        }
+        List<PlayerNPC> toAdd = new QDPlayerNPC().findStream().map(PlayerNPC::new).collect(Collectors.toList());
+
         for (PlayerNPC npc : toAdd) {
             npc.addToServer();
         }
@@ -114,22 +91,22 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public void update(MapleCharacter chr) {
-        if (chr == null || charId != chr.getId()) {
-            return; //cant use name as it mightve been change actually..
+        if (chr == null || npc.charid != chr.getId()) {
+            return; //不能使用名称，因为它实际上可能已经改变了..
         }
         setName(chr.getName());
         setHair(chr.getHair());
         setFace(chr.getFace());
-        setSkin((byte) (chr.getSkinColor()));
+        setSkin((chr.getSkinColor()));
         setGender(chr.getGender());
         setPets(chr.getPets());
 
-        equips = new HashMap<Byte, Integer>();
+        equips.clear();
         for (IItem item : chr.getInventory(MapleInventoryType.EQUIPPED).list()) {
             if (item.getPosition() < -128) {
                 continue;
             }
-            equips.put((byte) item.getPosition(), item.getItemId());
+            equips.put(item.getPosition(), item.getItemId());
         }
         saveToDB();
     }
@@ -139,117 +116,79 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public void destroy(boolean remove) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("DELETE FROM playernpcs WHERE scriptid = ?");
-            ps.setInt(1, getId());
-            ps.executeUpdate();
-            ps.close();
+        new QDPlayerNPC().scriptid.eq(getId()).delete();
+        new QDPlayerNPCEquip().npcid.eq(getId()).delete();
 
-            ps = con.prepareStatement("DELETE FROM playernpcs_equip WHERE npcid = ?");
-            ps.setInt(1, getId());
-            ps.executeUpdate();
-            ps.close();
-            if (remove) {
-                removeFromServer();
-            }
-        } catch (Exception se) {
-            se.printStackTrace();
+        if (remove) {
+            removeFromServer();
         }
     }
 
     public void saveToDB() {
-        Connection con = DatabaseConnection.getConnection();
-        try {
+        if (getNPCFromWZ() == null) {
+            destroy(true);
+            return;
+        }
+        destroy();
 
-            if (getNPCFromWZ() == null) {
-                destroy(true);
-                return;
-            }
-            destroy();
-            PreparedStatement ps = con.prepareStatement("INSERT INTO playernpcs(name, hair, face, skin, x, y, map, charid, scriptid, foothold, dir, gender, pets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            ps.setString(1, getName());
-            ps.setInt(2, getHair());
-            ps.setInt(3, getFace());
-            ps.setInt(4, getSkin());
-            ps.setInt(5, getPosition().x);
-            ps.setInt(6, getPosition().y);
-            ps.setInt(7, getMapId());
-            ps.setInt(8, getCharId());
-            ps.setInt(9, getId());
-            ps.setInt(10, getFh());
-            ps.setInt(11, getF());
-            ps.setInt(12, getGender());
-            String[] pet = {"0", "0", "0"};
-            for (int i = 0; i < 3; i++) {
-                if (pets[i] > 0) {
-                    pet[i] = String.valueOf(pets[i]);
-                }
-            }
-            ps.setString(13, pet[0] + "," + pet[1] + "," + pet[2]);
-            ps.executeUpdate();
-            ps.close();
+        npc.save();
 
-            ps = con.prepareStatement("INSERT INTO playernpcs_equip(npcid, charid, equipid, equippos) VALUES (?, ?, ?, ?)");
-            ps.setInt(1, getId());
-            ps.setInt(2, getCharId());
-            for (Entry<Byte, Integer> equip : equips.entrySet()) {
-                ps.setInt(3, equip.getValue());
-                ps.setInt(4, equip.getKey());
-                ps.executeUpdate();
-            }
-            ps.close();
-        } catch (Exception se) {
-            se.printStackTrace();
+        for (Entry<Integer, Integer> equip : equips.entrySet()) {
+            DPlayerNPCEquip npcEquip = new DPlayerNPCEquip();
+            npcEquip.npcid = getId();
+            npcEquip.charid = getCharId();
+            npcEquip.equipid = equip.getValue();
+            npcEquip.equippos = equip.getKey();
+            npcEquip.save();
         }
     }
 
-    public Map<Byte, Integer> getEquips() {
+    public Map<Integer, Integer> getEquips() {
         return equips;
     }
 
-    public byte getSkin() {
-        return skin;
+    public int getSkin() {
+        return npc.skin;
     }
 
     public int getGender() {
-        return gender;
+        return npc.gender;
     }
 
     public int getFace() {
-        return face;
+        return npc.face;
     }
 
     public int getHair() {
-        return hair;
+        return npc.hair;
     }
 
     public int getCharId() {
-        return charId;
+        return npc.charid;
     }
 
     public int getMapId() {
-        return mapid;
+        return npc.map;
     }
 
-    public void setSkin(byte s) {
-        this.skin = s;
+    public void setSkin(int s) {
+        this.npc.skin = s;
     }
 
     public void setFace(int f) {
-        this.face = f;
+        this.npc.face = f;
     }
 
     public void setHair(int h) {
-        this.hair = h;
+        this.npc.hair = h;
     }
 
     public void setGender(int g) {
-        this.gender = (byte) g;
+        this.npc.gender = g;
     }
 
     public int getPet(int i) {
-        return pets[i] > 0 ? pets[i] : 0;
+        return Math.max(pets[i], 0);
     }
 
     public void setPets(List<MaplePet> p) {

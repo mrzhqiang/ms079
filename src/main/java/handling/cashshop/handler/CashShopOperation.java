@@ -132,11 +132,7 @@ public class CashShopOperation {
                 e.printStackTrace();
             }
             if (type != 4) {
-                try {
-                    MapleCharacterUtil.setNXCodeUsed(c.getPlayer().getName(), code);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                MapleCharacterUtil.setNXCodeUsed(c.getPlayer().getName(), code);
             }
             /*
              * Explanation of type! Basically, this makes coupon codes do
@@ -160,7 +156,7 @@ public class CashShopOperation {
                         doCSPackets(c);
                         return;
                     }
-                    byte slot = MapleInventoryManipulator.addId(c, itez.getId(), (short) 1, "", (byte) 0);
+                    int slot = MapleInventoryManipulator.addId(c, itez.getId(), (short) 1, "", (byte) 0);
                     if (slot <= -1) {
                         c.getSession().write(MTSCSPacket.sendCSFail(0));
                         doCSPackets(c);
@@ -258,7 +254,7 @@ public class CashShopOperation {
                          * chr.getName() + ".log", note);
                          */
                         if (useNX == 1) {
-                            byte flag = itemz.getFlag();
+                            int flag = itemz.getFlag();
                             boolean 交易 = true;
                             for (int i = 0; i < itemjy_id.length; i++) {
                                 if (itemz.getItemId() == Integer.parseInt(itemjy_id[i])) {
@@ -697,7 +693,7 @@ public class CashShopOperation {
                         return;
                     }
                 }
-                byte pos = MapleInventoryManipulator.addId(c, item.getId(), (short) item.getCount(), null, (byte) 0);
+                int pos = MapleInventoryManipulator.addId(c, item.getId(), (short) item.getCount(), null, (byte) 0);
                 if (pos < 0) {
                     c.getSession().write(MTSCSPacket.sendCSFail(0xB1));
                     doCSPackets(c);

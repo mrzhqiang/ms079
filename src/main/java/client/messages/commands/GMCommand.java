@@ -116,7 +116,7 @@ public class GMCommand {
                 c.getPlayer().dropMessage(6, "[" + getCommand() + "] Successfully unbanned!");
 
             }
-            byte ret_ = MapleClient.unbanIPMacs(splitted[1]);
+            int ret_ = MapleClient.unbanIPMacs(splitted[1]);
             if (ret_ == -2) {
                 c.getPlayer().dropMessage(6, "[UnbanIP] SQL error.");
             } else if (ret_ == -1) {
@@ -339,41 +339,41 @@ public class GMCommand {
 
         @Override
         public int execute(MapleClient c, String[] splitted) {
-            java.util.Map<Pair<Short, Short>, MapleInventoryType> eqs = new ArrayMap<Pair<Short, Short>, MapleInventoryType>();
+            java.util.Map<Pair<Integer, Integer>, MapleInventoryType> eqs = new ArrayMap<>();
             if (splitted[1].equals("全部")) {
                 for (MapleInventoryType type : MapleInventoryType.values()) {
                     for (IItem item : c.getPlayer().getInventory(type)) {
-                        eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), type);
+                        eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), type);
                     }
                 }
             } else if (splitted[1].equals("已装备道具")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.EQUIPPED)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.EQUIPPED);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.EQUIPPED);
                 }
             } else if (splitted[1].equals("武器")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.EQUIP)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.EQUIP);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.EQUIP);
                 }
             } else if (splitted[1].equals("消耗")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.USE)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.USE);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.USE);
                 }
             } else if (splitted[1].equals("装饰")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.SETUP)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.SETUP);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.SETUP);
                 }
             } else if (splitted[1].equals("其他")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.ETC)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.ETC);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.ETC);
                 }
             } else if (splitted[1].equals("特殊")) {
                 for (IItem item : c.getPlayer().getInventory(MapleInventoryType.CASH)) {
-                    eqs.put(new Pair<Short, Short>(item.getPosition(), item.getQuantity()), MapleInventoryType.CASH);
+                    eqs.put(new Pair<>(item.getPosition(), item.getQuantity()), MapleInventoryType.CASH);
                 }
             } else {
                 c.getPlayer().dropMessage(6, "[全部/已装备道具/武器/消耗/装饰/其他/特殊]");
             }
-            for (Entry<Pair<Short, Short>, MapleInventoryType> eq : eqs.entrySet()) {
+            for (Entry<Pair<Integer, Integer>, MapleInventoryType> eq : eqs.entrySet()) {
                 MapleInventoryManipulator.removeFromSlot(c, eq.getValue(), eq.getKey().left, eq.getKey().right, false, false);
             }
             return 1;

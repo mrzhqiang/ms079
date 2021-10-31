@@ -2,8 +2,12 @@ package server.quest;
 
 import client.MapleCharacter;
 import client.MapleQuestStatus;
+import com.github.mrzhqiang.maplestory.domain.DWzQuestData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestPartyData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestReqData;
 import constants.GameConstants;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.NPCScriptManager;
@@ -11,63 +15,45 @@ import tools.MaplePacketCreator;
 import tools.Pair;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class MapleQuest implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleQuest.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
-    private static Map<Integer, MapleQuest> quests = new LinkedHashMap();
-    protected int id;
-    protected List<MapleQuestRequirement> startReqs = new LinkedList();
-    protected List<MapleQuestRequirement> completeReqs = new LinkedList();
-    protected List<MapleQuestAction> startActs = new LinkedList();
-    protected List<MapleQuestAction> completeActs = new LinkedList();
-    protected Map<String, List<Pair<String, Pair<String, Integer>>>> partyQuestInfo = new LinkedHashMap();
-    protected Map<Integer, Integer> relevantMobs = new LinkedHashMap();
-    private boolean autoStart = false;
-    private boolean autoPreComplete = false;
+    private static final Map<Integer, MapleQuest> quests = new LinkedHashMap<>();
+    protected List<MapleQuestRequirement> startReqs = new LinkedList<>();
+    protected List<MapleQuestRequirement> completeReqs = new LinkedList<>();
+    protected List<MapleQuestAction> startActs = new LinkedList<>();
+    protected List<MapleQuestAction> completeActs = new LinkedList<>();
+    protected Map<String, List<Pair<String, Pair<String, Integer>>>> partyQuestInfo = new LinkedHashMap<>();
+    protected Map<Integer, Integer> relevantMobs = new LinkedHashMap<>();
     private boolean repeatable = false;
     private boolean customend = false;
-    private boolean blocked = false;
-    private boolean autoAccept = false;
-    private boolean autoComplete = false;
     private boolean scriptedStart = false;
-    private int viewMedalItem = 0;
-    private int selectedSkillID = 0;
-    protected String name = "";
 
-    protected MapleQuest(final int id) {
-        this.id = id;
+    public final DWzQuestData data;
+
+    protected MapleQuest(DWzQuestData data) {
+        this.data = data;
     }
 
-    private static MapleQuest loadQuest(ResultSet rs, PreparedStatement psr, PreparedStatement psa, PreparedStatement pss,
-                                        PreparedStatement psq, PreparedStatement psi, PreparedStatement psp) throws SQLException {
-        MapleQuest ret = new MapleQuest(rs.getInt("questid"));
-        ret.name = rs.getString("name");
-        ret.autoStart = (rs.getInt("autoStart") > 0);
-        ret.autoPreComplete = (rs.getInt("autoPreComplete") > 0);
-        ret.autoAccept = (rs.getInt("autoAccept") > 0);
-        ret.autoComplete = (rs.getInt("autoComplete") > 0);
-        ret.viewMedalItem = rs.getInt("viewMedalItem");
-        ret.selectedSkillID = rs.getInt("selectedSkillID");
-        ret.blocked = (rs.getInt("blocked") > 0);
+    private static MapleQuest loadQuest(DWzQuestData data) {
+        MapleQuest ret = new MapleQuest(data);
 
-        psr.setInt(1, ret.id);
-        ResultSet rse = psr.executeQuery();
-        while (rse.next()) {
-            MapleQuestRequirementType type = MapleQuestRequirementType.getByWZName(rse.getString("name"));
-            MapleQuestRequirement req = new MapleQuestRequirement(ret, type, rse);
+        new QDWzQuestReqData().questid.eq(data.id).findEach(it -> {
+            MapleQuestRequirementType type = MapleQuestRequirementType.getByWZName(it.name);
+            MapleQuestRequirement req = new MapleQuestRequirement(ret, type, it);
             if (type.equals(MapleQuestRequirementType.interval)) {
                 ret.repeatable = true;
             } else if (type.equals(MapleQuestRequirementType.normalAutoStart)) {
                 ret.repeatable = true;
-                ret.autoStart = true;
+                ret.data.autoStart = true;
             } else if (type.equals(MapleQuestRequirementType.startscript)) {
                 ret.scriptedStart = true;
             } else if (type.equals(MapleQuestRequirementType.endscript)) {
@@ -77,45 +63,38 @@ public class MapleQuest implements Serializable {
                     ret.relevantMobs.put(mob.left, mob.right);
                 }
             }
-            if (rse.getInt("type") == 0) {
+            if (it.type == 0) {
                 ret.startReqs.add(req);
             } else {
                 ret.completeReqs.add(req);
             }
-        }
-        rse.close();
+        });
 
-        psa.setInt(1, ret.id);
-        rse = psa.executeQuery();
-        while (rse.next()) {
-            MapleQuestActionType ty = MapleQuestActionType.getByWZName(rse.getString("name"));
-            if (rse.getInt("type") == 0) {
-                if ((ty == MapleQuestActionType.item) && (ret.id == 7103)) {
-                    continue;
+        new QDWzQuestActData().questid.eq(ret.data.id).findEach(it -> {
+            MapleQuestActionType ty = MapleQuestActionType.getByWZName(it.name);
+            if (it.type == 0) {
+                if ((ty == MapleQuestActionType.item) && (ret.data.id == 7103)) {
+                    return;
                 }
-                ret.startActs.add(new MapleQuestAction(ty, rse, ret, pss, psq, psi));
+                ret.startActs.add(new MapleQuestAction(ty, it, ret));
             } else {
-                if ((ty == MapleQuestActionType.item) && (ret.id == 7102)) {
-                    continue;
+                if ((ty == MapleQuestActionType.item) && (ret.data.id == 7102)) {
+                    return;
                 }
-                ret.completeActs.add(new MapleQuestAction(ty, rse, ret, pss, psq, psi));
+                ret.completeActs.add(new MapleQuestAction(ty, it, ret));
             }
-        }
-        rse.close();
+        });
 
-        psp.setInt(1, ret.id);
-        rse = psp.executeQuery();
-        while (rse.next()) {
-            if (!ret.partyQuestInfo.containsKey(rse.getString("rank"))) {
-                ret.partyQuestInfo.put(rse.getString("rank"), new ArrayList<>());
+        new QDWzQuestPartyData().questid.eq(ret.data.id).findEach(it -> {
+            if (!ret.partyQuestInfo.containsKey(it.rank)) {
+                ret.partyQuestInfo.put(it.rank, new ArrayList<>());
             }
-            String mode = rse.getString("mode");
-            String property = rse.getString("property");
-            int value = rse.getInt("value");
-            List<Pair<String, Pair<String, Integer>>> list = ret.partyQuestInfo.get(rse.getString("rank"));
+            String mode = it.mode;
+            String property = it.property;
+            int value = it.value;
+            List<Pair<String, Pair<String, Integer>>> list = ret.partyQuestInfo.get(it.rank);
             list.add(new Pair<>(mode, new Pair<>(property, value)));
-        }
-        rse.close();
+        });
         return ret;
     }
 
@@ -219,38 +198,15 @@ public class MapleQuest implements Serializable {
     }
 
     public final int getSkillID() {
-        return selectedSkillID;
+        return data.selectedSkillID;
     }
 
     public final String getName() {
-        return name;
+        return data.name;
     }
 
     public static void initQuests() {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_questdata");
-            PreparedStatement psr = con.prepareStatement("SELECT * FROM wz_questreqdata WHERE questid = ?");
-            PreparedStatement psa = con.prepareStatement("SELECT * FROM wz_questactdata WHERE questid = ?");
-            PreparedStatement pss = con.prepareStatement("SELECT * FROM wz_questactskilldata WHERE uniqueid = ?");
-            PreparedStatement psq = con.prepareStatement("SELECT * FROM wz_questactquestdata WHERE uniqueid = ?");
-            PreparedStatement psi = con.prepareStatement("SELECT * FROM wz_questactitemdata WHERE uniqueid = ?");
-            PreparedStatement psp = con.prepareStatement("SELECT * FROM wz_questpartydata WHERE questid = ?");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                quests.put(rs.getInt("questid"), loadQuest(rs, psr, psa, pss, psq, psi, psp));
-            }
-            rs.close();
-            ps.close();
-            psr.close();
-            psa.close();
-            pss.close();
-            psq.close();
-            psi.close();
-            psp.close();
-        } catch (Exception e) {
-            LOGGER.error("加载任务信息失败", e);
-        }
+        new QDWzQuestData().findEach(data -> quests.put(data.id, loadQuest(data)));
         LOGGER.info("共加载 {} 个任务信息.", quests.size());
     }
 
@@ -269,7 +225,7 @@ public class MapleQuest implements Serializable {
     public static MapleQuest getInstance(int id) {
         MapleQuest ret = quests.get(id);
         if (ret == null) {
-            ret = new MapleQuest(id);
+            ret = new MapleQuest(new QDWzQuestData().id.eq(id).findOne());
             quests.put(id, ret);
         }
         return ret;
@@ -327,7 +283,7 @@ public class MapleQuest implements Serializable {
     }
 
     public void start(MapleCharacter c, int npc) {
-        if ((autoStart || checkNPCOnMap(c, npc)) && canStart(c, npc)) {
+        if ((data.autoStart || checkNPCOnMap(c, npc)) && canStart(c, npc)) {
             for (MapleQuestAction a : startActs) {
                 if (!a.checkEnd(c, null)) { //just in case
                     return;
@@ -349,7 +305,7 @@ public class MapleQuest implements Serializable {
     }
 
     public void complete(MapleCharacter c, int npc, Integer selection) {
-        if ((autoPreComplete || checkNPCOnMap(c, npc)) && canComplete(c, npc)) {
+        if ((data.autoPreComplete || checkNPCOnMap(c, npc)) && canComplete(c, npc)) {
             if (npc != 9010000) {
                 for (MapleQuestAction a : completeActs) {
                     if (!a.checkEnd(c, selection)) {
@@ -414,7 +370,7 @@ public class MapleQuest implements Serializable {
     }
 
     public int getId() {
-        return id;
+        return data.id;
     }
 
     public Map<Integer, Integer> getRelevantMobs() {
@@ -427,23 +383,40 @@ public class MapleQuest implements Serializable {
     }
 
     public int getMedalItem() {
-        return viewMedalItem;
+        return data.viewMedalItem;
     }
 
     public static enum MedalQuest {
 
-        新手冒险家(29005, 29015, 15, new int[]{104000000, 104010001, 100000006, 104020000, 100000000, 100010000, 100040000, 100040100, 101010103, 101020000, 101000000, 102000000, 101030104, 101030406, 102020300, 103000000, 102050000, 103010001, 103030200, 110000000}),
-        ElNath(29006, 29012, 50, new int[]{200000000, 200010100, 200010300, 200080000, 200080100, 211000000, 211030000, 211040300, 211040400, 211040401}),
-        LudusLake(29007, 29012, 40, new int[]{222000000, 222010400, 222020000, 220000000, 220020300, 220040200, 221020701, 221000000, 221030600, 221040400}),
-        Underwater(29008, 29012, 40, new int[]{230000000, 230010400, 230010200, 230010201, 230020000, 230020201, 230030100, 230040000, 230040200, 230040400}),
-        MuLung(29009, 29012, 50, new int[]{251000000, 251010200, 251010402, 251010500, 250010500, 250010504, 250000000, 250010300, 250010304, 250020300}),
-        NihalDesert(29010, 29012, 70, new int[]{261030000, 261020401, 261020000, 261010100, 261000000, 260020700, 260020300, 260000000, 260010600, 260010300}),
-        MinarForest(29011, 29012, 70, new int[]{240000000, 240010200, 240010800, 240020401, 240020101, 240030000, 240040400, 240040511, 240040521, 240050000}),
-        Sleepywood(29014, 29015, 50, new int[]{105040300, 105070001, 105040305, 105090200, 105090300, 105090301, 105090312, 105090500, 105090900, 105080000});
+        新手冒险家(29005, 29015, 15,
+                new int[]{104000000, 104010001, 100000006, 104020000, 100000000, 100010000, 100040000,
+                        100040100, 101010103, 101020000, 101000000, 102000000, 101030104, 101030406,
+                        102020300, 103000000, 102050000, 103010001, 103030200, 110000000}),
+        ElNath(29006, 29012, 50,
+                new int[]{200000000, 200010100, 200010300, 200080000, 200080100, 211000000,
+                        211030000, 211040300, 211040400, 211040401}),
+        LudusLake(29007, 29012, 40,
+                new int[]{222000000, 222010400, 222020000, 220000000, 220020300, 220040200,
+                        221020701, 221000000, 221030600, 221040400}),
+        Underwater(29008, 29012, 40,
+                new int[]{230000000, 230010400, 230010200, 230010201, 230020000, 230020201,
+                        230030100, 230040000, 230040200, 230040400}),
+        MuLung(29009, 29012, 50,
+                new int[]{251000000, 251010200, 251010402, 251010500, 250010500, 250010504,
+                        250000000, 250010300, 250010304, 250020300}),
+        NihalDesert(29010, 29012, 70,
+                new int[]{261030000, 261020401, 261020000, 261010100, 261000000, 260020700,
+                        260020300, 260000000, 260010600, 260010300}),
+        MinarForest(29011, 29012, 70,
+                new int[]{240000000, 240010200, 240010800, 240020401, 240020101, 240030000,
+                        240040400, 240040511, 240040521, 240050000}),
+        Sleepywood(29014, 29015, 50,
+                new int[]{105040300, 105070001, 105040305, 105090200, 105090300, 105090301,
+                        105090312, 105090500, 105090900, 105080000});
         public int questid, level, lquestid;
         public int[] maps;
 
-        private MedalQuest(int questid, int lquestid, int level, int[] maps) {
+        MedalQuest(int questid, int lquestid, int level, int[] maps) {
             this.questid = questid; //infoquest = questid -2005, customdata = questid -1995
             this.level = level;
             this.lquestid = lquestid;

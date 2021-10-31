@@ -479,7 +479,7 @@ public class PlayerInteractionHandler {
 //                        return;
 //                    }
                     if (ivItem.getQuantity() >= bundles_perbundle) {
-                        final byte flag = ivItem.getFlag();
+                        final int flag = ivItem.getFlag();
                         if (ItemFlag.UNTRADEABLE.check(flag) || ItemFlag.LOCK.check(flag)) {
                             c.getSession().write(MaplePacketCreator.enableActions());
                             return;

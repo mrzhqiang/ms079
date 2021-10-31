@@ -1,10 +1,18 @@
 package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
-import io.ebean.annotation.*;
+import io.ebean.annotation.DbComment;
+import io.ebean.annotation.Length;
+import io.ebean.annotation.NotNull;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +33,7 @@ public class DAccount extends Model {
     @Length(30)
     @Column(name = "name", unique = true)
     @DbComment("用户名/用户账号，不能为 Null")
-    public final String name;
+    public String name;
     @NotNull
     @Length(128)
     @DbComment("用户密码，不能为 Null")
@@ -41,50 +49,59 @@ public class DAccount extends Model {
     @Length(32)
     @DbComment("二级密码的盐")
     public String salt2;
+    @NotNull
     @Column(name = "loggedin")
     @DbComment("登录状态")
-    public Integer loggedIn;
+    public Integer loggedIn = 0;
     @WhenModified
     @Column(name = "lastlogin")
     @DbComment("上次登录时间")
     public LocalDateTime lastLogin;
+    @NotNull
     @WhenCreated
     @Column(name = "createdat")
     @DbComment("创建时间")
     public LocalDateTime created;
+    @NotNull
     @DbComment("生日")
     public LocalDate birthday = LocalDate.now();
+    @NotNull
     @DbComment("是否禁用")
-    public Integer banned;
+    public Integer banned = 0;
     @Column(name = "banreason")
     @DbComment("禁用理由")
     public String banReason;
+    @NotNull
     @DbComment("是否为 GM")
-    public Boolean gm = false;
+    public Integer gm = 0;
     @DbComment("电子邮件")
     public String email;
     @Column(name = "macs")
     @DbComment("硬件地址")
     public String mac;
+    @NotNull
     @Column(name = "tempban")
     @DbComment("临时禁用时间")
-    public LocalDateTime tempBan;
+    public LocalDateTime tempBan = LocalDateTime.now().minusDays(1);
     @Column(name = "greason")
     public Integer gReason;
     @Column(name = "ACash")
-    public Integer aCash;
+    public Integer aCash = 0;
     @Column(name = "mPoints")
     public Integer mPoint;
+    @NotNull
     // todo Enum 10 is ??
     @Column(name = "gender")
-    public Integer gender;
+    public Integer gender = 10;
     @Length(64)
     @Column(name = "SessionIP")
     public String sessionIP;
+    @NotNull
     @Column(name = "points")
-    public Integer point;
+    public Integer point = 0;
+    @NotNull
     @Column(name = "vpoints")
-    public Integer vPoint;
+    public Integer vPoint = 0;
     @Column(name = "lastlogon")
     public LocalDateTime lastLogon;
     @Length(255)
@@ -98,9 +115,8 @@ public class DAccount extends Model {
     public String passwordOtp;
     @Column(name = "expiration")
     public LocalDateTime expiration;
-    @NotNull
     @Column(name = "VIP")
-    public Integer vip = 0;
+    public Integer vip;
     @NotNull
     @Column(name = "money")
     public Integer money = 0;
@@ -111,13 +127,9 @@ public class DAccount extends Model {
     @Column(name = "lastGainHM")
     public Long lastGainHM = 0L;
     @Column(name = "paypalNX")
-    public Integer paypalNX;
+    public Integer paypalNX = 0;
 
     @OneToMany(mappedBy = "account")
-    public List<DCharacter> characterList;
+    public List<DCharacter> characters;
 
-    public DAccount(String name, String password) {
-        this.name = name;
-        this.password = password;
-    }
 }

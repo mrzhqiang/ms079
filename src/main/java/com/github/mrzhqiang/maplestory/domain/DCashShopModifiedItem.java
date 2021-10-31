@@ -1,5 +1,6 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
 import javax.persistence.Column;
@@ -9,16 +10,19 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "cashshop_modified_items")
-public class DCashShopModifiedItem {
+public class DCashShopModifiedItem extends Model {
 
     @Id
-    public Integer serial;
+    @Column(name = "serial")
+    public Integer id;
     @NotNull
+    @Column(name = "name")
     public String name;
     @NotNull
     @Column(name = "discount_price")
     public Integer discountPrice;
     @NotNull
+    @Column(name = "mark")
     public Integer mark;
     @NotNull
     @Column(name = "showup")
@@ -27,17 +31,22 @@ public class DCashShopModifiedItem {
     @Column(name = "itemid")
     public Integer itemid;
     @NotNull
+    @Column(name = "priority")
     public Integer priority;
     @NotNull
     @Column(name = "package")
     public Boolean packageField;
     @NotNull
+    @Column(name = "period")
     public Integer period;
     @NotNull
+    @Column(name = "gender")
     public Integer gender;
     @NotNull
+    @Column(name = "count")
     public Integer count;
     @NotNull
+    @Column(name = "meso")
     public Integer meso;
     @NotNull
     @Column(name = "unk_1")

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package handling.world;
 
 import client.*;
@@ -30,6 +10,7 @@ import java.util.Map;
 
 import client.inventory.MapleMount;
 import client.inventory.MaplePet;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import server.quest.MapleQuest;
 import tools.Pair;
 import java.util.ArrayList;
@@ -42,18 +23,18 @@ public class CharacterTransfer implements Externalizable {
             partyid, messengerid, mBookCover, dojo, ACash, MaplePoints,
             mount_itemid, mount_exp, points, vpoints, marriageId,
             familyid, seniorid, junior1, junior2, currentrep, totalrep, expression, constellation, blood, month, day, battleshipHP, prefix, mount_id, skillzq, bosslog, grname, jzname, mrsjrw, mrsgrw, mrsbossrw, mrfbrw, hythd, mrsgrwa, mrsbossrwa, mrfbrwa, mrsgrws, mrsbossrws, mrfbrws, mrsgrwas, mrsbossrwas, mrfbrwas, ddj, vip, djjl,qiandao;
-    public byte channel, dojoRecord, gender, gmLevel, guildrank, alliancerank, clonez, fairyExp, buddysize, world, initialSpawnPoint, skinColor, mount_level, mount_Fatigue, subcategory;
+    public int channel, dojoRecord, gender, gmLevel, guildrank, alliancerank, clonez, fairyExp, buddysize, world, initialSpawnPoint, skinColor, mount_level, mount_Fatigue, subcategory;
     public long lastfametime, TranferTime, lastGainHM;
     public String tempIP;
     public String name, accountname, BlessOfFairy, chalkboard, charmessage;
-    public short level, fame, str, dex, int_, luk, maxhp, maxmp, hp, mp, remainingAp, hpApUsed;
+    public int level, fame, str, dex, int_, luk, maxhp, maxmp, hp, mp, remainingAp, hpApUsed;
     public int job;
     public Object inventorys, skillmacro, storage, cs;
     public int[] savedlocation, wishlist, rocks, remainingSp, regrocks;
     public byte[] petStore;
     public boolean DebugMessage;
     public Map<Integer, Integer> mbook = new LinkedHashMap<Integer, Integer>();
-    public Map<Integer, Pair<Byte, Integer>> keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();
+    public Map<Integer, Pair<Integer, Integer>> keymap = new LinkedHashMap<>();
     public final List<Integer> finishedAchievements = new ArrayList<Integer>(), famedcharacters = new ArrayList<Integer>();
     public final Map<BuddyEntry, Boolean> buddies = new LinkedHashMap<BuddyEntry, Boolean>();
     public final Map<Integer, Object> Quest = new LinkedHashMap<Integer, Object>(); // Questid instead of MapleQuest, as it's huge. Cant be transporting MapleQuest.java
@@ -315,7 +296,21 @@ public class CharacterTransfer implements Externalizable {
         this.buddysize = in.readByte();
         final short addedbuddysize = in.readShort();
         for (int i = 0; i < addedbuddysize; i++) {
-            buddies.put(new BuddyEntry(in.readUTF(), in.readInt(), in.readUTF(), in.readInt(), in.readBoolean(), in.readInt(), in.readInt()), in.readBoolean());
+            String name = in.readUTF();
+            int chrId = in.readInt();
+            String group = in.readUTF();
+            int channel = in.readInt();
+            boolean visible = in.readBoolean();
+            int level = in.readInt();
+            int job = in.readInt();
+
+            // fixme 可能存在问题
+            DCharacter character = new DCharacter();
+            character.id = chrId;
+            character.name = name;
+            character.level = level;
+            character.job = job;
+            buddies.put(new BuddyEntry(character, group, channel, visible), in.readBoolean());
         }
 
         final int questsize = in.readShort();
@@ -364,7 +359,7 @@ public class CharacterTransfer implements Externalizable {
 
         final int keysize = in.readInt();
         for (int i = 0; i < keysize; i++) {
-            this.keymap.put(in.readInt(), new Pair<Byte, Integer>(in.readByte(), in.readInt()));
+            this.keymap.put(in.readInt(), new Pair<>((int) in.readByte(), in.readInt()));
         }
         this.petStore = new byte[in.readByte()];
         for (int i = 0; i < 3; i++) {
@@ -532,7 +527,7 @@ public class CharacterTransfer implements Externalizable {
         }
 
         out.writeInt(this.keymap.size());
-        for (final Map.Entry<Integer, Pair<Byte, Integer>> qs : this.keymap.entrySet()) {
+        for (final Map.Entry<Integer, Pair<Integer, Integer>> qs : this.keymap.entrySet()) {
             out.writeInt(qs.getKey());
             out.writeByte(qs.getValue().left);
             out.writeInt(qs.getValue().right);

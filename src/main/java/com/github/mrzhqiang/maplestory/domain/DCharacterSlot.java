@@ -1,64 +1,27 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "character_slots")
-public class DCharacterSlot {
+public class DCharacterSlot extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "accid")
+    public Integer accid;
+    @NotNull
+    @Column(name = "worldid")
+    public Integer worldid;
+    @NotNull
+    @Column(name = "charslots")
+    public Integer charslots;
 
-    @Column(name = "accid", nullable = false)
-    private Integer accid;
-
-    @Column(name = "worldid", nullable = false)
-    private Integer worldid;
-
-    @Column(name = "charslots", nullable = false)
-    private Integer charslots;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setAccid(Integer accid) {
-        this.accid = accid;
-    }
-
-    public Integer getAccid() {
-        return accid;
-    }
-
-    public void setWorldid(Integer worldid) {
-        this.worldid = worldid;
-    }
-
-    public Integer getWorldid() {
-        return worldid;
-    }
-
-    public void setCharslots(Integer charslots) {
-        this.charslots = charslots;
-    }
-
-    public Integer getCharslots() {
-        return charslots;
-    }
-
-    @Override
-    public String toString() {
-        return "DCharacterSlot{" +
-                "id=" + id + '\'' +
-                "accid=" + accid + '\'' +
-                "worldid=" + worldid + '\'' +
-                "charslots=" + charslots + '\'' +
-                '}';
-    }
 }

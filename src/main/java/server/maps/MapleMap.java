@@ -6,10 +6,11 @@ import client.MapleClient;
 import client.inventory.*;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.domain.DSpeedRun;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import com.google.common.base.Joiner;
 import constants.GameConstants;
 import constants.ServerConstants;
-import database.DatabaseConnection;
 import handling.MaplePacket;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
@@ -36,8 +37,6 @@ import tools.packet.PetPacket;
 
 import java.awt.*;
 import java.lang.ref.WeakReference;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
@@ -166,7 +165,7 @@ public final class MapleMap {
         return returnMapId;
     }
 
-    public final int getForcedReturnId() {
+    public int getForcedReturnId() {
         return forcedReturnMap;
     }
 
@@ -306,7 +305,7 @@ public final class MapleMap {
         return -1;
     }
 
-    public final void addMapObject(final MapleMapObject mapobject) {
+    public void addMapObject(MapleMapObject mapobject) {
         runningOidLock.lock();
         int newOid;
         try {
@@ -414,12 +413,12 @@ public final class MapleMap {
 
         final List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
         Collections.shuffle(dropEntry);
-        for (final MonsterDropEntry de : dropEntry) {
-            if (de.itemId == mob.getStolen()) {
+        for (MonsterDropEntry de : dropEntry) {
+            if (de.data.itemid == mob.getStolen()) {
                 continue;
             }
             int Rand = Randomizer.nextInt(999999);
-            int part1 = de.chance;
+            int part1 = de.data.chance;
             int part2 = chServerrate;
             int part3 = chr.getDropMod();
             int part4 = (int) (chr.getStat().dropBuff / 100.0);
@@ -431,17 +430,18 @@ public final class MapleMap {
                 } else {
                     pos = Vector.of((mobpos + ((d % 2 == 0) ? (25 * (d + 1) / 2) : -(25 * (d / 2)))), pos.y);
                 }
-                if (de.itemId == 0) { // meso
+                if (de.data.itemid == 0) { // meso
 //                    int mesos = Randomizer.nextInt(1 + Math.abs(de.Maximum - de.Minimum)) + de.Minimum;
 //                    if (mesos > 0) {
-//                        spawnMobMesoDrop((int) (mesos * (chr.getStat().mesoBuff / 100.0) * chr.getDropMod() * cmServerrate), calcDropPos(pos, mob.getPosition()), mob, chr, false, droptype);
+//                        spawnMobMesoDrop((int) (mesos * (chr.getStat().mesoBuff / 100.0) * chr.getDropMod() * cmServerrate),
+//                        calcDropPos(pos, mob.getPosition()), mob, chr, false, droptype);
 //                    }
                 } else {
-                    if (GameConstants.getInventoryType(de.itemId) == MapleInventoryType.EQUIP) {
-                        idrop = ii.randomizeStats((Equip) ii.getEquipById(de.itemId));
+                    if (GameConstants.getInventoryType(de.data.itemid) == MapleInventoryType.EQUIP) {
+                        idrop = ii.randomizeStats((Equip) ii.getEquipById(de.data.itemid));
                     } else {
-                        final int range = Math.abs(de.Maximum - de.Minimum);
-                        idrop = new Item(de.itemId, (byte) 0, (short) (de.Maximum != 1 ? Randomizer.nextInt(range <= 0 ? 1 : range) + de.Minimum : 1), (byte) 0);
+                        final int range = Math.abs(de.data.maxQuantity - de.data.minQuantity);
+                        idrop = new Item(de.data.itemid, (byte) 0, (short) (de.data.maxQuantity != 1 ? Randomizer.nextInt(range <= 0 ? 1 : range) + de.data.minQuantity : 1), (byte) 0);
 
                     }
                     if (Randomizer.nextInt(100) <= 7 && !mob.getStats().isBoss() && chr.getEventInstance() == null) {
@@ -450,7 +450,7 @@ public final class MapleMap {
                     if (Randomizer.nextInt(100) <= 10 && chr.getQuestStatus(28172) == 1) {
                         idrop = new Item(4001341, (byte) 0, (short) 1, (byte) 0);
                     }
-                    spawnMobDrop(idrop, calcDropPos(pos, mob.getPosition()), mob, chr, droptype, de.questid);
+                    spawnMobDrop(idrop, calcDropPos(pos, mob.getPosition()), mob, chr, droptype, de.data.questid);
                 }
                 d++;
             }
@@ -472,24 +472,29 @@ public final class MapleMap {
         final int cashModifier = (int) ((mob.getStats().isBoss() ? 0 : (mob.getMobExp() / 1000 + mob.getMobMaxHp() / 10000))); //no rate
         // Global Drops
         for (final MonsterGlobalDropEntry de : globalEntry) {
-            if (Randomizer.nextInt(999999) < de.chance && (de.continent < 0 || (de.continent < 10 && mapid / 100000000 == de.continent) || (de.continent < 100 && mapid / 10000000 == de.continent) || (de.continent < 1000 && mapid / 1000000 == de.continent))) {
+            if (Randomizer.nextInt(999999) < de.global.chance
+                    && (de.global.continent < 0  || (de.global.continent < 10  && mapid / 100000000 == de.global.continent)
+                    || (de.global.continent < 100 && mapid / 10000000 == de.global.continent)
+                    || (de.global.continent < 1000 && mapid / 1000000 == de.global.continent))) {
                 if (droptype == 3) {
                     pos = Vector.of((mobpos + (d % 2 == 0 ? (40 * (d + 1) / 2) : -(40 * (d / 2)))), pos.y);
                 } else {
                     pos = Vector.of((mobpos + ((d % 2 == 0) ? (25 * (d + 1) / 2) : -(25 * (d / 2)))), pos.y);
                 }
-                if (de.itemId == 0) {
+                if (de.global.itemid == 0) {
                     // chr.modifyCSPoints(1, (int) ((Randomizer.nextInt(cashz) + cashz + cashModifier) * (chr.getStat().cashBuff / 100.0) * chr.getCashMod()), true);
                 } else if (!gDropsDisabled) {
-                    if (GameConstants.getInventoryType(de.itemId) == MapleInventoryType.EQUIP) {
-                        idrop = ii.randomizeStats((Equip) ii.getEquipById(de.itemId));
+                    if (GameConstants.getInventoryType(de.global.itemid) == MapleInventoryType.EQUIP) {
+                        idrop = ii.randomizeStats((Equip) ii.getEquipById(de.global.itemid));
                     } else {
-                        idrop = new Item(de.itemId, (byte) 0, (short) (de.Maximum != 1 ? Randomizer.nextInt(de.Maximum - de.Minimum) + de.Minimum : 1), (byte) 0);
+                        idrop = new Item(de.global.itemid, (byte) 0, (short) (de.global.maxQuantity != 1
+                                ? Randomizer.nextInt(de.global.maxQuantity - de.global.minQuantity) + de.global.minQuantity
+                                : 1), (byte) 0);
                     }
                     if (Randomizer.nextInt(100) <= 7 && !mob.getStats().isBoss() && chr.getEventInstance() == null) {
                         idrop = new Item(4001126, (byte) 0, (short) 1, (byte) 0);
                     }
-                    spawnMobDrop(idrop, calcDropPos(pos, mob.getPosition()), mob, chr, de.onlySelf ? 0 : droptype, de.questid);
+                    spawnMobDrop(idrop, calcDropPos(pos, mob.getPosition()), mob, chr, de.onlySelf ? 0 : droptype, de.global.questid);
                     d++;
                 }
             }
@@ -1607,16 +1612,12 @@ public final class MapleMap {
         }
     }
 
-    public final void spawnMobDrop(final IItem idrop, final Vector dropPos, final MapleMonster mob, final MapleCharacter chr, final byte droptype, final short questid) {
+    public void spawnMobDrop(IItem idrop, Vector dropPos, MapleMonster mob, MapleCharacter chr, byte droptype, int questid) {
         final MapleMapItem mdrop = new MapleMapItem(idrop, dropPos, mob, chr, droptype, false, questid);
 
-        spawnAndAddRangedMapObject(mdrop, new DelayedPacketCreation() {
-
-            @Override
-            public void sendPackets(MapleClient c) {
-                if (questid <= 0 || c.getPlayer().getQuestStatus(questid) == 1) {
-                    c.getSession().write(MaplePacketCreator.dropItemFromMapObject(mdrop, mob.getPosition(), dropPos, (byte) 1));
-                }
+        spawnAndAddRangedMapObject(mdrop, c -> {
+            if (questid <= 0 || c.getPlayer().getQuestStatus(questid) == 1) {
+                c.getSession().write(MaplePacketCreator.dropItemFromMapObject(mdrop, mob.getPosition(), dropPos, (byte) 1));
             }
         }, null);
 //	broadcastMessage(MaplePacketCreator.dropItemFromMapObject(mdrop, mob.getPosition(), dropPos, (byte) 0));
@@ -1676,13 +1677,7 @@ public final class MapleMap {
             idrop = new Item(itemid, (byte) 0, (short) 1, (byte) 0);
         }
         final MapleMapItem mdrop = new MapleMapItem(pos, idrop);
-        spawnAndAddRangedMapObject(mdrop, new DelayedPacketCreation() {
-
-            @Override
-            public void sendPackets(MapleClient c) {
-                c.getSession().write(MaplePacketCreator.dropItemFromMapObject(mdrop, pos, pos, (byte) 1));
-            }
-        }, null);
+        spawnAndAddRangedMapObject(mdrop, c -> c.getSession().write(MaplePacketCreator.dropItemFromMapObject(mdrop, pos, pos, (byte) 1)), null);
         broadcastMessage(MaplePacketCreator.dropItemFromMapObject(mdrop, pos, pos, (byte) 0));
         mdrop.registerExpire(120000);
     }
@@ -3132,30 +3127,21 @@ public final class MapleMap {
 
     public void getRankAndAdd(String leader, String time, SpeedRunType type, long timz, Collection<String> squad) {
         try {
-            //Pair<String, Map<Integer, String>>
-            StringBuilder rett = new StringBuilder();
-            if (squad != null) {
-                for (String chr : squad) {
-                    rett.append(chr);
-                    rett.append(",");
-                }
-            }
-            String z = rett.toString();
-            if (squad != null) {
-                z = z.substring(0, z.length() - 1);
-            }
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("INSERT INTO speedruns(`type`, `leader`, `timestring`, `time`, `members`) VALUES (?,?,?,?,?)");
-            ps.setString(1, type.name());
-            ps.setString(2, leader);
-            ps.setString(3, time);
-            ps.setLong(4, timz);
-            ps.setString(5, z);
-            ps.executeUpdate();
-            ps.close();
+            String z = Joiner.on(',').join(squad);
+
+            DSpeedRun run = new DSpeedRun();
+            run.type = type.name();
+            run.leader = leader;
+            run.timestring = time;
+            run.time = timz;
+            run.members = z;
+            run.save();
 
             if (SpeedRunner.getInstance().getSpeedRunData(type) == null) { //great, we just add it
-                SpeedRunner.getInstance().addSpeedRunData(type, SpeedRunner.getInstance().addSpeedRunData(new StringBuilder("#rThese are the speedrun times for " + type + ".#k\r\n\r\n"), new HashMap<Integer, String>(), z, leader, 1, time));
+                SpeedRunner.getInstance().addSpeedRunData(type,
+                        SpeedRunner.getInstance().addSpeedRunData(
+                                new StringBuilder("#rThese are the speedrun times for " + type + ".#k\r\n\r\n"),
+                                new HashMap<>(), z, leader, 1, time));
             } else {
                 //i wish we had a way to get the rank
                 //TODO revamp
@@ -3163,7 +3149,7 @@ public final class MapleMap {
                 SpeedRunner.getInstance().loadSpeedRunData(type);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("getRankAndAdd", e);
         }
     }
 

@@ -1,6 +1,7 @@
 package server.life;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzNPCNameData;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzDirectory;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
@@ -8,15 +9,10 @@ import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.github.mrzhqiang.maplestory.wz.element.FloatElement;
 import com.google.common.base.Strings;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Pair;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,16 +65,8 @@ public final class MapleLifeFactory {
                             questCount.put(id, integers);
                         }))
                 );
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_npcnamedata ORDER BY `npc`"); ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    npcNames.put(rs.getInt("npc"), rs.getString("name"));
-                }
-            }
-        } catch (SQLException ex) {
-            LOGGER.error("Failed to load npc name data. ", ex);
-        }
+
+        new QDWzNPCNameData().orderBy().npc.asc().findEach(it -> npcNames.put(it.npc, it.name));
         LOGGER.info("共加载 {} 个NPC.", npcNames.size());
     }
 

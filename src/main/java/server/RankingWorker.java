@@ -20,19 +20,6 @@
  */
 package server;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
-import database.DatabaseConnection;
-import handling.channel.MapleGuildRanking;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import server.Timer.WorldTimer;
-
 public class RankingWorker {
 /*
     private final Map<Integer, List<RankingInformation>> rankings = new HashMap<Integer, List<RankingInformation>>();

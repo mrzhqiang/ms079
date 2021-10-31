@@ -119,7 +119,7 @@ public class FamilyPacket {
         int descendants = 2, gens = 0, generations = 0;
         if (family == null) {
             mplew.writeInt(2);
-            addFamilyCharInfo(new MapleFamilyCharacter(chr, 0, 0, 0, 0), mplew); //leader
+            addFamilyCharInfo(new MapleFamilyCharacter(chr.character, 0, true), mplew); //leader
         } else {
             mplew.writeInt(family.getMFC(chr.getId()).getPedigree().size() + 1); //+ 1 for leader, but we don't want leader seeing all msgs
             addFamilyCharInfo(family.getMFC(family.getLeaderId()), mplew);
@@ -132,7 +132,7 @@ public class FamilyPacket {
                 addFamilyCharInfo(senior, mplew);
             }
         }
-        addFamilyCharInfo(chr.getMFC() == null ? new MapleFamilyCharacter(chr, 0, 0, 0, 0) : chr.getMFC(), mplew);
+        addFamilyCharInfo(chr.getMFC() == null ? new MapleFamilyCharacter(chr.character, 0,true) : chr.getMFC(), mplew);
         if (family != null) {
             if (chr.getSeniorId() > 0) {
                 MapleFamilyCharacter senior = family.getMFC(chr.getSeniorId());

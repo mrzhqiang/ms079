@@ -1,64 +1,26 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "queststatusmobs")
-public class DQuestStatusMob {
+public class DQuestStatusMob extends Model {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "queststatusmobid", nullable = false)
-    private Integer queststatusmobid;
+    @Column(name = "queststatusmobid")
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "queststatusid")
+    public DQuestStatus questStatus;
+    @NotNull
+    @Column(name = "mob")
+    public Integer mob;
+    @NotNull
+    @Column(name = "count")
+    public Integer count;
 
-    @Column(name = "queststatusid", nullable = false)
-    private Integer queststatusid;
-
-    @Column(name = "mob", nullable = false)
-    private Integer mob;
-
-    @Column(name = "count", nullable = false)
-    private Integer count;
-
-    public void setQueststatusmobid(Integer queststatusmobid) {
-        this.queststatusmobid = queststatusmobid;
-    }
-
-    public Integer getQueststatusmobid() {
-        return queststatusmobid;
-    }
-
-    public void setQueststatusid(Integer queststatusid) {
-        this.queststatusid = queststatusid;
-    }
-
-    public Integer getQueststatusid() {
-        return queststatusid;
-    }
-
-    public void setMob(Integer mob) {
-        this.mob = mob;
-    }
-
-    public Integer getMob() {
-        return mob;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-
-    @Override
-    public String toString() {
-        return "DQuestStatusMob{" +
-                "queststatusmobid=" + queststatusmobid + '\'' +
-                "queststatusid=" + queststatusid + '\'' +
-                "mob=" + mob + '\'' +
-                "count=" + count + '\'' +
-                '}';
-    }
 }

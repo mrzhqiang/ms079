@@ -36,7 +36,7 @@ public class MapleTrade {
        //        Trade = "[交易记录开始] -------------------------------------------------------------------------- \r\n" ;
         if (exchangeItems != null) { // just to be on the safe side...
             for (final IItem item : exchangeItems) {
-                byte flag = item.getFlag();
+                int flag = item.getFlag();
 
                 if (ItemFlag.KARMA_EQ.check(flag)) {
                     item.setFlag((byte) (flag - ItemFlag.KARMA_EQ.getValue()));
@@ -149,7 +149,7 @@ public class MapleTrade {
         if (target == -1 || GameConstants.isPet(item.getItemId()) || isLocked() || (GameConstants.getInventoryType(item.getItemId()) == MapleInventoryType.CASH && quantity != 1) || (GameConstants.getInventoryType(item.getItemId()) == MapleInventoryType.EQUIP && quantity != 1)) {
             return false;
         }
-        final byte flag = item.getFlag();
+        final int flag = item.getFlag();
         if (ItemFlag.UNTRADEABLE.check(flag) || ItemFlag.LOCK.check(flag)) {
             c.getSession().write(MaplePacketCreator.enableActions());
             return false;

@@ -143,18 +143,18 @@ public class PacketHelper {
         List<MapleRing> cRing = aRing.getLeft();
         mplew.writeShort(cRing.size());
         for (MapleRing ring : cRing) {
-            mplew.writeInt(ring.getPartnerChrId());
+            mplew.writeInt(ring.ring.partnerChrId);
             mplew.writeAsciiString(ring.getPartnerName(), 13);
             mplew.writeLong(ring.getRingId());
-            mplew.writeLong(ring.getPartnerRingId());
+            mplew.writeLong(ring.ring.partnerRingId);
         }
         List<MapleRing> fRing = aRing.getRight();
         mplew.writeShort(fRing.size());
         for (MapleRing ring : fRing) {
-            mplew.writeInt(ring.getPartnerChrId());
+            mplew.writeInt(ring.ring.partnerChrId);
             mplew.writeAsciiString(ring.getPartnerName(), 13);
             mplew.writeLong(ring.getRingId());
-            mplew.writeLong(ring.getPartnerRingId());
+            mplew.writeLong(ring.ring.partnerRingId);
             mplew.writeInt(ring.getItemId());
         }
         mplew.writeShort(0);
@@ -378,7 +378,7 @@ public class PacketHelper {
 //    }
 
     public static void addDDItemInfo(MaplePacketLittleEndianWriter mplew, IItem item, boolean zeroPosition, boolean leaveOut, boolean cs) {
-        short pos = item.getPosition();
+        int pos = item.getPosition();
         if (zeroPosition) {
             if (!leaveOut) {
                 mplew.write(0);
@@ -467,7 +467,7 @@ public class PacketHelper {
         //boolean isPet = item.getPet() != null && item.getPet().getUniqueId() > -1;
         //boolean isRing = false;
         //Equip equip_ = null;
-        short pos = item.getPosition();
+        int pos = item.getPosition();
         //if (item.getType() == 1) {
         //    equip_ = (Equip) item;
         //    isRing = equip_.getRing() != null && equip_.getRing().getRingId() > -1;
@@ -679,7 +679,7 @@ public class PacketHelper {
                 ring = true;
             }
         }
-        short pos = item.getPosition();
+        int pos = item.getPosition();
         boolean masking = false;
         boolean equipped = false;
 

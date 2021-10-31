@@ -1,40 +1,30 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import com.google.common.base.MoreObjects;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "ipbans")
-public class DIPBans {
+public class DIPBans extends Model {
 
     @Id
-    @Column(name = "ipbanid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer ipbanid;
-
-    @Column(name = "ip", nullable = false)
-    private String ip;
-
-    public void setIpbanid(Integer ipbanid) {
-        this.ipbanid = ipbanid;
-    }
-
-    public Integer getIpbanid() {
-        return ipbanid;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public String getIp() {
-        return ip;
-    }
+    @Column(name = "ipbanid")
+    public Integer id;
+    @NotNull
+    @Column(name = "ip")
+    public String ip;
 
     @Override
     public String toString() {
-        return "DIPBans{" +
-                "ipbanid=" + ipbanid + '\'' +
-                "ip=" + ip + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("ip", ip)
+                .toString();
     }
 }

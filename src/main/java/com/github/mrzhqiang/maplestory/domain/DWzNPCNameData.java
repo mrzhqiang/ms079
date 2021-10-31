@@ -1,52 +1,24 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_npcnamedata")
-public class DWzNPCNameData {
+public class DWzNPCNameData extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "npc")
+    public Integer npc;
+    @NotNull
+    @Column(name = "name")
+    public String name;
 
-    @Column(name = "npc", nullable = false)
-    private Integer npc;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setNpc(Integer npc) {
-        this.npc = npc;
-    }
-
-    public Integer getNpc() {
-        return npc;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "DWzNPCNameData{" +
-                "id=" + id + '\'' +
-                "npc=" + npc + '\'' +
-                "name=" + name + '\'' +
-                '}';
-    }
 }

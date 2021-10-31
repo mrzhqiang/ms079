@@ -1,16 +1,21 @@
 package server;
 
-import constants.GameConstants;
 import client.inventory.IItem;
 import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
-import java.sql.Connection;
-import database.DatabaseConnection;
-import handling.MaplePacket;
+import com.github.mrzhqiang.maplestory.domain.DMtsItemOther;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDMtsItemOther;
+import constants.GameConstants;
 import constants.ServerConstants;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import handling.MaplePacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.Pair;
+import tools.packet.MTSCSPacket;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,18 +25,14 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import tools.Pair;
-import tools.packet.MTSCSPacket;
-
 public class MTSStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MTSStorage.class);
     //stores all carts all mts items, updates every hour
 
     private static final long serialVersionUID = 231541893513228L;
-    private long lastUpdate = System.currentTimeMillis();
+
+    private LocalDateTime lastUpdate = LocalDateTime.now();
     private final Map<Integer, MTSCart> idToCart;
     private final AtomicInteger packageId;
     private final Map<Integer, MTSItemInfo> buyNow; //packageid to mtsiteminfo
@@ -82,7 +83,7 @@ public class MTSStorage {
         }
     }
 
-    public final void addToBuyNow(final MTSCart cart, final IItem item, final int price, final int cid, final String seller, final long expiration) {
+    public void addToBuyNow(MTSCart cart, IItem item, int price, int cid, String seller, LocalDateTime expiration) {
         final int id;
         mutex.writeLock().lock();
         try {
@@ -125,36 +126,23 @@ public class MTSStorage {
         return item != null;
     }
 
-    private final void loadBuyNow() {
-        int lastPackage = 0;
-        int cId;
-        Map<Integer, Pair<IItem, MapleInventoryType>> items;
-        final Connection con = DatabaseConnection.getConnection();
-        try {
-            final PreparedStatement ps = con.prepareStatement("SELECT * FROM mts_items WHERE tab = 1");
-            final ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                lastPackage = rs.getInt("id");
-                cId = rs.getInt("characterid");
-                if (!idToCart.containsKey(cId)) {
-                    idToCart.put(cId, new MTSCart(cId));
-                }
-                items = ItemLoader.MTS.loadItems(false, lastPackage);
-                if (items != null && items.size() > 0) {
-                    for (Pair<IItem, MapleInventoryType> i : items.values()) {
-                        buyNow.put(lastPackage, new MTSItemInfo(rs.getInt("price"), i.getLeft(), rs.getString("seller"), lastPackage, cId, rs.getLong("expiration")));
-                    }
+    private void loadBuyNow() {
+        /*new QDMtsItems().tab.eq(1).findEach(it -> {
+            if (!idToCart.containsKey(it.characterid)) {
+                idToCart.put(it.characterid, new MTSCart(it.characterid));
+            }
+            Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.MTS.loadItems(false, it.id);
+            if (!items.isEmpty()) {
+                for (Pair<IItem, MapleInventoryType> i : items.values()) {
+                    buyNow.put(it.id, new MTSItemInfo(it.price, i.getLeft(), it.seller, it.id, it.characterid, it.expiration));
                 }
             }
-            rs.close();
-            ps.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        packageId.set(lastPackage);
+            // set last it item id
+            packageId.set(it.id);
+        });*/
     }
 
-    public final void saveBuyNow(boolean isShutDown) {
+    public void saveBuyNow(boolean isShutDown) {
         if (this.end) {
             return;
         }
@@ -162,61 +150,56 @@ public class MTSStorage {
         if (isShutDown) {
             LOGGER.debug("Saving MTS...");
         }
-        final Map<Integer, ArrayList<IItem>> expire = new HashMap<Integer, ArrayList<IItem>>();
-        final List<Integer> toRemove = new ArrayList<Integer>();
-        final long now = System.currentTimeMillis();
-        final Map<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> items = new HashMap<Integer, ArrayList<Pair<IItem, MapleInventoryType>>>();
-        final Connection con = DatabaseConnection.getConnection();
+
+        Map<Integer, ArrayList<IItem>> expire = new HashMap<>();
+        List<Integer> toRemove = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        Map<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> items = new HashMap<>();
+
         mutex.writeLock().lock(); //lock wL so rL will also be locked
         try {
-            PreparedStatement ps = con.prepareStatement("DELETE FROM mts_items WHERE tab = 1");
-            ps.execute();
-            ps.close();
-            ps = con.prepareStatement("INSERT INTO mts_items VALUES (?, ?, ?, ?, ?, ?)");
+            new QDMtsItemOther().tab.eq(1).delete();
+
             for (MTSItemInfo m : buyNow.values()) {
-                if (now > m.getEndingDate()) {
+                if (now.isAfter(m.getEndingDate())) {
                     if (!expire.containsKey(m.getCharacterId())) {
-                        expire.put(m.getCharacterId(), new ArrayList<IItem>());
+                        expire.put(m.getCharacterId(), new ArrayList<>());
                     }
                     expire.get(m.getCharacterId()).add(m.getItem());
                     toRemove.add(m.getId());
-                    items.put(m.getId(), null); //destroy from the mtsitems.
+                    items.put(m.getId(), null); //从 mtsitems 销毁。
                 } else {
-                    ps.setInt(1, m.getId());
-                    ps.setByte(2, (byte) 1);
-                    ps.setInt(3, m.getPrice());
-                    ps.setInt(4, m.getCharacterId());
-                    ps.setString(5, m.getSeller());
-                    ps.setLong(6, m.getEndingDate());
-                    ps.executeUpdate();
+                    DMtsItemOther item = new DMtsItemOther();
+                    item.id = m.id;
+                    item.tab = 1;
+                    item.price = m.price;
+                    item.character = new QDCharacter().id.eq(m.getCharacterId()).findOne();
+                    item.expiration = m.getEndingDate();
+                    item.save();
+
                     if (!items.containsKey(m.getId())) {
-                        items.put(m.getId(), new ArrayList<Pair<IItem, MapleInventoryType>>());
+                        items.put(m.getId(), new ArrayList<>());
                     }
-                    items.get(m.getId()).add(new Pair<IItem, MapleInventoryType>(m.getItem(), GameConstants.getInventoryType(m.getItem().getItemId())));
+                    items.get(m.getId()).add(new Pair<>(m.getItem(), GameConstants.getInventoryType(m.getItem().getItemId())));
                 }
             }
             for (int i : toRemove) {
                 buyNow.remove(i);
             }
-            ps.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
         } finally {
             mutex.writeLock().unlock();
         }
+
         if (isShutDown) {
             LOGGER.debug("Saving MTS items...");
         }
-        try {
-            for (Entry<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> ite : items.entrySet()) {
-                ItemLoader.MTS.saveItems(ite.getValue(), ite.getKey());
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        for (Entry<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> ite : items.entrySet()) {
+            ItemLoader.saveItems(ite.getValue());
         }
         if (isShutDown) {
             LOGGER.debug("Saving MTS carts...");
         }
+
         cart_mutex.writeLock().lock();
         try {
             for (Entry<Integer, MTSCart> c : idToCart.entrySet()) {
@@ -231,16 +214,14 @@ public class MTSStorage {
                 }
                 c.getValue().save();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         } finally {
             cart_mutex.writeLock().unlock();
         }
-        lastUpdate = System.currentTimeMillis();
+        lastUpdate = LocalDateTime.now();
     }
 
     public final void checkExpirations() {
-        if ((System.currentTimeMillis() - lastUpdate) > 3600000) { //every hour
+        if ((Duration.between(lastUpdate, LocalDateTime.now()).toHours() > 1)) { //每隔一小时
             saveBuyNow(false);
         }
     }
@@ -258,8 +239,6 @@ public class MTSStorage {
             try {
                 ret = new MTSCart(characterId);
                 idToCart.put(characterId, ret);
-            } catch (SQLException e) {
-                e.printStackTrace();
             } finally {
                 cart_mutex.writeLock().unlock();
             }
@@ -343,6 +322,9 @@ public class MTSStorage {
         return ret;
     }
 
+    /**
+     * todo 存储实体，直接保存，避免加锁。
+     */
     public static class MTSItemInfo {
 
         private int price;
@@ -350,9 +332,9 @@ public class MTSStorage {
         private String seller;
         private int id; //packageid
         private int cid;
-        private long date;
+        private LocalDateTime date;
 
-        public MTSItemInfo(int price, IItem item, String seller, int id, int cid, long date) {
+        public MTSItemInfo(int price, IItem item, String seller, int id, int cid, LocalDateTime date) {
             this.item = item;
             this.price = price;
             this.seller = seller;
@@ -385,7 +367,7 @@ public class MTSStorage {
             return cid;
         }
 
-        public long getEndingDate() {
+        public LocalDateTime getEndingDate() {
             return date;
         }
 

@@ -1,66 +1,28 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "famelog")
-public class DFameLog {
+public class DFameLog extends Model {
 
     @Id
-    @Column(name = "famelogid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer famelogid;
+    @Column(name = "famelogid")
+    public Integer id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "characterid")
+    public DCharacter character;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "characterid_to")
+    public DCharacter to;
+    @NotNull
+    @Column(name = "when")
+    public LocalDateTime when;
 
-    @Column(name = "characterid", nullable = false)
-    private Integer characterid;
-
-    @Column(name = "characterid_to", nullable = false)
-    private Integer characteridTo;
-
-    @Column(name = "when", nullable = false)
-    private LocalDateTime when;
-
-    public void setFamelogid(Integer famelogid) {
-        this.famelogid = famelogid;
-    }
-
-    public Integer getFamelogid() {
-        return famelogid;
-    }
-
-    public void setCharacterid(Integer characterid) {
-        this.characterid = characterid;
-    }
-
-    public Integer getCharacterid() {
-        return characterid;
-    }
-
-    public void setCharacteridTo(Integer characteridTo) {
-        this.characteridTo = characteridTo;
-    }
-
-    public Integer getCharacteridTo() {
-        return characteridTo;
-    }
-
-    public void setWhen(LocalDateTime when) {
-        this.when = when;
-    }
-
-    public LocalDateTime getWhen() {
-        return when;
-    }
-
-    @Override
-    public String toString() {
-        return "DFameLog{" +
-                "famelogid=" + famelogid + '\'' +
-                "characterid=" + characterid + '\'' +
-                "characteridTo=" + characteridTo + '\'' +
-                "when=" + when + '\'' +
-                '}';
-    }
 }

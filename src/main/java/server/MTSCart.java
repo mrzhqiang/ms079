@@ -1,39 +1,16 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server;
 
-import constants.GameConstants;
 import client.inventory.IItem;
 import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
-import java.sql.Connection;
-import database.DatabaseConnection;
+import com.github.mrzhqiang.maplestory.domain.DMtsCart;
+import com.github.mrzhqiang.maplestory.domain.query.QDMtsCart;
+import constants.GameConstants;
+import tools.Pair;
+
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import tools.Pair;
 
 public class MTSCart implements Serializable {
 
@@ -47,9 +24,9 @@ public class MTSCart implements Serializable {
     private List<Integer> notYetSold = new ArrayList<Integer>(10);
     private int owedNX = 0;
 
-    public MTSCart(int characterId) throws SQLException {
+    public MTSCart(int characterId) {
         this.characterId = characterId;
-        for (Pair<IItem, MapleInventoryType> item : ItemLoader.MTS_TRANSFER.loadItems(false, characterId).values()) {
+        for (Pair<IItem, MapleInventoryType> item : ItemLoader.loadItems(9, false, characterId).values()) {
             transfer.add(item.getLeft());
         }
         loadCart();
@@ -114,63 +91,47 @@ public class MTSCart implements Serializable {
         owedNX += newNX;
     }
 
-    public void save() throws SQLException {
-        List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<Pair<IItem, MapleInventoryType>>();
+    public void save() {
+        List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<>();
 
         for (IItem item : getInventory()) {
-            itemsWithType.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));
+            itemsWithType.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
 
-        ItemLoader.MTS_TRANSFER.saveItems(itemsWithType, characterId);
-        final Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("DELETE FROM mts_cart WHERE characterid = ?");
-        ps.setInt(1, characterId);
-        ps.execute();
-        ps.close();
-        ps = con.prepareStatement("INSERT INTO mts_cart VALUES(DEFAULT, ?, ?)");
-        ps.setInt(1, characterId);
+        ItemLoader.saveItems(itemsWithType);
+        new QDMtsCart().characterid.eq(characterId).delete();
+
         for (int i : cart) {
-            ps.setInt(2, i);
-            ps.executeUpdate();
+            DMtsCart cart = new DMtsCart();
+            cart.characterid = characterId;
+            cart.itemid = i;
+            cart.save();
         }
         if (owedNX > 0) {
-            ps.setInt(2, -owedNX);
-            ps.executeUpdate();
+            DMtsCart cart = new DMtsCart();
+            cart.characterid = characterId;
+            cart.itemid = -owedNX;
+            cart.save();
         }
-        ps.close();
-        //notYetSold shouldnt be saved here
+        //not Yet Sold 不应该保存在这里
     }
 
-    public void loadCart() throws SQLException {
-        final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM mts_cart WHERE characterid = ?");
-        ps.setInt(1, characterId);
-        final ResultSet rs = ps.executeQuery();
-        int iId;
-        while (rs.next()) {
-            iId = rs.getInt("itemid");
-            if (iId < 0) {
-                owedNX -= iId;
-            } else if (MTSStorage.getInstance().check(iId)) {
-                cart.add(iId);
+    public void loadCart() {
+        new QDMtsCart().characterid.eq(characterId).findEach(it -> {
+            if (it.itemid < 0) {
+                owedNX -= it.itemid;
+            } else if (MTSStorage.getInstance().check(it.itemid)) {
+                cart.add(it.itemid);
             }
-        }
-        rs.close();
-        ps.close();
+        });
     }
 
-    public void loadNotYetSold() throws SQLException {
-        final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM mts_items WHERE characterid = ?");
-        ps.setInt(1, characterId);
-        final ResultSet rs = ps.executeQuery();
-        int pId;
-        while (rs.next()) {
-            pId = rs.getInt("id");
-            if (MTSStorage.getInstance().check(pId)) {
-                notYetSold.add(pId);
+    public void loadNotYetSold() {
+        /*new QDMtsitem().characterid.eq(characterId).findEach(it -> {
+            if (MTSStorage.getInstance().check(it.id)) {
+                notYetSold.add(it.id);
             }
-        }
-        rs.close();
-        ps.close();
+        });*/
     }
 
     public void changeInfo(final int tab, final int type, final int page) {

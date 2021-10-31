@@ -1,52 +1,24 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "mulungdojo")
-public class DMuLungDojo {
+public class DMuLungDojo extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "charid")
+    public Integer charid;
+    @NotNull
+    @Column(name = "stage")
+    public Integer stage;
 
-    @Column(name = "charid", nullable = false)
-    private Integer charid;
-
-    @Column(name = "stage", nullable = false)
-    private Integer stage;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setCharid(Integer charid) {
-        this.charid = charid;
-    }
-
-    public Integer getCharid() {
-        return charid;
-    }
-
-    public void setStage(Integer stage) {
-        this.stage = stage;
-    }
-
-    public Integer getStage() {
-        return stage;
-    }
-
-    @Override
-    public String toString() {
-        return "DMuLungDojo{" +
-                "id=" + id + '\'' +
-                "charid=" + charid + '\'' +
-                "stage=" + stage + '\'' +
-                '}';
-    }
 }

@@ -4,14 +4,9 @@ import com.github.mrzhqiang.maplestory.domain.DBuddy;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
-import database.DatabaseConnection;
 import tools.MaplePacketCreator;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 public class BuddyList implements Serializable {
@@ -94,7 +89,7 @@ public class BuddyList implements Serializable {
      *
      * @return 目前好友清單容量
      */
-    public byte getCapacity() {
+    public int getCapacity() {
         return capacity;
     }
 
@@ -181,16 +176,16 @@ public class BuddyList implements Serializable {
     /**
      * @param data
      */
-    public void loadFromTransfer(final Map<BuddyEntry, Boolean> data) {
+    public void loadFromTransfer(Map<BuddyEntry, Boolean> data) {
         BuddyEntry buddyid;
         boolean pair;
-        for (final Map.Entry<BuddyEntry, Boolean> qs : data.entrySet()) {
+        for (Map.Entry<BuddyEntry, Boolean> qs : data.entrySet()) {
             buddyid = qs.getKey();
             pair = qs.getValue();
             if (!pair) {
                 pendingReqs.push(buddyid);
             } else {
-                put(new BuddyEntry(buddyid.getName(), buddyid.getCharacterId(), buddyid.getGroup(), -1, true, buddyid.getLevel(), buddyid.getJob()));
+                put(new BuddyEntry(buddyid.character, buddyid.getGroup(), -1, true));
             }
         }
     }
@@ -202,14 +197,10 @@ public class BuddyList implements Serializable {
         if (character != null) {
             List<DBuddy> buddies = new QDBuddy().owner.eq(character).findList();
             for (DBuddy buddy : buddies) {
-                int buddyid = buddy.id;
-                String buddyname = buddy.owner.name;
                 if (buddy.pending == 1) {
-                    pendingReqs.push(new BuddyEntry(buddyname, buddyid, buddy.groupName,
-                            -1, false, buddy.owner.level, buddy.owner.job));
+                    pendingReqs.push(new BuddyEntry(buddy.owner, buddy.groupName, -1, false));
                 } else {
-                    put(new BuddyEntry(buddyname, buddyid, buddy.groupName,
-                            -1, true, buddy.owner.level, buddy.owner.job));
+                    put(new BuddyEntry(buddy.owner, buddy.groupName, -1, true));
                 }
             }
         }
@@ -231,98 +222,47 @@ public class BuddyList implements Serializable {
      * 新增好友請求
      *
      * @param client       欲增加好友的角色客戶端
-     * @param buddyId      新增的好友ID
-     * @param buddyName    新增的好友名稱
      * @param buddyChannel 新增的好友頻道
-     * @param buddyLevel   新增的好友的等級
-     * @param buddyJob     新增的好友的職業
+     * @param character    好友信息
      */
-    public void addBuddyRequest(MapleClient client, int buddyId, String buddyName, int buddyChannel, int buddyLevel, int buddyJob) {
+    public void addBuddyRequest(MapleClient client, int buddyChannel, DCharacter character) {
 
-        this.put(new BuddyEntry(buddyName, buddyId, BuddyList.DEFAULT_GROUP, buddyChannel, false, buddyLevel, buddyJob));
+        this.put(new BuddyEntry(character, BuddyList.DEFAULT_GROUP, buddyChannel, false));
 
         if (pendingReqs.isEmpty()) {
 
-            client.sendPacket(MaplePacketCreator.requestBuddylistAdd(buddyId, buddyName, buddyLevel, buddyJob));
+            client.sendPacket(MaplePacketCreator.requestBuddylistAdd(character));
 
         } else {
 
-            BuddyEntry newPair = new BuddyEntry(buddyName, buddyId, BuddyList.DEFAULT_GROUP, -1, false, buddyJob, buddyLevel);
+            BuddyEntry newPair = new BuddyEntry(character, BuddyList.DEFAULT_GROUP, -1, false);
             pendingReqs.push(newPair);
 
         }
     }
 
     public static int getBuddyCount(int chrId, int pending) {
-        int count = 0;
-        Connection con = DatabaseConnection.getConnection();
-        try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) as buddyCount FROM buddies WHERE characterid = ? AND pending = ?")) {
-            ps.setInt(1, chrId);
-            ps.setInt(2, pending);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    throw new RuntimeException("BuddyListHandler: getBuudyCount From DB is Error.");
-                } else {
-                    count = rs.getInt("buddyCount");
-                }
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            //FilePrinter.printError("BuddyListHandler.txt", ex);
-        }
-        return count;
+        return new QDBuddy().owner.id.eq(chrId).pending.eq(pending).findCount();
     }
 
     public static int getBuddyCapacity(int charId) {
-        int capacity = -1;
-        Connection con = DatabaseConnection.getConnection();
-        try (PreparedStatement ps = con.prepareStatement("SELECT buddyCapacity FROM characters WHERE id = ?")) {
-            ps.setInt(1, charId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    capacity = rs.getInt("buddyCapacity");
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            //FilePrinter.printError("BuddyListModifyHandler.txt", ex);
-        }
-
-        return capacity;
+        return new QDCharacter().id.eq(charId).findOneOrEmpty()
+                .map(it -> it.buddyCapacity)
+                .orElse(-1);
     }
 
     public static int getBuddyPending(int chrId, int buddyId) {
-        int pending = -1;
-        Connection con = DatabaseConnection.getConnection();
-        try (PreparedStatement ps = con.prepareStatement("SELECT pending FROM buddies WHERE characterid = ? AND buddyid = ?")) {
-            ps.setInt(1, chrId);
-            ps.setInt(2, buddyId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pending = rs.getInt("pending");
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            //FilePrinter.printError("BuddyListModifyHandler.txt", ex);
-        }
-
-        return pending;
+        return new QDBuddy().owner.id.eq(chrId).buddies.eq(buddyId).findOneOrEmpty()
+                .map(it -> it.pending)
+                .orElse(-1);
     }
 
     public static void addBuddyToDB(MapleCharacter player, BuddyEntry buddy) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("INSERT INTO buddies (`characterid`, `buddyid`, `groupname`, `pending`) VALUES (?, ?, ?, 1)")) {
-                ps.setInt(1, buddy.getCharacterId());
-                ps.setInt(2, player.getId());
-                ps.setString(3, buddy.getGroup());
-                ps.executeUpdate();
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            //FilePrinter.printError("BuddyListModifyHandler.txt", ex);
-        }
+        DBuddy dBuddy = new DBuddy();
+        dBuddy.owner = new QDCharacter().id.eq(buddy.getCharacterId()).findOne();
+        dBuddy.buddies = player.getId();
+        dBuddy.groupName = buddy.getGroup();
+        dBuddy.pending = 1;
+        dBuddy.save();
     }
 }

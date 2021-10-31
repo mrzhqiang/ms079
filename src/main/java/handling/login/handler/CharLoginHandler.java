@@ -241,7 +241,7 @@ public class CharLoginHandler {
         final int bottom = slea.readInt();//裤子
         final int shoes = slea.readInt();//鞋子
         final int weapon = slea.readInt();//武器
-        final byte gender = c.getGender();//性别
+        final int gender = c.getGender();//性别
         switch (gender) {
             case 0:
                 //如果是男的

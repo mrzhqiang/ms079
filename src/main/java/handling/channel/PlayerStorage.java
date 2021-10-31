@@ -44,7 +44,7 @@ public class PlayerStorage {
     private final ReentrantReadWriteLock mutex2 = new ReentrantReadWriteLock();
     private final Lock rL2 = mutex2.readLock(), wL2 = mutex2.writeLock();
     private final Map<String, MapleCharacter> nameToChar = new HashMap<String, MapleCharacter>();
-    private final Map<Integer, MapleCharacter> idToChar = new HashMap<Integer, MapleCharacter>();
+    private final Map<Integer, MapleCharacter> idToChar = new HashMap<>();
     private final Map<Integer, CharacterTransfer> PendingCharacter = new HashMap<Integer, CharacterTransfer>();
     private int channel;
 
@@ -146,7 +146,7 @@ public class PlayerStorage {
      }
      return null;
      }*/
-    public final MapleCharacter getCharacterById(final int id) {
+    public MapleCharacter getCharacterById(int id) {
         rL.lock();
         try {
             return idToChar.get(id);

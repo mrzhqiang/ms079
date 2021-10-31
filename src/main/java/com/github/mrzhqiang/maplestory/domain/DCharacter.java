@@ -7,6 +7,7 @@ import javax.persistence.*;
 import javax.persistence.Index;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "characters", indexes = {
@@ -25,11 +26,11 @@ public class DCharacter extends Model {
     @DbForeignKey(noConstraint = true)
     @JoinColumn(name = "accountid")
     @DbComment("所属账号")
-    public final DAccount account;
+    public DAccount account;
     @NotNull
     @Length(20)
     @DbComment("角色名")
-    public final String name;
+    public String name;
 
     @NotNull
     @DbComment("世界？大区？")
@@ -106,7 +107,7 @@ public class DCharacter extends Model {
     @WhenCreated
     @Column(name = "createdate")
     public LocalDateTime created;
-    @OneToOne
+    @ManyToOne
     @DbForeignKey(noConstraint = true)
     @JoinColumn(name = "guildid")
     public DGuild guild;
@@ -277,8 +278,16 @@ public class DCharacter extends Model {
     @OneToOne(mappedBy = "owner")
     public DBuddy buddy;
 
-    public DCharacter(DAccount account, String name) {
-        this.account = account;
-        this.name = name;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DCharacter that = (DCharacter) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

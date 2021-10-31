@@ -1,47 +1,19 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc>
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package client.inventory;
 
-import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.domain.DPet;
+import com.github.mrzhqiang.maplestory.domain.query.QDPet;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import constants.GameConstants;
-import java.awt.Point;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.io.Serializable;
-
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import database.DatabaseConnection;
 import server.MapleItemInformationProvider;
 import server.movement.AbsoluteLifeMovement;
 import server.movement.LifeMovement;
 import server.movement.LifeMovementFragment;
 
+import java.io.Serializable;
+import java.util.List;
+
 public class MaplePet implements Serializable {
 
-    public static enum PetFlag {
+    public enum PetFlag {
 
         ITEM_PICKUP(0x01, 5190000, 5191000),
         EXPAND_PICKUP(0x02, 5190002, 5191002), //idk
@@ -54,23 +26,23 @@ public class MaplePet implements Serializable {
         PET_DRAW(0x100, 5190007, -1), //nfs
         PET_DIALOGUE(0x200, 5190008, -1); //nfs
 
-        private final int i, item, remove;
+        private int i, item, remove;
 
-        private PetFlag(int i, int item, int remove) {
+        PetFlag(int i, int item, int remove) {
             this.i = i;
             this.item = item;
             this.remove = remove;
         }
 
-        public final int getValue() {
+        public int getValue() {
             return i;
         }
 
-        public final boolean check(int flag) {
+        public boolean check(int flag) {
             return (flag & i) == i;
         }
 
-        public static final PetFlag getByAddId(final int itemId) {
+        public static PetFlag getByAddId(int itemId) {
             for (PetFlag flag : PetFlag.values()) {
                 if (flag.item == itemId) {
                     return flag;
@@ -79,7 +51,7 @@ public class MaplePet implements Serializable {
             return null;
         }
 
-        public static final PetFlag getByDelId(final int itemId) {
+        public static PetFlag getByDelId(int itemId) {
             for (PetFlag flag : PetFlag.values()) {
                 if (flag.remove == itemId) {
                     return flag;
@@ -89,139 +61,100 @@ public class MaplePet implements Serializable {
         }
     }
 
-    private static final long serialVersionUID = 9179541993413738569L;
-    private String name;
-    private int Fh = 0, stance = 0, uniqueid, petitemid, secondsLeft = 0;
+    private static long serialVersionUID = 9179541993413738569L;
+
+    private DPet pet;
+
+    private int Fh = 0, stance = 0, uniqueid, petitemid;
     private Vector pos;
-    private byte fullness = 100, level = 1, summoned = 0;
-    private short inventorypos = 0, closeness = 0, flags = 0;
+    private int summoned = 0;
+    private int inventorypos = 0;
     private boolean changed = false;
 
-    private MaplePet(final int petitemid, final int uniqueid) {
+    private MaplePet(int petitemid, int uniqueid) {
         this.petitemid = petitemid;
         this.uniqueid = uniqueid;
     }
 
-    private MaplePet(final int petitemid, final int uniqueid, final short inventorypos) {
+    private MaplePet(int petitemid, int uniqueid, int inventorypos) {
         this.petitemid = petitemid;
         this.uniqueid = uniqueid;
         this.inventorypos = inventorypos;
     }
 
-    public static final MaplePet loadFromDb(final int itemid, final int petid, final short inventorypos) {
-        try {
-            final MaplePet ret = new MaplePet(itemid, petid, inventorypos);
-
-            Connection con = DatabaseConnection.getConnection(); // Get a connection to the database
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM pets WHERE petid = ?"); // Get pet details..
-            ps.setInt(1, petid);
-
-            final ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-                return null;
-            }
-
-            ret.setName(rs.getString("name"));
-            ret.setCloseness(rs.getShort("closeness"));
-            ret.setLevel(rs.getByte("level"));
-            ret.setFullness(rs.getByte("fullness"));
-            ret.setSecondsLeft(rs.getInt("seconds"));
-            ret.setFlags(rs.getShort("flags"));
-            ret.changed = false;
-
-            rs.close();
-            ps.close();
-
-            return ret;
-        } catch (SQLException ex) {
-            Logger.getLogger(MaplePet.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
+    private MaplePet(int petitemid, DPet pet, int inventorypos) {
+        this.petitemid = petitemid;
+        this.pet = pet;
+        this.inventorypos = inventorypos;
     }
 
-    public final void saveToDb() {
+    public static MaplePet loadFromDb(int itemid, int petid, int inventorypos) {
+        DPet one = new QDPet().id.eq(petid).findOne();
+        if (one == null) {
+            return null;
+        }
+        MaplePet ret = new MaplePet(itemid, one, inventorypos);
+        ret.changed = false;
+        return ret;
+    }
+
+    public void saveToDb() {
         if (!changed) {
             return;
         }
-        try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE pets SET name = ?, level = ?, closeness = ?, fullness = ?, seconds = ?, flags = ? WHERE petid = ?");
-            ps.setString(1, name); // Set name
-            ps.setByte(2, level); // Set Level
-            ps.setShort(3, closeness); // Set Closeness
-            ps.setByte(4, fullness); // Set Fullness
-            ps.setInt(5, secondsLeft);
-            ps.setShort(6, flags);
-            ps.setInt(7, uniqueid); // Set ID
-            ps.executeUpdate(); // Execute statement
-            ps.close();
-            changed = false;
-        } catch (final SQLException ex) {
-            ex.printStackTrace();
-        }
+
+        pet.save();
+        changed = false;
     }
-    public static final MaplePet createPet(final int itemid, final int uniqueid) {
+
+    public static MaplePet createPet(int itemid, int uniqueid) {
         return createPet(itemid, MapleItemInformationProvider.getInstance().getName(itemid), 1, 0, 100, uniqueid, itemid == 5000054 ? 18000 : 0);
     }
 
-    public static final MaplePet createPet(int itemid, String name, int level, int closeness, int fullness, int uniqueid, int secondsLeft) {
+    public static MaplePet createPet(int itemid, String name, int level, int closeness, int fullness, int uniqueid, int secondsLeft) {
         if (uniqueid <= -1) { //wah
             uniqueid = MapleInventoryIdentifier.getInstance();
-        } 
-        short ret1 = MapleItemInformationProvider.getInstance().getPetFlagInfo(itemid);    
-        try { // Commit to db first
-            PreparedStatement pse = DatabaseConnection.getConnection().prepareStatement("INSERT INTO pets (petid, name, level, closeness, fullness, seconds, flags) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            pse.setInt(1, uniqueid);
-            pse.setString(2, name);
-            pse.setByte(3, (byte) level);
-            pse.setShort(4, (short) closeness);
-            pse.setByte(5, (byte) fullness);
-            pse.setInt(6, secondsLeft);
-            pse.setShort(7, (short) ret1); //flags
-            pse.executeUpdate();
-            pse.close();
-        } catch (final SQLException ex) {
-            ex.printStackTrace();
-            return null;
         }
-        final MaplePet pet = new MaplePet(itemid, uniqueid);
-        pet.setName(name);
-        pet.setLevel(level);
-        pet.setFullness(fullness);
-        pet.setCloseness(closeness);
-        pet.setFlags(ret1);
-        pet.setSecondsLeft(secondsLeft);
+        int ret1 = MapleItemInformationProvider.getInstance().getPetFlagInfo(itemid);
 
-        return pet;
+        DPet dPet = new DPet();
+        dPet.id = uniqueid;
+        dPet.name = name;
+        dPet.level = level;
+        dPet.closeness = closeness;
+        dPet.fullness = fullness;
+        dPet.seconds = secondsLeft;
+        dPet.flags = ret1;
+        dPet.save();
+        return new MaplePet(itemid, dPet, uniqueid);
     }
 
-    public final String getName() {
-        return name;
+    public String getName() {
+        return pet.name;
     }
 
-    public final void setName(final String name) {
-        this.name = name;
+    public void setName(String name) {
+        this.pet.name = name;
         this.changed = true;
     }
 
-    public final boolean getSummoned() {
+    public boolean getSummoned() {
         return summoned > 0;
     }
 
-    public final byte getSummonedValue() {
+    public int getSummonedValue() {
         return summoned;
     }
 
-    public final void setSummoned(final int summoned) {
-        this.summoned = (byte) summoned;
+    public void setSummoned(int summoned) {
+        this.summoned = (int) summoned;
     }
 
-    public final short getInventoryPosition() {
+    public int getInventoryPosition() {
         return inventorypos;
     }
 
-    public final void setInventoryPosition(final short inventorypos) {
+    public void setInventoryPosition(int inventorypos) {
         this.inventorypos = inventorypos;
     }
 
@@ -229,76 +162,76 @@ public class MaplePet implements Serializable {
         return uniqueid;
     }
 
-    public final short getCloseness() {
-        return closeness;
+    public int getCloseness() {
+        return pet.closeness;
     }
 
-    public final void setCloseness(int closeness) {
-        if(closeness >= 2147483647 || closeness <= 0){
+    public void setCloseness(int closeness) {
+        if (closeness >= 2147483647 || closeness <= 0) {
             closeness = 1;
         }
-        this.closeness = (short) closeness;
+        this.pet.closeness = closeness;
         this.changed = true;
     }
 
-    public final byte getLevel() {
-        return level;
+    public int getLevel() {
+        return pet.level;
     }
 
-    public final void setLevel(final int level) {
-        this.level = (byte) level;
+    public void setLevel(int level) {
+        this.pet.level = (int) level;
         this.changed = true;
     }
 
-    public final byte getFullness() {
-        return fullness;
+    public int getFullness() {
+        return pet.fullness;
     }
 
-    public final void setFullness(final int fullness) {
-        this.fullness = (byte) fullness;
+    public void setFullness(int fullness) {
+        this.pet.fullness = fullness;
         this.changed = true;
     }
 
-    public final short getFlags() {
-        return flags;
+    public int getFlags() {
+        return pet.flags;
     }
 
-    public final void setFlags(final int fffh) {
-        this.flags = (short) fffh;
+    public void setFlags(int fffh) {
+        this.pet.flags = fffh;
         this.changed = true;
     }
 
-    public final int getFh() {
+    public int getFh() {
         return Fh;
     }
 
-    public final void setFh(final int Fh) {
+    public void setFh(int Fh) {
         this.Fh = Fh;
     }
 
-    public final Vector getPos() {
+    public Vector getPos() {
         return pos;
     }
 
-    public final void setPos(final Vector pos) {
+    public void setPos(Vector pos) {
         this.pos = pos;
     }
 
-    public final int getStance() {
+    public int getStance() {
         return stance;
     }
 
-    public final void setStance(final int stance) {
+    public void setStance(int stance) {
         this.stance = stance;
     }
 
-    public final int getPetItemId() {
+    public int getPetItemId() {
         return petitemid;
     }
 
-    public final boolean canConsume(final int itemId) {
-        final MapleItemInformationProvider mii = MapleItemInformationProvider.getInstance();
-        for (final int petId : mii.petsCanConsume(itemId)) {
+    public boolean canConsume(int itemId) {
+        MapleItemInformationProvider mii = MapleItemInformationProvider.getInstance();
+        for (int petId : mii.petsCanConsume(itemId)) {
             if (petId == petitemid) {
                 return true;
             }
@@ -306,8 +239,8 @@ public class MaplePet implements Serializable {
         return false;
     }
 
-    public final void updatePosition(final List<LifeMovementFragment> movement) {
-        for (final LifeMovementFragment move : movement) {
+    public void updatePosition(List<LifeMovementFragment> movement) {
+        for (LifeMovementFragment move : movement) {
             if (move instanceof LifeMovement) {
                 if (move instanceof AbsoluteLifeMovement) {
                     setPos(((LifeMovement) move).getPosition());
@@ -317,12 +250,12 @@ public class MaplePet implements Serializable {
         }
     }
 
-    public final int getSecondsLeft() {
-        return secondsLeft;
+    public int getSecondsLeft() {
+        return pet.seconds;
     }
 
-    public final void setSecondsLeft(int sl) {
-        this.secondsLeft = sl;
+    public void setSecondsLeft(int sl) {
+        this.pet.seconds = sl;
         this.changed = true;
     }
 }

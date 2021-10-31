@@ -2,23 +2,30 @@ package tools.wztosql;
 
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.DWzItemAddData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemEquipData;
+import com.github.mrzhqiang.maplestory.domain.DWzItemRewardData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemAddData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemEquipData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzItemRewardData;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzDirectory;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import constants.GameConstants;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.Pair;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 public class DumpItems {
 
@@ -28,7 +35,6 @@ public class DumpItems {
     protected boolean hadError = false;
     protected boolean update;
     protected int id = 0;
-    private final Connection con = DatabaseConnection.getConnection();
 
     public DumpItems(boolean update) {
         this.update = update;
@@ -38,47 +44,7 @@ public class DumpItems {
         return hadError;
     }
 
-    public void dumpItems() throws Exception {
-        if (!hadError) {
-            PreparedStatement psa = con.prepareStatement("INSERT INTO wz_itemadddata(itemid, `key`, `subKey`, `value`) VALUES (?, ?, ?, ?)");
-            PreparedStatement psr = con.prepareStatement("INSERT INTO wz_itemrewarddata(itemid, item, prob, quantity, period, worldMsg, effect) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            PreparedStatement ps = con.prepareStatement("INSERT INTO wz_itemdata(itemid, name, msg, `desc`, slotMax, price, wholePrice, stateChange, flags, karma, meso, monsterBook, itemMakeLevel, questId, scrollReqs, consumeItem, totalprob, incSkill, replaceId, replaceMsg, `create`, afterImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            PreparedStatement pse = con.prepareStatement("INSERT INTO wz_itemequipdata(itemid, itemLevel, `key`, `value`) VALUES (?, ?, ?, ?)");
-            try {
-                dumpItems(psa, psr, ps, pse);
-            } catch (Exception e) {
-                e.printStackTrace();
-                LOGGER.debug(id + " quest.");
-                hadError = true;
-            } finally {
-                psa.executeBatch();
-                psa.close();
-                psr.executeBatch();
-                psr.close();
-                pse.executeBatch();
-                pse.close();
-                ps.executeBatch();
-                ps.close();
-            }
-        }
-    }
-
-    public void delete(String sql) throws Exception {
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.executeUpdate();
-        }
-    }
-
-    public boolean doesExist(String sql) throws Exception {
-        boolean ret;
-        try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            ret = rs.next();
-        }
-        return ret;
-    }
-
-    public void dumpItems(WzDirectory d, PreparedStatement psa, PreparedStatement psr,
-                          PreparedStatement ps, PreparedStatement pse, boolean charz) {
+    public void dumpItems(WzDirectory d, boolean charz) {
         d.dirStream().filter(directory -> !directory.name().equalsIgnoreCase("Special")
                         && !directory.name().equalsIgnoreCase("Hair")
                         && !directory.name().equalsIgnoreCase("Face")
@@ -86,25 +52,14 @@ public class DumpItems {
                 .forEach(directory -> directory.fileStream().map(WzFile::content)
                         .forEach(iz -> {
                             if (charz || directory.name().equalsIgnoreCase("Pet")) {
-                                try {
-                                    dumpItem(psa, psr, ps, pse, iz);
-                                } catch (Exception e) {
-                                    LOGGER.error("导出数据出错", e);
-                                }
+                                dumpItem(iz);
                             } else {
-                                iz.childrenStream().forEach(itemData -> {
-                                    try {
-                                        dumpItem(psa, psr, ps, pse, itemData);
-                                    } catch (Exception e) {
-                                        LOGGER.error("导出数据出错", e);
-                                    }
-                                });
+                                iz.childrenStream().forEach(this::dumpItem);
                             }
                         }));
     }
 
-    public void dumpItem(PreparedStatement psa, PreparedStatement psr, PreparedStatement ps,
-                         PreparedStatement pse, WzElement<?> iz) throws Exception {
+    public void dumpItem(WzElement<?> iz) {
         try {
             String name = iz.name();
             if (name.endsWith(".img")) {
@@ -118,31 +73,33 @@ public class DumpItems {
             return;
         }
         doneIds.add(id);
-        if (update && doesExist("SELECT * FROM wz_itemdata WHERE itemid = " + id)) {
+
+        if (update && new QDWzItemData().id.eq(id).exists()) {
             return;
         }
-        ps.setInt(1, id);
+
+        DWzItemData itemData = new DWzItemData();
+        itemData.id = id;
+
         WzElement<?> stringData = getStringData(id);
         if (stringData == null) {
-            ps.setString(2, "");
-            ps.setString(3, "");
-            ps.setString(4, "");
+            itemData.name = "";
+            itemData.msg = "";
+            itemData.desc = "";
         } else {
-            ps.setString(2, Elements.findString(stringData, "name"));
-            ps.setString(3, Elements.findString(stringData, "msg"));
-            ps.setString(4, Elements.findString(stringData, "desc"));
+            itemData.name = Elements.findString(stringData, "name");
+            itemData.msg = Elements.findString(stringData, "msg");
+            itemData.desc = Elements.findString(stringData, "desc");
         }
-        short ret = iz.findByName("info/slotMax")
-                .map(element -> Elements.ofInt(element, -1))
-                .map(Integer::shortValue)
+        itemData.slotMax = iz.findByName("info/slotMax")
+                .map(element1 -> Elements.ofInt(element1, -1))
                 .orElseGet(() -> {
                     if (GameConstants.getInventoryType(id) == MapleInventoryType.EQUIP) {
-                        return (short) 1;
+                        return 1;
                     } else {
-                        return (short) 100;
+                        return 100;
                     }
                 });
-        ps.setInt(5, ret);
 
         double pEntry;
         if (iz.find("info/unitPrice") != null) {
@@ -161,9 +118,10 @@ public class DumpItems {
         if (id == 2070019 || id == 2330007) {
             pEntry = 1.0;
         }
-        ps.setString(6, String.valueOf(pEntry));
-        ps.setInt(7, Elements.findInt(iz, "info/price", -1));
-        ps.setInt(8, Elements.findInt(iz, "info/stateChangeItem"));
+
+        itemData.price = String.valueOf(pEntry);
+        itemData.wholePrice = Elements.findInt(iz, "info/price", -1);
+        itemData.stateChange = Elements.findInt(iz, "info/stateChangeItem");
         int flags = Elements.findInt(iz, "info/bagType");
         if (Elements.findInt(iz, "info/notSale") > 0) {
             flags |= 0x10;
@@ -192,12 +150,13 @@ public class DumpItems {
         if (Elements.findInt(iz, "info/mobHP") > 0 && Elements.findInt(iz, "info/mobHP") < 100) {
             flags |= 0x1000;
         }
-        ps.setInt(9, flags);
-        ps.setInt(10, Elements.findInt(iz, "info/tradeAvailable"));
-        ps.setInt(11, Elements.findInt(iz, "info/meso"));
-        ps.setInt(12, Elements.findInt(iz, "info/mob"));
-        ps.setInt(13, Elements.findInt(iz, "info/lv"));
-        ps.setInt(14, Elements.findInt(iz, "info/questId"));
+
+        itemData.flags = flags;
+        itemData.karma = Elements.findInt(iz, "info/tradeAvailable");
+        itemData.meso = Elements.findInt(iz, "info/meso");
+        itemData.monsterBook = Elements.findInt(iz, "info/mob");
+        itemData.itemMakeLevel = Elements.findInt(iz, "info/lv");
+        itemData.questId = Elements.findInt(iz, "info/questId");
         StringBuilder scrollReqs = new StringBuilder(), consumeItem = new StringBuilder(), incSkill = new StringBuilder();
         iz.findByName("req").map(WzElement::childrenStream)
                 .ifPresent(stream -> stream.forEach(element -> {
@@ -213,8 +172,8 @@ public class DumpItems {
                     }
                     consumeItem.append(Elements.ofInt(element));
                 }));
-        ps.setString(15, scrollReqs.toString());
-        ps.setString(16, consumeItem.toString());
+        itemData.scrollReqs = scrollReqs.toString();
+        itemData.consumeItem = consumeItem.toString();
         Map<Integer, Map<String, Integer>> equipStats = new HashMap<>();
         equipStats.put(-1, new HashMap<>());
         iz.findByName("mob").map(WzElement::childrenStream)
@@ -250,9 +209,9 @@ public class DumpItems {
                                 }
                             });
                         }));
-        String s22 = iz.findByName("info").map(element -> {
+        itemData.afterImage = iz.findByName("info").map(element1 -> {
             Map<String, Integer> rett = equipStats.get(-1);
-            element.childrenStream().filter(data -> data.name().startsWith("inc"))
+            element1.childrenStream().filter(data -> data.name().startsWith("inc"))
                     .forEach(data -> {
                         int gg = Elements.ofInt(data);
                         if (gg != 0) {
@@ -260,44 +219,42 @@ public class DumpItems {
                         }
                     });
             //save sql, only do the ones that exist
-            for (String stat : GameConstants.stats) {
-                if ("canLevel".equals(stat)) {
-                    if (element.find("level") != null) {
-                        rett.put(stat, 1);
+            for (String stat1 : GameConstants.stats) {
+                if ("canLevel".equals(stat1)) {
+                    if (element1.find("level") != null) {
+                        rett.put(stat1, 1);
                     }
                     continue;
                 }
-                element.findByName(stat).ifPresent(d -> {
-                    if ("skill".equals(stat)) {
+                element1.findByName(stat1).ifPresent(d -> {
+                    if ("skill".equals(stat1)) {
                         for (int i = 0; i < d.childrenStream().count(); i++) { // List of allowed skillIds
                             rett.put("skillid" + i, Elements.findInt(d, String.valueOf(i)));
                         }
                     } else {
                         int dd = Elements.ofInt(d);
                         if (dd != 0) {
-                            rett.put(stat, dd);
+                            rett.put(stat1, dd);
                         }
                     }
                 });
             }
-            return Elements.findString(element, "afterImage");
+            return Elements.findString(element1, "afterImage");
         }).orElse("");
-        ps.setString(22, s22);
 
-        pse.setInt(1, id);
         for (Entry<Integer, Map<String, Integer>> stats : equipStats.entrySet()) {
-            pse.setInt(2, stats.getKey());
             for (Entry<String, Integer> stat : stats.getValue().entrySet()) {
-                pse.setString(3, stat.getKey());
-                pse.setInt(4, stat.getValue());
-                pse.addBatch();
+                DWzItemEquipData equipData = new DWzItemEquipData();
+                equipData.id = id;
+                equipData.itemLevel = stats.getKey();
+                equipData.key = stat.getKey();
+                equipData.value = stat.getValue();
+                equipData.save();
             }
         }
         WzElement<?> dat = iz.find("info/addition");
         if (dat != null) {
-            psa.setInt(1, id);
             dat.childrenStream().forEach(element -> {
-                Pair<String, Integer> incs = null;
                 switch (element.name()) {
                     case "statinc":
                     case "critical":
@@ -311,47 +268,43 @@ public class DumpItems {
                         element.childrenStream().forEach(subKey -> {
                             if (subKey.name().equals("con")) {
                                 subKey.childrenStream().forEach(conK -> {
-                                    try {
-                                        switch (conK.name()) {
-                                            case "job":
-                                                StringBuilder sbbb = new StringBuilder();
-                                                if (conK.value() == null) { // a loop
-                                                    conK.childrenStream().forEach(ids -> {
-                                                        sbbb.append(ids.value().toString());
-                                                        sbbb.append(",");
-                                                    });
-                                                    sbbb.deleteCharAt(sbbb.length() - 1);
-                                                } else {
-                                                    sbbb.append(conK.value().toString());
-                                                }
-                                                psa.setString(2, element.name().equals("elemBoost") ? "elemboost" : element.name());
-                                                psa.setString(3, "con:job");
-                                                psa.setString(4, sbbb.toString());
-                                                psa.addBatch();
-                                                break;
-                                            case "weekDay":
-                                                // 01142367
-                                                return;
-                                            default:
-                                                psa.setString(2, element.name().equals("elemBoost") ? "elemboost" : element.name());
-                                                psa.setString(3, "con:" + conK.name());
-                                                psa.setString(4, conK.value().toString());
-                                                psa.addBatch();
-                                                break;
-                                        }
-                                    } catch (Exception e) {
-                                        LOGGER.error("处理 SQL 出错", e);
+                                    DWzItemAddData addData = new DWzItemAddData();
+                                    addData.id = id;
+                                    switch (conK.name()) {
+                                        case "job":
+                                            StringBuilder sbbb = new StringBuilder();
+                                            if (conK.value() == null) { // a loop
+                                                conK.childrenStream().forEach(ids -> {
+                                                    sbbb.append(ids.value().toString());
+                                                    sbbb.append(",");
+                                                });
+                                                sbbb.deleteCharAt(sbbb.length() - 1);
+                                            } else {
+                                                sbbb.append(conK.value().toString());
+                                            }
+                                            addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
+                                            addData.subKey = "con:job";
+                                            addData.value = sbbb.toString();
+                                            addData.save();
+                                            break;
+                                        case "weekDay":
+                                            // 01142367
+                                            return;
+                                        default:
+                                            addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
+                                            addData.subKey = "con:" + conK.name();
+                                            addData.value = conK.value().toString();
+                                            addData.save();
+                                            break;
                                     }
                                 });
                             } else {
-                                try {
-                                    psa.setString(2, element.name().equals("elemBoost") ? "elemboost" : element.name());
-                                    psa.setString(3, subKey.name());
-                                    psa.setString(4, subKey.value().toString());
-                                    psa.addBatch();
-                                } catch (SQLException e) {
-                                    LOGGER.error("处理 SQL 出错", e);
-                                }
+                                DWzItemAddData addData = new DWzItemAddData();
+                                addData.id = id;
+                                addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
+                                addData.subKey = subKey.name();
+                                addData.value = subKey.value().toString();
+                                addData.save();
                             }
                         });
                         break;
@@ -361,52 +314,50 @@ public class DumpItems {
                 }
             });
         }
+
         int totalprob = 0;
         dat = iz.find("reward");
         if (dat != null) {
-            psr.setInt(1, id);
             totalprob = dat.childrenStream().map(reward -> {
-                try {
-                    psr.setInt(2, Elements.findInt(reward, "item"));
-                    psr.setInt(3, Elements.findInt(reward, "prob"));
-                    psr.setInt(4, Elements.findInt(reward, "count"));
-                    psr.setInt(5, Elements.findInt(reward, "period"));
-                    psr.setString(6, Elements.findString(reward, "worldMsg"));
-                    psr.setString(7, Elements.findString(reward, "Effect"));
-                    psr.addBatch();
-                } catch (SQLException e) {
-                    LOGGER.error("处理 SQL 出错", e);
-                }
+                DWzItemRewardData rewardData = new DWzItemRewardData();
+                rewardData.id = id;
+                rewardData.item = Elements.findInt(reward, "item");
+                rewardData.prob = Elements.findInt(reward, "prob");
+                rewardData.quantity = Elements.findInt(reward, "count");
+                rewardData.period = Elements.findInt(reward, "period");
+                rewardData.worldMsg = Elements.findString(reward, "worldMsg");
+                rewardData.effect = Elements.findString(reward, "Effect");
+                rewardData.save();
                 return Elements.findInt(reward, "prob");
             }).reduce(0, Integer::sum);
         }
-        ps.setInt(17, totalprob);
-        ps.setString(18, incSkill.toString());
+        itemData.totalprob = totalprob;
+        itemData.incSkill = incSkill.toString();
         dat = iz.find("replace");
         if (dat != null) {
-            ps.setInt(19, Elements.findInt(dat, "itemid"));
-            ps.setString(20, Elements.findString(dat, "msg"));
+            itemData.replaceid = Elements.findInt(dat, "itemid");
+            itemData.replacemsg = Elements.findString(dat, "msg");
         } else {
-            ps.setInt(19, 0);
-            ps.setString(20, "");
+            itemData.replaceid = 0;
+            itemData.replacemsg = "";
         }
-        ps.setInt(21, Elements.findInt(iz, "info/create"));
-        ps.addBatch();
+        itemData.create = Elements.findInt(iz, "info/create");
+        itemData.save();
     }
-    //kinda inefficient
 
-    public void dumpItems(PreparedStatement psa, PreparedStatement psr, PreparedStatement ps, PreparedStatement pse) throws Exception {
+    public void dumpItems() {
         if (!update) {
-            delete("DELETE FROM wz_itemdata");
-            delete("DELETE FROM wz_itemequipdata");
-            delete("DELETE FROM wz_itemadddata");
-            delete("DELETE FROM wz_itemrewarddata");
-            LOGGER.debug("Deleted wz_itemdata successfully.");
+            new QDWzItemData().delete();
+            new QDWzItemEquipData().delete();
+            new QDWzItemAddData().delete();
+            new QDWzItemRewardData().delete();
+            LOGGER.debug("已成功删除 wz_itemdata。");
         }
-        LOGGER.debug("Adding into wz_itemdata.....");
-        dumpItems(WzData.ITEM.directory(), psa, psr, ps, pse, false);
-        dumpItems(WzData.CHARACTER.directory(), psa, psr, ps, pse, true);
-        LOGGER.debug("Done wz_itemdata...");
+
+        LOGGER.debug("添加到 wz_itemdata...");
+        dumpItems(WzData.ITEM.directory(), false);
+        dumpItems(WzData.CHARACTER.directory(), true);
+        LOGGER.debug("完成 wz_itemdata...");
     }
 
     public int currentId() {

@@ -1,64 +1,27 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.time.LocalDateTime;
 
+@SuppressWarnings("EntityIdMissingInspection")
 @Entity
 @Table(name = "fishing_rewards")
-public class DFishingReward {
+public class DFishingReward extends Model {
 
-    @Column(name = "itemid", nullable = false)
-    private Integer itemid;
-
-    @Column(name = "chance", nullable = false)
-    private Integer chance;
-
+    @NotNull
+    @Column(name = "itemid")
+    public Integer itemid;
+    @NotNull
+    @Column(name = "chance")
+    public Integer chance;
     @Column(name = "expiration")
-    private Integer expiration;
-
+    public LocalDateTime expiration;
     @Column(name = "name")
-    private String name;
+    public String name;
 
-    public void setItemid(Integer itemid) {
-        this.itemid = itemid;
-    }
-
-    public Integer getItemid() {
-        return itemid;
-    }
-
-    public void setChance(Integer chance) {
-        this.chance = chance;
-    }
-
-    public Integer getChance() {
-        return chance;
-    }
-
-    public void setExpiration(Integer expiration) {
-        this.expiration = expiration;
-    }
-
-    public Integer getExpiration() {
-        return expiration;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "DFishingReward{" +
-                "itemid=" + itemid + '\'' +
-                "chance=" + chance + '\'' +
-                "expiration=" + expiration + '\'' +
-                "name=" + name + '\'' +
-                '}';
-    }
 }

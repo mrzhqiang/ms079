@@ -1,60 +1,60 @@
 package server;
 
 import client.MapleCharacter;
-import java.io.Serializable;
+import client.MapleClient;
 import client.inventory.Equip;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Calendar;
 import client.inventory.IItem;
-import constants.GameConstants;
-import client.inventory.MaplePet;
 import client.inventory.Item;
 import client.inventory.ItemLoader;
-import client.MapleClient;
-import client.inventory.MapleRing;
 import client.inventory.MapleInventoryIdentifier;
 import client.inventory.MapleInventoryType;
-import database.DatabaseConnection;
-import java.util.Date;
-import tools.packet.MTSCSPacket;
-import tools.MaplePacketCreator;
+import client.inventory.MaplePet;
+import client.inventory.MapleRing;
+import com.github.mrzhqiang.maplestory.domain.DGift;
+import com.github.mrzhqiang.maplestory.domain.query.QDGift;
+import constants.GameConstants;
 import tools.Pair;
+import tools.packet.MTSCSPacket;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CashShop implements Serializable {
 
     private static final long serialVersionUID = 231541893513373579L;
+
     private int accountId, characterId;
-    private ItemLoader factory;
-    private List<IItem> inventory = new ArrayList<IItem>();
-    private List<Integer> uniqueids = new ArrayList<Integer>();
+    private final List<IItem> inventory = new ArrayList<>();
+    private final List<Integer> uniqueids = new ArrayList<>();
 
     public CashShop(int accountId, int characterId, int jobType) {
         this.accountId = accountId;
         this.characterId = characterId;
 
+        Map<Integer, Pair<IItem, MapleInventoryType>> items;
         if (jobType / 1000 == 1) {
-            factory = ItemLoader.CASHSHOP_CYGNUS;
+            // CASHSHOP_CYGNUS == 3
+            items = ItemLoader.loadItems(3, false, accountId);
         } else if ((jobType / 100 == 21 || jobType / 100 == 20) && jobType != 2001) {
-            factory = ItemLoader.CASHSHOP_ARAN;
+            // CASHSHOP_ARAN == 4
+            items = ItemLoader.loadItems(4, false, accountId);
         } else if (jobType == 2001 || jobType / 100 == 22) {
-            factory = ItemLoader.CASHSHOP_EVAN;
+            // CASHSHOP_EVAN == 7
+            items = ItemLoader.loadItems(7, false, accountId);
         } else if (jobType >= 3000) {
-            factory = ItemLoader.CASHSHOP_RESIST;
+            // CASHSHOP_RESIST == 11
+            items = ItemLoader.loadItems(11, false, accountId);
         } else if (jobType / 10 == 43) {
-            factory = ItemLoader.CASHSHOP_DB;
+            // CASHSHOP_DB == 10
+            items = ItemLoader.loadItems(10, false, accountId);
         } else {
-            factory = ItemLoader.CASHSHOP_EXPLORER;
+            // CASHSHOP_EXPLORER == 2
+            items = ItemLoader.loadItems(2, false, accountId);
         }
-
-        for (Pair<IItem, MapleInventoryType> item : factory.loadItems(false, accountId).values()) {
-            inventory.add(item.getLeft());
-        }
-
+        items.forEach((integer, item) -> inventory.add(item.getLeft()));
     }
 
     public int getItemsSize() {
@@ -114,7 +114,7 @@ public class CashShop implements Serializable {
         if (GameConstants.getInventoryType(cItem.getId()) == MapleInventoryType.EQUIP) {
             Equip eq = (Equip) MapleItemInformationProvider.getInstance().getEquipById(cItem.getId());
             eq.setUniqueId(uniqueid);
-            eq.setExpiration((long) (System.currentTimeMillis() + (long) (period * 24 * 60 * 60 * 1000)));
+            eq.setExpiration(System.currentTimeMillis() + (period * 24 * 60 * 60 * 1000));
             eq.setGiftFrom(gift);
             if (GameConstants.isEffectRing(cItem.getId()) && uniqueid > 0) {
                 MapleRing ring = MapleRing.loadFromDb(uniqueid);
@@ -212,53 +212,35 @@ public class CashShop implements Serializable {
     }
 
     public void gift(int recipient, String from, String message, int sn, int uniqueid) {
-        try {
-            PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("INSERT INTO `gifts` VALUES (DEFAULT, ?, ?, ?, ?, ?)");
-            ps.setInt(1, recipient);
-            ps.setString(2, from);
-            ps.setString(3, message);
-            ps.setInt(4, sn);
-            ps.setInt(5, uniqueid);
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException sqle) {
-            sqle.printStackTrace();
-        }
+        DGift gift = new DGift();
+        gift.recipient = recipient;
+        gift.from = from;
+        gift.message = message;
+        gift.sn = sn;
+        gift.uniqueid = uniqueid;
+        gift.save();
     }
 
     public List<Pair<IItem, String>> loadGifts() {
-        List<Pair<IItem, String>> gifts = new ArrayList<Pair<IItem, String>>();
-        Connection con = DatabaseConnection.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM `gifts` WHERE `recipient` = ?");
-            ps.setInt(1, characterId);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                CashItemInfo cItem = CashItemFactory.getInstance().getItem(rs.getInt("sn"));
-                IItem item = toItem(cItem, rs.getInt("uniqueid"), rs.getString("from"));
-                gifts.add(new Pair<IItem, String>(item, rs.getString("message")));
-                uniqueids.add(item.getUniqueId());
-                List<CashItemInfo> packages = CashItemFactory.getInstance().getPackageItems(cItem.getId());
-                if (packages != null && packages.size() > 0) {
-                    for (CashItemInfo packageItem : packages) {
-                        addToInventory(toItem(packageItem, rs.getString("from")));
+        List<Pair<IItem, String>> gifts = new QDGift().recipient.eq(characterId).findStream()
+                .map(it -> {
+                    CashItemInfo cItem = CashItemFactory.getInstance().getItem(it.sn);
+                    IItem item = toItem(cItem, it.uniqueid, it.from);
+                    uniqueids.add(item.getUniqueId());
+                    List<CashItemInfo> packages = CashItemFactory.getInstance().getPackageItems(cItem.getId());
+                    if (packages != null && packages.size() > 0) {
+                        for (CashItemInfo packageItem : packages) {
+                            addToInventory(toItem(packageItem, it.from));
+                        }
+                    } else {
+                        addToInventory(item);
                     }
-                } else {
-                    addToInventory(item);
-                }
-            }
+                    return new Pair<>(item, it.message);
+                })
+                .collect(Collectors.toList());
 
-            rs.close();
-            ps.close();
-            ps = con.prepareStatement("DELETE FROM `gifts` WHERE `recipient` = ?");
-            ps.setInt(1, characterId);
-            ps.executeUpdate();
-            ps.close();
-            save();
-        } catch (SQLException sqle) {
-            sqle.printStackTrace();
-        }
+        new QDGift().recipient.eq(characterId).delete();
+        save();
         return gifts;
     }
 
@@ -274,14 +256,14 @@ public class CashShop implements Serializable {
         }
     }
 
-    public void save() throws SQLException {
-        List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<Pair<IItem, MapleInventoryType>>();
+    public void save() {
+        List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<>();
 
         for (IItem item : inventory) {
-            itemsWithType.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));
+            itemsWithType.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
 
-        factory.saveItems(itemsWithType, accountId);
+        ItemLoader.saveItems(itemsWithType);
     }
 
     public IItem toItem(CashItemInfo cItem, MapleCharacter chr, int uniqueid, String gift) {

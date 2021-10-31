@@ -21,10 +21,7 @@
 package scripting;
 
 import client.*;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Connection;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
@@ -33,6 +30,8 @@ import java.util.Map.Entry;
 
 import client.inventory.Equip;
 import client.inventory.IItem;
+import com.github.mrzhqiang.maplestory.domain.DHiredMerch;
+import com.github.mrzhqiang.maplestory.domain.query.QDHiredMerch;
 import constants.GameConstants;
 import client.inventory.ItemFlag;
 import client.inventory.MapleInventory;
@@ -55,21 +54,21 @@ import tools.packet.PlayerShopPacket;
 import server.MapleItemInformationProvider;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
-import database.DatabaseConnection;
-import handling.channel.handler.HiredMerchantHandler;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
 import server.MapleCarnivalChallenge;
+
 import java.util.HashMap;
+
 import handling.world.guild.MapleGuildAlliance;
-import java.rmi.RemoteException;
+
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import javax.script.Invocable;
+
 import server.*;
-import server.MapleSquad.MapleSquadType;
 import server.maps.SpeedRunType;
 import server.Timer.CloneTimer;
 import server.life.*;
@@ -570,11 +569,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     public void unequipEverything() {
         MapleInventory equipped = getPlayer().getInventory(MapleInventoryType.EQUIPPED);
         MapleInventory equip = getPlayer().getInventory(MapleInventoryType.EQUIP);
-        List<Short> ids = new LinkedList<Short>();
+        List<Integer> ids = new LinkedList<>();
         for (IItem item : equipped.list()) {
             ids.add(item.getPosition());
         }
-        for (short id : ids) {
+        for (int id : ids) {
             MapleInventoryManipulator.unequip(getC(), id, equip.getNextFreeSlot());
         }
     }
@@ -933,59 +932,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
          */
     }
 
-    public void giveMerchantMesos() {
-        long mesos = 0;
-        try {
-            Connection con = (Connection) DatabaseConnection.getConnection();
-            PreparedStatement ps = (PreparedStatement) con.prepareStatement("SELECT * FROM hiredmerchants WHERE merchantid = ?");
-            ps.setInt(1, getPlayer().getId());
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-            } else {
-                mesos = rs.getLong("mesos");
-            }
-            rs.close();
-            ps.close();
-
-            ps = (PreparedStatement) con.prepareStatement("UPDATE hiredmerchants SET mesos = 0 WHERE merchantid = ?");
-            ps.setInt(1, getPlayer().getId());
-            ps.executeUpdate();
-            ps.close();
-
-        } catch (SQLException ex) {
-            LOGGER.error("Error gaining mesos in hired merchant" + ex);
-        }
-        c.getPlayer().gainMeso((int) mesos, true);
-    }
-
     public void dc() {
         MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(c.getPlayer().getName().toString());
         victim.getClient().getSession().close();
         victim.getClient().disconnect(true, false);
 
-    }
-
-    public long getMerchantMesos() {
-        long mesos = 0;
-        try {
-            Connection con = (Connection) DatabaseConnection.getConnection();
-            PreparedStatement ps = (PreparedStatement) con.prepareStatement("SELECT * FROM hiredmerchants WHERE merchantid = ?");
-            ps.setInt(1, getPlayer().getId());
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                rs.close();
-                ps.close();
-            } else {
-                mesos = rs.getLong("mesos");
-            }
-            rs.close();
-            ps.close();
-        } catch (SQLException ex) {
-            LOGGER.error("Error gaining mesos in hired merchant" + ex);
-        }
-        return mesos;
     }
 
     public void openDuey() {
@@ -1004,45 +955,27 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         c.getSession().write(PlayerShopPacket.merchItemStore_ItemData(pack));
     }
 
-    private static final MerchItemPackage loadItemFrom_Database(final int charid, final int accountid) {
-        final Connection con = DatabaseConnection.getConnection();
-
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?");
-            ps.setInt(1, charid);
-            ps.setInt(2, accountid);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                ps.close();
-                rs.close();
-                return null;
-            }
-            final int packageid = rs.getInt("PackageId");
-
-            final MerchItemPackage pack = new MerchItemPackage();
-            pack.setPackageid(packageid);
-            pack.setMesos(rs.getInt("Mesos"));
-            pack.setSentTime(rs.getLong("time"));
-
-            ps.close();
-            rs.close();
-
-            Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.HIRED_MERCHANT.loadItems(false, charid);
-            if (items != null) {
-                List<IItem> iters = new ArrayList<IItem>();
-                for (Pair<IItem, MapleInventoryType> z : items.values()) {
-                    iters.add(z.left);
-                }
-                pack.setItems(iters);
-            }
-
-            return pack;
-        } catch (SQLException e) {
-            e.printStackTrace();
+    private static MerchItemPackage loadItemFrom_Database(int charid, int accountid) {
+        DHiredMerch one = new QDHiredMerch().character.id.eq(charid).or().account.id.eq(accountid).findOne();
+        if (one == null) {
             return null;
         }
+
+        final MerchItemPackage pack = new MerchItemPackage();
+        pack.setPackageid(one.id);
+        pack.setMesos(one.mesos);
+        pack.setSentTime(one.time);
+
+        Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.loadItems(5, false, -1, -1, charid);
+        if (items != null) {
+            List<IItem> iters = new ArrayList<>();
+            for (Pair<IItem, MapleInventoryType> z : items.values()) {
+                iters.add(z.left);
+            }
+            pack.setItems(iters);
+        }
+
+        return pack;
     }
 
     public void sendRepairWindow() {
@@ -1527,7 +1460,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                 rate = getClient().getChannelServer().getBossDropRate();
             }
         }
-        List ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+        List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
         if ((ranks != null) && (ranks.size() > 0)) {
             int num = 0;
             int itemId = 0;
@@ -1535,25 +1468,40 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 
             MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             StringBuilder name = new StringBuilder();
-            for (int i = 0; i < ranks.size(); i++) {
-                MonsterDropEntry de = (MonsterDropEntry) ranks.get(i);
-                if ((de.chance > 0) && ((de.questid <= 0) || ((de.questid > 0) && (MapleQuest.getInstance(de.questid).getName().length() > 0)))) {
-                    itemId = de.itemId;
+            for (MonsterDropEntry de : ranks) {
+                if (de.data.chance > 0 && (de.data.questid <= 0 || MapleQuest.getInstance(de.data.questid).getName().length() > 0)) {
+                    itemId = de.data.itemid;
                     if (!ii.itemExists(itemId)) {
                         continue;
                     }
                     if (num == 0) {
-                        name.append("当前怪物 #o").append(mobId).append("# 的爆率为:\r\n");
+                        name.append("当前怪物 #o")
+                                .append(mobId)
+                                .append("# 的爆率为:\r\n");
                         name.append("--------------------------------------\r\n");
                     }
-                    String namez = new StringBuilder().append("#z").append(itemId).append("#").toString();
+                    String namez = "#z" + itemId + "#";
                     if (itemId == 0) {
                         itemId = 4031041;
-                        namez = new StringBuilder().append(de.Minimum * getClient().getChannelServer().getMesoRate()).append(" - ").append(de.Maximum * getClient().getChannelServer().getMesoRate()).append(" 的金币").toString();
+                        namez = de.data.minQuantity * getClient().getChannelServer().getMesoRate() +
+                                " - " +
+                                de.data.maxQuantity * getClient().getChannelServer().getMesoRate()
+                                + " 的金币";
                     }
-                    ch = de.chance * rate;
+                    ch = de.data.chance * rate;
                     //  if (getPlayer().isAdmin()) {
-                    name.append(num + 1).append(") #v").append(itemId).append("#").append(namez).append(" - ").append(Integer.valueOf(ch >= 999999 ? 1000000 : ch).doubleValue() / 10000.0D).append("%的爆率. ").append((de.questid > 0) && (MapleQuest.getInstance(de.questid).getName().length() > 0) ? new StringBuilder().append("需要接受任务: ").append(MapleQuest.getInstance(de.questid).getName()).toString() : "").append("\r\n");
+                    name.append(num + 1)
+                            .append(") #v")
+                            .append(itemId)
+                            .append("#")
+                            .append(namez)
+                            .append(" - ")
+                            .append(Integer.valueOf(ch >= 999999 ? 1000000 : ch).doubleValue() / 10000.0D)
+                            .append("%的爆率. ")
+                            .append((de.data.questid > 0) && (MapleQuest.getInstance(de.data.questid).getName().length() > 0)
+                                    ? "需要接受任务: " + MapleQuest.getInstance(de.data.questid).getName()
+                                    : "")
+                            .append("\r\n");
                     // } else {
                     //     name.append(num + 1).append(") #v").append(itemId).append("#").append(namez).append((de.questid > 0) && (MapleQuest.getInstance(de.questid).getName().length() > 0) ? new StringBuilder().append("需要接受任务: ").append(MapleQuest.getInstance(de.questid).getName()).toString() : "").append("\r\n");
                     // }
@@ -1568,7 +1516,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     }
 
     public String checkMapDrop() {
-        List ranks = new ArrayList(MapleMonsterInformationProvider.getInstance().getGlobalDrop());
+        List<MonsterGlobalDropEntry> ranks = new ArrayList<>(MapleMonsterInformationProvider.getInstance().getGlobalDrop());
         int mapid = this.c.getPlayer().getMap().getId();
         int cashServerRate = getClient().getChannelServer().getCashRate();
         int globalServerRate = 1;
@@ -1576,24 +1524,44 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             int num = 0;
 
             StringBuilder name = new StringBuilder();
-            for (int i = 0; i < ranks.size(); i++) {
-                MonsterGlobalDropEntry de = (MonsterGlobalDropEntry) ranks.get(i);
-                if ((de.continent < 0) || ((de.continent < 10) && (mapid / 100000000 == de.continent)) || ((de.continent < 100) && (mapid / 10000000 == de.continent)) || ((de.continent < 1000) && (mapid / 1000000 == de.continent))) {
-                    int itemId = de.itemId;
+            for (MonsterGlobalDropEntry de : ranks) {
+                if ((de.global.continent < 0)
+                        || ((de.global.continent < 10) && (mapid / 100000000 == de.global.continent))
+                        || ((de.global.continent < 100) && (mapid / 10000000 == de.global.continent))
+                        || ((de.global.continent < 1000) && (mapid / 1000000 == de.global.continent))) {
+                    int itemId = de.global.itemid;
                     if (num == 0) {
                         name.append("当前地图 #r").append(mapid).append("#k - #m").append(mapid).append("# 的全局爆率为:");
                         name.append("\r\n--------------------------------------\r\n");
                     }
-                    String names = new StringBuilder().append("#z").append(itemId).append("#").toString();
+                    String names = "#z" + itemId + "#";
                     if ((itemId == 0) && (cashServerRate != 0)) {
                         itemId = 4031041;
-                        names = new StringBuilder().append(de.Minimum * cashServerRate).append(" - ").append(de.Maximum * cashServerRate).append(" 的抵用卷").toString();
+                        names = de.global.minQuantity * cashServerRate + " - " + de.global.maxQuantity * cashServerRate + " 的抵用卷";
                     }
-                    int chance = de.chance * globalServerRate;
+                    int chance = de.global.chance * globalServerRate;
                     if (getPlayer().isAdmin()) {
-                        name.append(num + 1).append(") #v").append(itemId).append("#").append(names).append(" - ").append(Integer.valueOf(chance >= 999999 ? 1000000 : chance).doubleValue() / 10000.0D).append("%的爆率. ").append((de.questid > 0) && (MapleQuest.getInstance(de.questid).getName().length() > 0) ? new StringBuilder().append("需要接受任务: ").append(MapleQuest.getInstance(de.questid).getName()).toString() : "").append("\r\n");
+                        name.append(num + 1).append(") #v")
+                                .append(itemId)
+                                .append("#")
+                                .append(names)
+                                .append(" - ")
+                                .append(Integer.valueOf(chance >= 999999 ? 1000000 : chance).doubleValue() / 10000.0D)
+                                .append("%的爆率. ")
+                                .append((de.global.questid > 0) && (MapleQuest.getInstance(de.global.questid).getName().length() > 0)
+                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.questid).getName()
+                                        : "")
+                                .append("\r\n");
                     } else {
-                        name.append(num + 1).append(") #v").append(itemId).append("#").append(names).append((de.questid > 0) && (MapleQuest.getInstance(de.questid).getName().length() > 0) ? new StringBuilder().append("需要接受任务: ").append(MapleQuest.getInstance(de.questid).getName()).toString() : "").append("\r\n");
+                        name.append(num + 1)
+                                .append(") #v")
+                                .append(itemId)
+                                .append("#")
+                                .append(names)
+                                .append((de.global.questid > 0) && (MapleQuest.getInstance(de.global.questid).getName().length() > 0)
+                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.questid).getName()
+                                        : "")
+                                .append("\r\n");
                     }
                     num++;
                 }
@@ -1605,67 +1573,6 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return "当前地图没有设置全局爆率。";
     }
 
-    public int getzb() {
-        int money = 0;
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "");
-            ResultSet rs = limitCheck.executeQuery();
-            if (rs.next()) {
-                money = rs.getInt("money");
-            }
-            limitCheck.close();
-            rs.close();
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
-        return money;
-    }
-
-    public void setzb(int slot) {
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            try (PreparedStatement ps = con.prepareStatement("UPDATE accounts SET money =money+ " + slot + " WHERE id = " + cid + "")) {
-                ps.executeUpdate();
-            }
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
-    }
-
-    public int getmoneyb() {
-        int moneyb = 0;
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            ResultSet rs;
-            try (PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
-                rs = limitCheck.executeQuery();
-                if (rs.next()) {
-                    moneyb = rs.getInt("moneyb");
-                }
-            }
-            rs.close();
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
-        return moneyb;
-    }
-
-    public void setmoneyb(int slot) {
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "");
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
-    }
-
     public MapleMapFactory getMapFactory() {
         return getClient().getChannelServer().getMapFactory();
     }
@@ -1675,32 +1582,25 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         MapleMap warpMap = c.getChannelServer().getMapFactory().getMap(mid);
         c.getPlayer().changeMap(warpMap, warpMap.getPortal(0));
         c.sendPacket(MaplePacketCreator.getClock(time));
-        Timer.EventTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                MapleMap warpMap = c.getChannelServer().getMapFactory().getMap(retmap);
-                if (c.getPlayer() != null) {
-                    c.sendPacket(MaplePacketCreator.stopClock());
-                    c.getPlayer().changeMap(warpMap, warpMap.getPortal(0));
-                    c.getPlayer().dropMessage(6, "到达目的地ヘ!");
-                }
+        Timer.EventTimer.getInstance().schedule(() -> {
+            MapleMap warpMap1 = c.getChannelServer().getMapFactory().getMap(retmap);
+            if (c.getPlayer() != null) {
+                c.sendPacket(MaplePacketCreator.stopClock());
+                c.getPlayer().changeMap(warpMap1, warpMap1.getPortal(0));
+                c.getPlayer().dropMessage(6, "到达目的地ヘ!");
             }
-        }, 1000 * time);
+        }, 1000L * time);
     }
 
     public void warpMapWithClock(final int mid, int seconds) {
         c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getClock(seconds));
-        Timer.MapTimer.getInstance().schedule(new Runnable() {
-
-            public void run() {
-                if (c.getPlayer() != null) {
-                    for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
-                        chr.changeMap(mid);
-                    }
+        Timer.MapTimer.getInstance().schedule(() -> {
+            if (c.getPlayer() != null) {
+                for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
+                    chr.changeMap(mid);
                 }
             }
-        }, seconds * 1000);
+        }, seconds * 1000L);
     }
 
     public void showlvl() {
@@ -1889,50 +1789,22 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     }
 
     public void 获取等级排行榜() {
-        MapleGuild.等级排行榜(getClient(), npc);
+        MapleGuild.levelRank(getClient(), npc);
     }
 
     public void 获取人气排行榜() {
-        MapleGuild.人气排行榜(getClient(), npc);
+        MapleGuild.fameRank(getClient(), npc);
     }
 
     public void 获取金币排行榜() {
-        MapleGuild.金币排行榜(getClient(), npc);
+        MapleGuild.mesoRank(getClient(), npc);
     }
 
     public void 获取家族排行榜() {
-        MapleGuild.家族排行榜(getClient(), npc);
+        MapleGuild.gpRank(getClient(), npc);
     }
 
     public void 获取杀怪排行榜() {
-        MapleGuild.杀怪排行榜(getClient(), npc);
-    }
-
-    public int getsg() {
-        int sg = 0;
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM characters WHERE id=" + cid + "");
-            ResultSet rs = limitCheck.executeQuery();
-            if (rs.next()) {
-                sg = rs.getInt("sg");
-            }
-            limitCheck.close();
-            rs.close();
-        } catch (SQLException ex) {
-        }
-        return sg;
-    }
-
-    public void setsg(int slot) {
-        try {
-            int cid = getPlayer().getAccountID();
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE characters SET sg =sg+ " + slot + " WHERE id = " + cid + "");
-            ps.executeUpdate();
-            ps.close();
-        } catch (SQLException ex) {
-        }
+        MapleGuild.sgRank(getClient(), npc);
     }
 }

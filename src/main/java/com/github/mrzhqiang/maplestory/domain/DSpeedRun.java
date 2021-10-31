@@ -1,88 +1,33 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "speedruns")
-public class DSpeedRun {
+public class DSpeedRun extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "type")
+    public String type;
+    @NotNull
+    @Column(name = "leader")
+    public String leader;
+    @NotNull
+    @Column(name = "timestring")
+    public String timestring;
+    @NotNull
+    @Column(name = "time")
+    public Long time;
+    @NotNull
+    @Column(name = "members")
+    public String members;
 
-    @Column(name = "type", nullable = false)
-    private String type;
-
-    @Column(name = "leader", nullable = false)
-    private String leader;
-
-    @Column(name = "timestring", nullable = false)
-    private String timestring;
-
-    @Column(name = "time", nullable = false)
-    private Long time;
-
-    @Column(name = "members", nullable = false)
-    private String members;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setLeader(String leader) {
-        this.leader = leader;
-    }
-
-    public String getLeader() {
-        return leader;
-    }
-
-    public void setTimestring(String timestring) {
-        this.timestring = timestring;
-    }
-
-    public String getTimestring() {
-        return timestring;
-    }
-
-    public void setTime(Long time) {
-        this.time = time;
-    }
-
-    public Long getTime() {
-        return time;
-    }
-
-    public void setMembers(String members) {
-        this.members = members;
-    }
-
-    public String getMembers() {
-        return members;
-    }
-
-    @Override
-    public String toString() {
-        return "DSpeedRun{" +
-                "id=" + id + '\'' +
-                "type=" + type + '\'' +
-                "leader=" + leader + '\'' +
-                "timestring=" + timestring + '\'' +
-                "time=" + time + '\'' +
-                "members=" + members + '\'' +
-                '}';
-    }
 }

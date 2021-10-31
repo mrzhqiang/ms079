@@ -19,7 +19,9 @@ public class DAccountTest {
 
     @Test
     public void insertFindDelete() {
-        DAccount account = new DAccount("fssd", "123456");
+        DAccount account = new DAccount();
+        account.name = "fssd";
+        account.password = "123456";
 
         DB.save(account);
 
@@ -32,15 +34,19 @@ public class DAccountTest {
 
     @Test
     public void oneToMany() {
-        DAccount account = new DAccount("fssd", "123456");
+        DAccount account = new DAccount();
+        account.name = "fssd";
+        account.password = "123456";
 
         DB.save(account);
 
-        DCharacter character = new DCharacter(account, "放肆青春");
+        DCharacter character = new DCharacter();
+        character.account = account;
+        character.name = "放肆青春";
 
         DB.save(character);
 
-        Optional<DAccount> fssd = new QDAccount().characterList.name.eq("放肆青春").findOneOrEmpty();
+        Optional<DAccount> fssd = new QDAccount().characters.name.eq("放肆青春").findOneOrEmpty();
 
         assertTrue(fssd.isPresent());
 

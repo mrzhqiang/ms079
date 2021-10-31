@@ -1,234 +1,69 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_mobskilldata")
-public class DWzMobSkillData {
+public class DWzMobSkillData extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    public Integer id;
+    @NotNull
+    @Column(name = "skillid")
+    public Integer skillid;
+    @NotNull
+    @Column(name = "level")
+    public Integer level;
+    @NotNull
+    @Column(name = "hp")
+    public Integer hp;
+    @NotNull
+    @Column(name = "mpcon")
+    public Integer mpcon;
+    @NotNull
+    @Column(name = "x")
+    public Integer x;
+    @NotNull
+    @Column(name = "y")
+    public Integer y;
+    @NotNull
+    @Column(name = "time")
+    public Integer time;
+    @NotNull
+    @Column(name = "prop")
+    public Integer prop;
+    @NotNull
+    @Column(name = "limit_")
+    public Integer limit;
+    @NotNull
+    @Column(name = "spawneffect")
+    public Integer spawneffect;
+    @NotNull
+    @Column(name = "interval_")
+    public Integer interval;
+    @NotNull
+    @Column(name = "summons")
+    public String summons;
+    @NotNull
+    @Column(name = "ltx")
+    public Integer ltx;
+    @NotNull
+    @Column(name = "lty")
+    public Integer lty;
+    @NotNull
+    @Column(name = "rbx")
+    public Integer rbx;
+    @NotNull
+    @Column(name = "rby")
+    public Integer rby;
+    @NotNull
+    @Column(name = "once")
+    public Integer once;
 
-    @Column(name = "skillid", nullable = false)
-    private Integer skillid;
-
-    @Column(name = "level", nullable = false)
-    private Integer level;
-
-    @Column(name = "hp", nullable = false)
-    private Integer hp;
-
-    @Column(name = "mpcon", nullable = false)
-    private Integer mpcon;
-
-    @Column(name = "x", nullable = false)
-    private Integer x;
-
-    @Column(name = "y", nullable = false)
-    private Integer y;
-
-    @Column(name = "time", nullable = false)
-    private Integer time;
-
-    @Column(name = "prop", nullable = false)
-    private Integer prop;
-
-//    @Column(name = "limit", nullable = false)
-    @Column(name = "limit_", nullable = false)
-    private Integer limit;
-
-    @Column(name = "spawneffect", nullable = false)
-    private Integer spawneffect;
-
-//    @Column(name = "interval", nullable = false)
-    @Column(name = "interval_", nullable = false)
-    private Integer interval;
-
-    @Column(name = "summons", nullable = false)
-    private String summons;
-
-    @Column(name = "ltx", nullable = false)
-    private Integer ltx;
-
-    @Column(name = "lty", nullable = false)
-    private Integer lty;
-
-    @Column(name = "rbx", nullable = false)
-    private Integer rbx;
-
-    @Column(name = "rby", nullable = false)
-    private Integer rby;
-
-    @Column(name = "once", nullable = false)
-    private Integer once;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setSkillid(Integer skillid) {
-        this.skillid = skillid;
-    }
-
-    public Integer getSkillid() {
-        return skillid;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setHp(Integer hp) {
-        this.hp = hp;
-    }
-
-    public Integer getHp() {
-        return hp;
-    }
-
-    public void setMpcon(Integer mpcon) {
-        this.mpcon = mpcon;
-    }
-
-    public Integer getMpcon() {
-        return mpcon;
-    }
-
-    public void setX(Integer x) {
-        this.x = x;
-    }
-
-    public Integer getX() {
-        return x;
-    }
-
-    public void setY(Integer y) {
-        this.y = y;
-    }
-
-    public Integer getY() {
-        return y;
-    }
-
-    public void setTime(Integer time) {
-        this.time = time;
-    }
-
-    public Integer getTime() {
-        return time;
-    }
-
-    public void setProp(Integer prop) {
-        this.prop = prop;
-    }
-
-    public Integer getProp() {
-        return prop;
-    }
-
-    public void setLimit(Integer limit) {
-        this.limit = limit;
-    }
-
-    public Integer getLimit() {
-        return limit;
-    }
-
-    public void setSpawneffect(Integer spawneffect) {
-        this.spawneffect = spawneffect;
-    }
-
-    public Integer getSpawneffect() {
-        return spawneffect;
-    }
-
-    public void setInterval(Integer interval) {
-        this.interval = interval;
-    }
-
-    public Integer getInterval() {
-        return interval;
-    }
-
-    public void setSummons(String summons) {
-        this.summons = summons;
-    }
-
-    public String getSummons() {
-        return summons;
-    }
-
-    public void setLtx(Integer ltx) {
-        this.ltx = ltx;
-    }
-
-    public Integer getLtx() {
-        return ltx;
-    }
-
-    public void setLty(Integer lty) {
-        this.lty = lty;
-    }
-
-    public Integer getLty() {
-        return lty;
-    }
-
-    public void setRbx(Integer rbx) {
-        this.rbx = rbx;
-    }
-
-    public Integer getRbx() {
-        return rbx;
-    }
-
-    public void setRby(Integer rby) {
-        this.rby = rby;
-    }
-
-    public Integer getRby() {
-        return rby;
-    }
-
-    public void setOnce(Integer once) {
-        this.once = once;
-    }
-
-    public Integer getOnce() {
-        return once;
-    }
-
-    @Override
-    public String toString() {
-        return "DWzMobSkillData{" +
-                "id=" + id + '\'' +
-                "skillid=" + skillid + '\'' +
-                "level=" + level + '\'' +
-                "hp=" + hp + '\'' +
-                "mpcon=" + mpcon + '\'' +
-                "x=" + x + '\'' +
-                "y=" + y + '\'' +
-                "time=" + time + '\'' +
-                "prop=" + prop + '\'' +
-                "limit=" + limit + '\'' +
-                "spawneffect=" + spawneffect + '\'' +
-                "interval=" + interval + '\'' +
-                "summons=" + summons + '\'' +
-                "ltx=" + ltx + '\'' +
-                "lty=" + lty + '\'' +
-                "rbx=" + rbx + '\'' +
-                "rby=" + rby + '\'' +
-                "once=" + once + '\'' +
-                '}';
-    }
 }

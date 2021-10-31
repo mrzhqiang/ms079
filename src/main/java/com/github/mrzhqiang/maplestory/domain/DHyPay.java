@@ -1,76 +1,29 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "hypay")
-public class DHyPay {
+public class DHyPay extends Model {
 
     @Id
-    @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
+    public Integer id;
     @Column(name = "accname")
-    private String accname;
+    public String accname;
+    @NotNull
+    @Column(name = "payUsed")
+    public Integer payUsed;
+    @NotNull
+    @Column(name = "pay")
+    public Integer pay;
+    @NotNull
+    @Column(name = "payReward")
+    public Integer payReward;
 
-    @Column(name = "payUsed", nullable = false)
-    private Integer payUsed;
-
-    @Column(name = "pay", nullable = false)
-    private Integer pay;
-
-    @Column(name = "payReward", nullable = false)
-    private Integer payReward;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setAccname(String accname) {
-        this.accname = accname;
-    }
-
-    public String getAccname() {
-        return accname;
-    }
-
-    public void setPayUsed(Integer payUsed) {
-        this.payUsed = payUsed;
-    }
-
-    public Integer getPayUsed() {
-        return payUsed;
-    }
-
-    public void setPay(Integer pay) {
-        this.pay = pay;
-    }
-
-    public Integer getPay() {
-        return pay;
-    }
-
-    public void setPayReward(Integer payReward) {
-        this.payReward = payReward;
-    }
-
-    public Integer getPayReward() {
-        return payReward;
-    }
-
-    @Override
-    public String toString() {
-        return "DHyPay{" +
-                "id=" + id + '\'' +
-                "accname=" + accname + '\'' +
-                "payUsed=" + payUsed + '\'' +
-                "pay=" + pay + '\'' +
-                "payReward=" + payReward + '\'' +
-                '}';
-    }
 }

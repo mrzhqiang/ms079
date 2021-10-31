@@ -1,18 +1,15 @@
 package client;
 
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DMonsterBook;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDMonsterBook;
 import constants.GameConstants;
-import database.DatabaseConnection;
 import server.MapleItemInformationProvider;
 import tools.data.output.MaplePacketLittleEndianWriter;
 import tools.packet.MonsterBookPacket;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,41 +53,27 @@ public class MonsterBook implements Serializable {
         List<DMonsterBook> books = new QDMonsterBook().cardid.eq(charid).orderBy().cardid.asc().findList();
         Map<Integer, Integer> cards = new LinkedHashMap<>();
         for (DMonsterBook book : books) {
-            cards.put(book.getCardid(), book.getLevel());
+            cards.put(book.cardid, book.level);
         }
         return new MonsterBook(cards);
     }
 
-    public final void saveCards(final int charid) throws SQLException {
+    public void saveCards(int charid) {
         if (!changed || cards.size() == 0) {
             return;
         }
-        final Connection con = DatabaseConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement("DELETE FROM monsterbook WHERE charid = ?");
-        ps.setInt(1, charid);
-        ps.execute();
-        ps.close();
 
-        boolean first = true;
-        final StringBuilder query = new StringBuilder();
+        new QDMonsterBook().cardid.eq(charid).delete();
 
-        for (final Entry<Integer, Integer> all : cards.entrySet()) {
-            if (first) {
-                first = false;
-                query.append("INSERT INTO monsterbook VALUES (DEFAULT,");
-            } else {
-                query.append(",(DEFAULT,");
-            }
-            query.append(charid);
-            query.append(",");
-            query.append(all.getKey()); // Card ID
-            query.append(",");
-            query.append(all.getValue()); // Card level
-            query.append(")");
+        DCharacter one = new QDCharacter().id.eq(charid).findOne();
+
+        for (Entry<Integer, Integer> all : cards.entrySet()) {
+            DMonsterBook book = new DMonsterBook();
+            book.character = one;
+            book.cardid = all.getKey();
+            book.level = all.getValue();
+            book.save();
         }
-        ps = con.prepareStatement(query.toString());
-        ps.execute();
-        ps.close();
     }
 
     private void calculateLevel() {

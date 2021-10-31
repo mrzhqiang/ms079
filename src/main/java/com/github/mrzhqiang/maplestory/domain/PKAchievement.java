@@ -1,16 +1,19 @@
 package com.github.mrzhqiang.maplestory.domain;
 
+import io.ebean.annotation.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
 public class PKAchievement {
-
-    @Column(name = "achievementid", nullable = false)
+    @NotNull
+    @Column(name = "achievementid")
     public Integer achievementid;
 
-    @Column(name = "charid", nullable = false)
+    @NotNull
+    @Column(name = "charid")
     public Integer charid;
 
     @Override

@@ -45,7 +45,7 @@ public class MaplePlayerShop extends AbstractPlayerStore {
         if (pItem.bundles > 0) {
             IItem newItem = pItem.item.copy();
             newItem.setQuantity((short) (quantity * newItem.getQuantity()));
-            byte flag = newItem.getFlag();
+            int flag = newItem.getFlag();
 
             if (ItemFlag.KARMA_EQ.check(flag)) {
                 newItem.setFlag((byte) (flag - ItemFlag.KARMA_EQ.getValue()));

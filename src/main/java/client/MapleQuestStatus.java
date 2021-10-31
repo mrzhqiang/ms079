@@ -72,7 +72,7 @@ public class MapleQuestStatus implements Serializable {
         return quest;
     }
 
-    public final byte getStatus() {
+    public final int getStatus() {
         return status;
     }
 

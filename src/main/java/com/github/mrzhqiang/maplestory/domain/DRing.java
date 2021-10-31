@@ -1,76 +1,31 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "rings")
-public class DRing {
+public class DRing extends Model {
 
     @Id
-    @Column(name = "ringid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer ringid;
+    @Column(name = "ringid")
+    public Integer id;
+    @NotNull
+    @Column(name = "partnerRingId")
+    public Integer partnerRingId;
+    @NotNull
+    @Column(name = "partnerChrId")
+    public Integer partnerChrId;
+    @NotNull
+    @Column(name = "itemid")
+    public Integer itemid;
+    @NotNull
+    @Column(name = "partnername")
+    public String partnername;
 
-    @Column(name = "partnerRingId", nullable = false)
-    private Integer partnerRingId;
-
-    @Column(name = "partnerChrId", nullable = false)
-    private Integer partnerChrId;
-
-    @Column(name = "itemid", nullable = false)
-    private Integer itemid;
-
-    @Column(name = "partnername", nullable = false)
-    private String partnername;
-
-    public void setRingid(Integer ringid) {
-        this.ringid = ringid;
-    }
-
-    public Integer getRingid() {
-        return ringid;
-    }
-
-    public void setPartnerRingId(Integer partnerRingId) {
-        this.partnerRingId = partnerRingId;
-    }
-
-    public Integer getPartnerRingId() {
-        return partnerRingId;
-    }
-
-    public void setPartnerChrId(Integer partnerChrId) {
-        this.partnerChrId = partnerChrId;
-    }
-
-    public Integer getPartnerChrId() {
-        return partnerChrId;
-    }
-
-    public void setItemid(Integer itemid) {
-        this.itemid = itemid;
-    }
-
-    public Integer getItemid() {
-        return itemid;
-    }
-
-    public void setPartnername(String partnername) {
-        this.partnername = partnername;
-    }
-
-    public String getPartnername() {
-        return partnername;
-    }
-
-    @Override
-    public String toString() {
-        return "DRing{" +
-                "ringid=" + ringid + '\'' +
-                "partnerRingId=" + partnerRingId + '\'' +
-                "partnerChrId=" + partnerChrId + '\'' +
-                "itemid=" + itemid + '\'' +
-                "partnername=" + partnername + '\'' +
-                '}';
-    }
 }

@@ -1,6 +1,7 @@
 package server.maps;
 
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzCustomLife;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -10,7 +11,6 @@ import com.github.mrzhqiang.maplestory.wz.element.data.Rectangle;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import database.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MaplePortal;
@@ -22,9 +22,6 @@ import server.life.MapleNPC;
 import server.maps.MapleNodes.MapleNodeInfo;
 import server.maps.MapleNodes.MaplePlatform;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -435,30 +432,25 @@ public class MapleMapFactory {
     }
 
     public static void loadCustomLife() {
-        try {
-            Connection con = (Connection) DatabaseConnection.getConnection();
-            try (java.sql.PreparedStatement ps = con.prepareStatement("SELECT * FROM `wz_customlife`"); ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    final int mapid = rs.getInt("mid");
-                    final AbstractLoadedMapleLife myLife = loadLife(rs.getInt("dataid"), rs.getInt("f"), rs.getByte("hide") > 0, rs.getInt("fh"), rs.getInt("cy"), rs.getInt("rx0"), rs.getInt("rx1"), rs.getInt("x"), rs.getInt("y"), rs.getString("type"), rs.getInt("mobtime"));
-                    if (myLife == null) {
-                        continue;
-                    }
-                    final List<AbstractLoadedMapleLife> entries = customLife.get(mapid);
-                    final List<AbstractLoadedMapleLife> collections = new ArrayList<>();
-                    if (entries == null) {
-                        collections.add(myLife);
-                        customLife.put(mapid, collections);
-                    } else {
-                        collections.addAll(entries); //re-add
-                        collections.add(myLife);
-                        customLife.put(mapid, collections);
-                    }
-                }
+        new QDWzCustomLife().findEach(it -> {
+            int mapid = it.mid;
+            AbstractLoadedMapleLife myLife = loadLife(it.dataid, it.f,
+                    it.hide > 0, it.fh, it.cy, it.rx0, it.rx1, it.x, it.y, it.type, it.mobtime);
+            if (myLife == null) {
+                return;
             }
-        } catch (SQLException e) {
-            LOGGER.error("Error loading custom life..." + e);
-        }
+            List<AbstractLoadedMapleLife> entries = customLife.get(mapid);
+            List<AbstractLoadedMapleLife> collections = new ArrayList<>();
+            if (entries == null) {
+                collections.add(myLife);
+                customLife.put(mapid, collections);
+            } else {
+                collections.addAll(entries); //re-add
+                collections.add(myLife);
+                customLife.put(mapid, collections);
+            }
+        });
+
     }
 
     private void addAreaBossSpawn(final MapleMap map) {

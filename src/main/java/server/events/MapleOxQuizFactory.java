@@ -21,17 +21,14 @@
  */
 package server.events;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import database.DatabaseConnection;
-import java.util.Map.Entry;
+import com.github.mrzhqiang.maplestory.domain.DWzOxData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzOxData;
 import server.Randomizer;
 import tools.Pair;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class MapleOxQuizFactory {
 
@@ -66,38 +63,10 @@ public class MapleOxQuizFactory {
         if (initialized) {
             return;
         }
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_oxdata");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int questionset = rs.getInt("questionset");
-                int questionid = rs.getInt("questionid");
-                questionCache.put(new Pair<>(questionset, questionid), get(rs));
-            }
-            rs.close();
-            ps.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        initialized = true;
-    }
 
-    public MapleOxQuizEntry getFromSQL(String sql) {
-        MapleOxQuizEntry ret = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ret = get(rs);
-            }
-            rs.close();
-            ps.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ret;
+        new QDWzOxData().findEach(it ->
+                questionCache.put(new Pair<>(it.pkQuestion.questionset, it.pkQuestion.questionid), get(it)));
+        initialized = true;
     }
 
     public static MapleOxQuizEntry getOxEntry(int questionSet, int questionId) {
@@ -114,14 +83,21 @@ public class MapleOxQuizFactory {
             if (initialized) {
                 return null;
             }
-            mooe = getFromSQL("SELECT * FROM wz_oxdata WHERE questionset = " + pair.getLeft() + " AND questionid = " + pair.getRight());
-            questionCache.put(pair, mooe);
+
+            DWzOxData one = new QDWzOxData()
+                    .pkQuestion.questionset.eq(pair.left)
+                    .pkQuestion.questionid.eq(pair.right)
+                    .findOne();
+            if (one != null) {
+                mooe = get(one);
+                questionCache.put(pair, mooe);
+            }
         }
         return mooe;
     }
 
-    private MapleOxQuizEntry get(ResultSet rs) throws SQLException {
-        return new MapleOxQuizEntry(rs.getString("question"), rs.getString("display"), getAnswerByText(rs.getString("answer")), rs.getInt("questionset"), rs.getInt("questionid"));
+    private MapleOxQuizEntry get(DWzOxData data) {
+        return new MapleOxQuizEntry(data.question, data.display, getAnswerByText(data.answer), data.pkQuestion.questionset, data.pkQuestion.questionid);
     }
 
     private int getAnswerByText(String text) {

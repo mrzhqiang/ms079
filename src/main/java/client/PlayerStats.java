@@ -91,20 +91,20 @@ public class PlayerStats implements Serializable {
         relocHeal();
     }
 
-    public final short getStr() {
-        return (short) str;
+    public final int getStr() {
+        return str;
     }
 
-    public final short getDex() {
-        return (short) dex;
+    public final int getDex() {
+        return dex;
     }
 
-    public final short getLuk() {
-        return (short) luk;
+    public final int getLuk() {
+        return luk;
     }
 
-    public final short getInt() {
-        return (short) int_;
+    public final int getInt() {
+        return int_;
     }
 
     public final void setStr(final short str) {
@@ -926,7 +926,7 @@ public class PlayerStats implements Serializable {
                     return false;
                 }
                 durabilityHandling.remove(eqq);
-                final short pos = chr.getInventory(MapleInventoryType.EQUIP).getNextFreeSlot();
+                final int pos = chr.getInventory(MapleInventoryType.EQUIP).getNextFreeSlot();
                 MapleInventoryManipulator.unequip(chr.getClient(), eqq.getPosition(), pos);
                 chr.getClient().getSession().write(MaplePacketCreator.updateSpecialItemUse(eqq, (byte) 1, pos));
             } else {

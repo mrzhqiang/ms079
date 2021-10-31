@@ -1,14 +1,15 @@
 package tools.packet;
 
 import client.*;
-import java.sql.SQLException;
-import java.sql.ResultSet;
 
+import java.time.ZoneOffset;
 import java.util.List;
 import client.inventory.IItem;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.domain.DNote;
+import com.github.mrzhqiang.maplestory.domain.query.QDWishList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.CashShop;
@@ -18,12 +19,12 @@ import server.CashItemInfo.CashModInfo;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
 import constants.ServerConstants;
-import database.DatabaseConnection;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+
 import java.util.*;
 import tools.Pair;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import server.MTSStorage.MTSItemInfo;
 import tools.HexTool;
 import tools.KoreanDateUtil;
@@ -3699,7 +3700,7 @@ public class MTSCSPacket {
         return mplew.getPacket();
     }
 
-    public static MaplePacket showNotes(ResultSet notes, int count) throws SQLException {
+    public static MaplePacket showNotes(List<DNote> notes, int count) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -3709,12 +3710,12 @@ public class MTSCSPacket {
         mplew.write(3);
         mplew.write(count);
         for (int i = 0; i < count; i++) {
-            mplew.writeInt(notes.getInt("id"));
-            mplew.writeMapleAsciiString(notes.getString("from"));
-            mplew.writeMapleAsciiString(notes.getString("message"));
-            mplew.writeLong(PacketHelper.getKoreanTimestamp(notes.getLong("timestamp")));
-            mplew.write(notes.getInt("gift"));
-            notes.next();
+            DNote note = notes.get(i);
+            mplew.writeInt(note.id);
+            mplew.writeMapleAsciiString(note.from);
+            mplew.writeMapleAsciiString(note.message);
+            mplew.writeLong(PacketHelper.getKoreanTimestamp(note.timestamp));
+            mplew.write(note.gift);
         }
 
         return mplew.getPacket();
@@ -3770,26 +3771,15 @@ public class MTSCSPacket {
         mplew.writeShort(SendPacketOpcode.CS_OPERATION.getValue());
 
         mplew.write(70);
-        Connection con = DatabaseConnection.getConnection();
-        int i = 10;
-        try {
-            PreparedStatement ps = con.prepareStatement("SELECT sn FROM wishlist WHERE characterid = ? LIMIT 10");
-            ps.setInt(1, chr.getAccountID());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                mplew.writeInt(rs.getInt("sn"));
-                i--;
-            }
 
-            rs.close();
-            ps.close();
-        } catch (SQLException se) {
-            LOGGER.debug("Error getting wishlist data:" + se);
-        }
-
-        while (i > 0) {
+        AtomicInteger count = new AtomicInteger(10);
+        new QDWishList().character.eq(chr.character).setMaxRows(10).findEach(it -> {
+            mplew.writeInt(it.sn);
+            count.decrementAndGet();
+        });
+        while (count.get() > 0) {
             mplew.writeInt(0);
-            i--;
+            count.decrementAndGet();
         }
         /*
          * mplew.write(update ? 64 : 70); //+12 int[] list = chr.getWishlist();
@@ -3943,43 +3933,43 @@ public class MTSCSPacket {
         mplew.writeInt(item.sn);
         mplew.writeInt(flags);
         if ((flags & 0x1) != 0) {
-            mplew.writeInt(item.itemid);
+            mplew.writeInt(item.item.itemid);
         }
         if ((flags & 0x2) != 0) {
-            mplew.writeShort(item.count);
+            mplew.writeShort(item.item.count);
         }
         if ((flags & 0x4) != 0) {
-            mplew.writeInt(item.discountPrice);
+            mplew.writeInt(item.item.discountPrice);
         }
         if ((flags & 0x8) != 0) {
-            mplew.write(item.unk_1 - 1);
+            mplew.write(item.item.unk1 - 1);
         }
         if ((flags & 0x10) != 0) {
-            mplew.write(item.priority);
+            mplew.write(item.item.priority);
         }
         if ((flags & 0x20) != 0) {
-            mplew.writeShort(item.period);
+            mplew.writeShort(item.item.period);
         }
         if ((flags & 0x40) != 0) {
             mplew.writeInt(0);
         }
         if ((flags & 0x80) != 0) {
-            mplew.writeInt(item.meso);
+            mplew.writeInt(item.item.meso);
         }
         if ((flags & 0x100) != 0) {
-            mplew.write(item.unk_2 - 1);
+            mplew.write(item.item.unk2 - 1);
         }
         if ((flags & 0x200) != 0) {
-            mplew.write(item.gender);
+            mplew.write(item.item.gender);
         }
         if ((flags & 0x400) != 0) {
-            mplew.write(item.showUp ? 1 : 0);
+            mplew.write(item.item.showup ? 1 : 0);
         }
         if ((flags & 0x800) != 0) {
-            mplew.write(item.mark);
+            mplew.write(item.item.mark);
         }
         if ((flags & 0x1000) != 0) {
-            mplew.write(item.unk_3 - 1);
+            mplew.write(item.item.unk3 - 1);
         }
         if ((flags & 0x2000) != 0) {
             mplew.writeShort(0);
@@ -4003,7 +3993,7 @@ public class MTSCSPacket {
         }
     }
 
-    public static MaplePacket showBoughtCSQuestItem(int price, short quantity, byte position, int itemid) {
+    public static MaplePacket showBoughtCSQuestItem(int price, int quantity, int position, int itemid) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
@@ -4428,8 +4418,8 @@ public class MTSCSPacket {
         mplew.writeInt(item.getTaxes()); //this + below = price
         mplew.writeInt(item.getPrice()); //price
         mplew.writeInt(0);// Long?
-        mplew.writeInt(KoreanDateUtil.getQuestTimestamp(item.getEndingDate()));
-        mplew.writeInt(KoreanDateUtil.getQuestTimestamp(item.getEndingDate()));
+        mplew.writeInt(KoreanDateUtil.getQuestTimestamp(item.getEndingDate().toInstant(ZoneOffset.UTC).toEpochMilli()));
+        mplew.writeInt(KoreanDateUtil.getQuestTimestamp(item.getEndingDate().toInstant(ZoneOffset.UTC).toEpochMilli()));
         mplew.writeMapleAsciiString(item.getSeller()); //account name (what was nexon thinking?)
         mplew.writeMapleAsciiString(item.getSeller()); //char name
         mplew.writeZeroBytes(28);

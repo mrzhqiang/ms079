@@ -2,64 +2,26 @@ package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "storages")
 public class DStorage extends Model {
 
     @Id
-    @Column(name = "storageid", nullable = false)
-    private Integer storageid;
+    @Column(name = "storageid")
+    public Integer id;
+    @OneToOne
+    @JoinColumn(name = "accountid")
+    public DAccount account;
+    @Column(name = "slots")
+    public Integer slots;
+    @Column(name = "meso")
+    public Integer meso;
 
-    @Column(name = "accountid", nullable = false)
-    private Integer accountid;
-
-    @Column(name = "slots", nullable = false)
-    private Integer slots;
-
-    @Column(name = "meso", nullable = false)
-    private Integer meso;
-
-    public void setStorageid(Integer storageid) {
-        this.storageid = storageid;
-    }
-
-    public Integer getStorageid() {
-        return storageid;
-    }
-
-    public void setAccountid(Integer accountid) {
-        this.accountid = accountid;
-    }
-
-    public Integer getAccountid() {
-        return accountid;
-    }
-
-    public void setSlots(Integer slots) {
-        this.slots = slots;
-    }
-
-    public Integer getSlots() {
-        return slots;
-    }
-
-    public void setMeso(Integer meso) {
-        this.meso = meso;
-    }
-
-    public Integer getMeso() {
-        return meso;
-    }
-
-    @Override
-    public String toString() {
-        return "DStorage{" +
-                "storageid=" + storageid + '\'' +
-                "accountid=" + accountid + '\'' +
-                "slots=" + slots + '\'' +
-                "meso=" + meso + '\'' +
-                '}';
-    }
 }

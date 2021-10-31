@@ -3,6 +3,10 @@ package server.quest;
 import client.*;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.domain.DWzQuestActData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActItemData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActQuestData;
+import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActSkillData;
 import constants.GameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,57 +29,48 @@ public class MapleQuestAction implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleQuestAction.class);
 
     private static final long serialVersionUID = 9179541993413738569L;
-    private MapleQuestActionType type;
-    private MapleQuest quest;
+
+    private final MapleQuestActionType type;
+    private final MapleQuest quest;
     private int intStore = 0;
-    private List<Integer> applicableJobs = new ArrayList();
+    private final List<Integer> applicableJobs = new ArrayList<>();
     private List<QuestItem> items = null;
     private List<Triple<Integer, Integer, Integer>> skill = null;
     private List<Pair<Integer, Integer>> state = null;
 
-    public MapleQuestAction(MapleQuestActionType type, ResultSet rse, MapleQuest quest, PreparedStatement pss, PreparedStatement psq, PreparedStatement psi)
-            throws SQLException {
+    public MapleQuestAction(MapleQuestActionType type, DWzQuestActData data, MapleQuest quest) {
         this.type = type;
         this.quest = quest;
+        this.intStore = data.intStore;
 
-        this.intStore = rse.getInt("intStore");
-        String[] jobs = rse.getString("applicableJobs").split(", ");
-        if ((jobs.length <= 0) && (rse.getString("applicableJobs").length() > 0)) {
-            this.applicableJobs.add(Integer.valueOf(Integer.parseInt(rse.getString("applicableJobs"))));
+        String[] jobs = data.applicableJobs.split(", ");
+        if ((jobs.length <= 0) && (data.applicableJobs.length() > 0)) {
+            this.applicableJobs.add(Integer.parseInt(data.applicableJobs));
         }
+
         for (String j : jobs) {
             if (j.length() > 0) {
-                this.applicableJobs.add(Integer.valueOf(Integer.parseInt(j)));
+                this.applicableJobs.add(Integer.parseInt(j));
             }
         }
-        ResultSet rs;
+
         switch (type) {
             case item:
-                this.items = new ArrayList<QuestItem>();
-                psi.setInt(1, rse.getInt("uniqueid"));
-                rs = psi.executeQuery();
-                while (rs.next()) {
-                    this.items.add(new QuestItem(rs.getInt("itemid"), rs.getInt("count"), rs.getInt("period"), rs.getInt("gender"), rs.getInt("job"), rs.getInt("jobEx"), rs.getInt("prop")));//, rs.getInt("jobEx")
-                }
-                rs.close();
+                items = new ArrayList<>();
+                new QDWzQuestActItemData().uniqueid.eq(data.uniqueid).findEach(it ->
+                        //, rs.getInt("jobEx")
+                        items.add(new QuestItem(it.itemid, it.count, it.period, it.gender, it.job,it.jobEx,it.prop)));
                 break;
             case quest:
-                this.state = new ArrayList<Pair<Integer, Integer>>();
-                psq.setInt(1, rse.getInt("uniqueid"));
-                rs = psq.executeQuery();
-                while (rs.next()) {
-                    this.state.add(new Pair(Integer.valueOf(rs.getInt("quest")), Integer.valueOf(rs.getInt("state"))));
-                }
-                rs.close();
+                state = new ArrayList<>();
+                new QDWzQuestActQuestData().uniqueid.eq(data.uniqueid).findEach(it ->
+                        state.add(new Pair<>(it.quest, it.state)));
                 break;
             case skill:
-                this.skill = new ArrayList<Triple<Integer, Integer, Integer>>();
-                pss.setInt(1, rse.getInt("uniqueid"));
-                rs = pss.executeQuery();
-                while (rs.next()) {
-                    this.skill.add(new Triple(Integer.valueOf(rs.getInt("skillid")), Integer.valueOf(rs.getInt("skillLevel")), Integer.valueOf(rs.getInt("masterLevel"))));
-                }
-                rs.close();
+                skill = new ArrayList<>();
+                new QDWzQuestActSkillData().uniqueid.eq(data.uniqueid).findEach(it ->
+                        skill.add(new Triple<>(it.skillid, it.skillLevel, it.masterLevel)));
+                break;
         }
     }
 

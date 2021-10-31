@@ -1,17 +1,16 @@
 package KinMS.db;
 
 import client.MapleCharacter;
-import database.DatabaseConnection;
+import com.github.mrzhqiang.maplestory.domain.query.QDQuestMonster;
+import com.github.mrzhqiang.maplestory.domain.query.QDQuestNPC;
 import handling.channel.ChannelServer;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
 import tools.MaplePacketCreator;
@@ -24,7 +23,7 @@ public class CherryMSLotteryImpl
     private MapleMapFactory mapFactory;
     public boolean jjc;
     private int zjNum;
-    Collection<MapleCharacter> characters = new ArrayList();
+    Collection<MapleCharacter> characters = new ArrayList<>();
     private long alltouzhu;
     private long allpeichu;
 
@@ -150,39 +149,22 @@ public class CherryMSLotteryImpl
         return a;
     }*/
     public int test3() throws SQLException {
-        Connection con = DatabaseConnection.getConnection();
-        String sql = "SELECT count(*) from questmonster WHERE zt = 0";
-        PreparedStatement ps = con.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery();
-        int count = -1;
-        if (rs.next()) {
-            count = rs.getInt(1);
-        }
-        rs.close();
-        ps.close();
-        return count;
+        return new QDQuestMonster().zt.eq(0).findCount();
     }
 
     public void deletebuff() {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE questmonster SET name = 0,charid = 0,zt = 0 WHERE zt <> 0");
-            ps.close();
-            ps.executeUpdate();
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
+        new QDQuestMonster().zt.notEqualTo(0).asUpdate()
+                .set("name", 0)
+                .set("charid", 0)
+                .set("zt", 0)
+                .update();
     }
 
     public void deletequest() {
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE questnpc SET name = 0,zt = 0");
-            ps.close();
-            ps.executeUpdate();
-        } catch (SQLException ex) {
-            ex.getStackTrace();
-        }
+        new QDQuestNPC().asUpdate()
+                .set("name", 0)
+                .set("zt", 0)
+                .update();
     }
 
     public void drawalottery() {

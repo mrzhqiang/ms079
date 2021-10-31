@@ -1,5 +1,7 @@
 package server;
 
+import com.github.mrzhqiang.maplestory.domain.DCashShopModifiedItem;
+
 public class CashItemInfo {
 
     private final int itemId;
@@ -69,7 +71,7 @@ public class CashItemInfo {
     }
 
     public boolean onSale() {
-        return onSale || (CashItemFactory.getInstance().getModInfo(sn) != null && CashItemFactory.getInstance().getModInfo(sn).showUp);
+        return onSale || (CashItemFactory.getInstance().getModInfo(sn) != null && CashItemFactory.getInstance().getModInfo(sn).item.showup);
     }
 
     public boolean genderEquals(int g) {
@@ -78,70 +80,56 @@ public class CashItemInfo {
 
     public static class CashModInfo {
 
-        public int discountPrice, mark, priority, sn, itemid, flags, period, gender, count, meso, unk_1, unk_2, unk_3, extra_flags;
-        public boolean showUp, packagez;
+        public final DCashShopModifiedItem item;
+        public int sn, flags;
         private CashItemInfo cii;
 
-        public CashModInfo(int sn, int discount, int mark, boolean show, int itemid, int priority,
-                           boolean packagez, int period, int gender, int count, int meso, int unk_1,
-                           int unk_2, int unk_3, int extra_flags) {
+        public CashModInfo(int sn, DCashShopModifiedItem item) {
             this.sn = sn;
-            this.itemid = itemid;
-            this.discountPrice = discount;
-            this.mark = mark; //0 = new, 1 = sale, 2 = hot, 3 = event
-            this.showUp = show;
-            this.priority = priority;
-            this.packagez = packagez;
-            this.period = period;
-            this.gender = gender;
-            this.count = count;
-            this.meso = meso;
-            this.unk_1 = unk_1; //0 = doesn't have, 1 = has, but false, 2 = has and true
-            this.unk_2 = unk_2;
-            this.unk_3 = unk_3;
-            this.extra_flags = extra_flags;
-            this.flags = extra_flags;
+            // mark: 0 = new, 1 = sale, 2 = hot, 3 = event
+            // unk_1: 0 = doesn't have, 1 = has, but false, 2 = has and true
+            this.item = item;
 
-            if (this.itemid > 0) {
-                this.flags |= 0x1;
+            if (item.id > 0) {
+                flags |= 0x1;
             }
-            if (this.count > 0) {
-                this.flags |= 0x2;
+            if (item.count > 0) {
+                flags |= 0x2;
             }
-            if (this.discountPrice > 0) {
-                this.flags |= 0x4;
+            if (item.discountPrice > 0) {
+                flags |= 0x4;
             }
-            if (this.unk_1 > 0) {
-                this.flags |= 0x8;
+            if (item.unk1 > 0) {
+                flags |= 0x8;
             }
-            if (this.priority >= 0) {
-                this.flags |= 0x10;
+            if (item.priority >= 0) {
+                flags |= 0x10;
             }
-            if (this.period > 0) {
-                this.flags |= 0x20;
+            if (item.period > 0) {
+                flags |= 0x20;
             }
             //0x40 = ?
-            if (this.meso > 0) {
-                this.flags |= 0x80;
+            if (item.meso > 0) {
+                flags |= 0x80;
             }
-            if (this.unk_2 > 0) {
-                this.flags |= 0x100;
+            if (item.unk2 > 0) {
+                flags |= 0x100;
             }
-            if (this.gender >= 0) {
-                this.flags |= 0x200;
+            if (item.gender >= 0) {
+                flags |= 0x200;
             }
-            if (this.showUp) {
-                this.flags |= 0x400;
+            if (item.showup) {
+                flags |= 0x400;
             }
-            if (this.mark >= -1 || this.mark <= 3) {
-                this.flags |= 0x800;
+            if (item.mark >= -1 || item.mark <= 3) {
+                flags |= 0x800;
             }
-            if (this.unk_3 > 0) {
-                this.flags |= 0x1000;
+            if (item.unk3 > 0) {
+                flags |= 0x1000;
             }
             //0x2000, 0x4000, 0x8000 - ?
-            if (this.packagez) {
-                this.flags |= 0x10000;
+            if (item.packageField) {
+                flags |= 0x10000;
             }
         }
 
@@ -151,39 +139,39 @@ public class CashItemInfo {
             }
             final int item, c, price, expire, gen;
             final boolean onSale;
-            if (itemid <= 0) {
+            if (this.item.id <= 0) {
                 item = (backup == null ? 0 : backup.getId());
             } else {
-                item = itemid;
+                item = this.item.id;
             }
-            if (count <= 0) {
+            if (this.item.count <= 0) {
                 c = (backup == null ? 0 : backup.getCount());
             } else {
-                c = count;
+                c = this.item.count;
             }
-            if (meso <= 0) {
-                if (discountPrice <= 0) {
+            if (this.item.meso <= 0) {
+                if (this.item.discountPrice <= 0) {
                     price = (backup == null ? 0 : backup.getPrice());
                 } else {
-                    price = discountPrice;
+                    price = this.item.discountPrice;
                 }
             } else {
-                price = meso;
+                price = this.item.meso;
             }
-            if (period <= 0) {
+            if (this.item.period <= 0) {
                 expire = (backup == null ? 0 : backup.getPeriod());
             } else {
-                expire = period;
+                expire = this.item.period;
             }
-            if (gender < 0) {
+            if (this.item.gender < 0) {
                 gen = (backup == null ? 0 : backup.getGender());
             } else {
-                gen = gender;
+                gen = this.item.gender;
             }
-            if (!showUp) {
-                onSale = (backup == null ? false : backup.onSale());
+            if (!this.item.showup) {
+                onSale = (backup != null && backup.onSale());
             } else {
-                onSale = showUp;
+                onSale = this.item.showup;
             }
 
             cii = new CashItemInfo(item, c, price, sn, expire, gen, onSale);

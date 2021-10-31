@@ -1,112 +1,43 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import javax.persistence.*;
+import io.ebean.Model;
+import io.ebean.annotation.NotNull;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "bbs_threads")
-public class DBbsThread {
+public class DBbsThread extends Model {
 
     @Id
-    @Column(name = "threadid", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer threadid;
+    @Column(name = "threadid")
+    public Integer id;
+    @NotNull
+    @Column(name = "postercid")
+    public Integer postercid;
+    @NotNull
+    @Column(name = "name")
+    public String name;
+    @NotNull
+    @Column(name = "timestamp")
+    public Long timestamp;
+    @NotNull
+    @Column(name = "icon")
+    public Integer icon;
+    @NotNull
+    @Column(name = "startpost")
+    public String startpost;
 
-    @Column(name = "postercid", nullable = false)
-    private Integer postercid;
+    @ManyToOne
+    @JoinColumn(name = "guildid")
+    public DGuild guild;
+    @NotNull
+    @Column(name = "localthreadid")
+    public Integer localthreadid;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "timestamp", nullable = false)
-    private Long timestamp;
-
-    @Column(name = "icon", nullable = false)
-    private Integer icon;
-
-    @Column(name = "startpost", nullable = false)
-    private String startpost;
-
-    @Column(name = "guildid", nullable = false)
-    private Integer guildid;
-
-    @Column(name = "localthreadid", nullable = false)
-    private Integer localthreadid;
-
-    public void setThreadid(Integer threadid) {
-        this.threadid = threadid;
-    }
-
-    public Integer getThreadid() {
-        return threadid;
-    }
-
-    public void setPostercid(Integer postercid) {
-        this.postercid = postercid;
-    }
-
-    public Integer getPostercid() {
-        return postercid;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setIcon(Integer icon) {
-        this.icon = icon;
-    }
-
-    public Integer getIcon() {
-        return icon;
-    }
-
-    public void setStartpost(String startpost) {
-        this.startpost = startpost;
-    }
-
-    public String getStartpost() {
-        return startpost;
-    }
-
-    public void setGuildid(Integer guildid) {
-        this.guildid = guildid;
-    }
-
-    public Integer getGuildid() {
-        return guildid;
-    }
-
-    public void setLocalthreadid(Integer localthreadid) {
-        this.localthreadid = localthreadid;
-    }
-
-    public Integer getLocalthreadid() {
-        return localthreadid;
-    }
-
-    @Override
-    public String toString() {
-        return "DBbsThread{" +
-                "threadid=" + threadid + '\'' +
-                "postercid=" + postercid + '\'' +
-                "name=" + name + '\'' +
-                "timestamp=" + timestamp + '\'' +
-                "icon=" + icon + '\'' +
-                "startpost=" + startpost + '\'' +
-                "guildid=" + guildid + '\'' +
-                "localthreadid=" + localthreadid + '\'' +
-                '}';
-    }
 }
