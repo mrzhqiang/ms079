@@ -1,36 +1,7 @@
-10-01 22:40:18 +0800 INFO [db.heartBeat] - Resetting DataSourcePool [db] min[2] max[200] free[0] busy[32] waiting[0] highWaterMark[32] waitCount[0] hitCount[8825]
-10-01 22:40:18 +0800 INFO [db.heartBeat] - Busy Connections:
-name[db1] startTime[1633098228813] busySeconds[989] stackTrace[] stmt[SELECT guildid FROM guilds]
-name[db0] startTime[1633098228954] busySeconds[989] stackTrace[] stmt[SELECT familyid FROM families]
-name[db2] startTime[1633098229039] busySeconds[989] stackTrace[] stmt[SELECT MAX(party)+2 FROM characters]
-name[db3] startTime[1633098229114] busySeconds[989] stackTrace[] stmt[SELECT * FROM wz_questpartydata WHERE questid = ?]
-name[db4] startTime[1633098233235] busySeconds[985] stackTrace[] stmt[SELECT * FROM wz_itemrewarddata ORDER BY itemid]
-name[db5] startTime[1633098233789] busySeconds[984] stackTrace[] stmt[SELECT * FROM wz_oxdata]
-name[db24] startTime[1633098441556] busySeconds[776] stackTrace[] stmt[SELECT * FROM character_slots WHERE accid = ? AND worldid = ?]
-name[db6] startTime[1633098243506] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db7] startTime[1633098243588] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db8] startTime[1633098243634] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db9] startTime[1633098243678] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db10] startTime[1633098243723] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db11] startTime[1633098243768] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db12] startTime[1633098243803] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db13] startTime[1633098243843] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db14] startTime[1633098243884] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db15] startTime[1633098243966] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db16] startTime[1633098244004] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db17] startTime[1633098244034] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db18] startTime[1633098244076] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db19] startTime[1633098244108] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db20] startTime[1633098244144] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db21] startTime[1633098244174] busySeconds[974] stackTrace[] stmt[SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25]
-name[db29] startTime[1633098943618] busySeconds[274] stackTrace[] stmt[SELECT * FROM character_slots WHERE accid = ? AND worldid = ?]
-name[db27] startTime[1633098632572] busySeconds[585] stackTrace[] stmt[null]
-name[db22] startTime[1633098310813] busySeconds[907] stackTrace[] stmt[null]
-name[db30] startTime[1633099016220] busySeconds[202] stackTrace[] stmt[null]
-name[db23] startTime[1633098311122] busySeconds[907] stackTrace[] stmt[SELECT * FROM character_slots WHERE accid = ? AND worldid = ?]
-name[db26] startTime[1633098632652] busySeconds[585] stackTrace[] stmt[SELECT * FROM character_slots WHERE accid = ? AND worldid = ?]
-name[db31] startTime[1633099016358] busySeconds[201] stackTrace[] stmt[SELECT * FROM character_slots WHERE accid = ? AND worldid = ?]
-name[db25] startTime[1633098441484] busySeconds[776] stackTrace[] stmt[null]
-name[db28] startTime[1633098943517] busySeconds[274] stackTrace[] stmt[null]
+1. 修复当前无法进入游戏的 bug，同时逐渐重构为基于 Ebean 框架的数据结构。
 
-解决上面的相关查询语句，才有可能进入游戏。
+2. 同时可以尝试从 Mina 框架迁移到 Netty 框架。
+
+3. 优化稳定性和性能。
+
+4. 灵活扩展能力。
