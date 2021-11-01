@@ -19,13 +19,13 @@
 
         <mysql-connector-java.version>8.0.25</mysql-connector-java.version>
         <helper.version>2021.1.3</helper.version>
-        <jsoup.version>1.13.1</jsoup.version>
-        <ebean.version>12.11.3</ebean.version>
+        <jsoup.version>1.14.3</jsoup.version>
+        <ebean.version>12.12.1</ebean.version>
         <guice.version>5.0.1</guice.version>
-        <slf4j-api.version>1.7.25</slf4j-api.version>
-        <logback.version>1.2.3</logback.version>
+        <slf4j-api.version>1.7.32</slf4j-api.version>
+        <logback.version>1.2.6</logback.version>
 
-        <junit.version>4.13</junit.version>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencies>
