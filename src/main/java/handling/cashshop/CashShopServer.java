@@ -1,8 +1,8 @@
 package handling.cashshop;
 
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import handling.MapleServerHandler;
 import handling.channel.PlayerStorage;
 import handling.mina.MapleCodecFactory;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 
 @Singleton
-public class CashShopServer {
+public final class CashShopServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CashShopServer.class);
 
@@ -32,10 +32,10 @@ public class CashShopServer {
     private static boolean finishedShutdown = false;
 
     @Inject
-    public CashShopServer(ServerProperties properties, MapleCodecFactory factory) {
+    public CashShopServer(ServerProperties properties, MapleCodecFactory factory, MapleServerHandler handler) {
         this.properties = properties;
         this.factory = factory;
-        this.serverHandler = new MapleServerHandler();
+        this.serverHandler = handler;
         this.serverHandler.setCs(true);
     }
 

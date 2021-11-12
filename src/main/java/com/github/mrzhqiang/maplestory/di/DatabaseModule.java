@@ -1,8 +1,8 @@
-package com.github.mrzhqiang.maplestory.config;
+package com.github.mrzhqiang.maplestory.di;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import javax.inject.Singleton;
 import com.google.inject.name.Named;
 import io.ebean.Database;
 import io.ebean.DatabaseFactory;
@@ -12,15 +12,11 @@ import io.ebean.datasource.DataSourceConfig;
 import java.util.Properties;
 
 /**
- * 数据库配置。
+ * 数据库模块。
  */
-public final class DatabaseConfiguration extends AbstractModule {
+final class DatabaseModule extends AbstractModule {
 
-    public static final DatabaseConfiguration INSTANCE = new DatabaseConfiguration();
-
-    private DatabaseConfiguration() {
-        // inner instance
-    }
+    static final DatabaseModule INSTANCE = new DatabaseModule();
 
     @Singleton
     @Provides

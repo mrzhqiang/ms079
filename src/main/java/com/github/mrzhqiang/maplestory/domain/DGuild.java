@@ -67,14 +67,17 @@ public class DGuild extends Model {
     @Column(name = "signature")
     public Integer signature;
     @NotNull
-    @Column(name = "alliance")
-    public Integer alliance;
+    @OneToOne
+    @JoinColumn(name = "alliance")
+    public DAlliance alliance;
 
-    @OneToMany(mappedBy = "guild", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "guild")
+    @OrderBy("localthreadid desc")
     public List<DBbsThread> threads;
     @OneToMany(mappedBy = "guild", cascade = CascadeType.ALL)
     public List<DBbsReply> replies;
     @OneToMany(mappedBy = "guild")
+    @OrderBy("guildRank asc, name asc")
     public List<DCharacter> characters;
 
     @Override

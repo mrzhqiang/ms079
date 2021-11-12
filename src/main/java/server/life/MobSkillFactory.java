@@ -47,7 +47,7 @@ public class MobSkillFactory {
                     skill.setY(y);
                     float prop = Elements.findInt(element, "prop", 100) / 100f;
                     skill.setProp(prop);
-                    short limit = (short) Elements.findInt(element, "limit");
+                    short limit = Elements.findInt(element, "limit").shortValue();
                     skill.setLimit(limit);
                     skill.setLt(Elements.findVector(element, "lt"));
                     skill.setRb(Elements.findVector(element, "rb"));

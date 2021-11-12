@@ -16,10 +16,10 @@ public class DKeyMap extends Model {
     @JoinColumn(name = "characterid")
     public DCharacter character;
     @NotNull
-    @Column(name = "key")
+    @Column(name = "key_")
     public Integer key;
     @NotNull
-    @Column(name = "type")
+    @Column(name = "type_")
     public Integer type;
     @NotNull
     @Column(name = "action")

@@ -185,7 +185,7 @@ public class InventoryHandler {
         return sortedList;
     }
 
-    public static final boolean UseRewardItem(final byte slot, final int itemId, final MapleClient c, final MapleCharacter chr) {
+    public static boolean UseRewardItem(byte slot, int itemId, MapleClient c, MapleCharacter chr) {
         final IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem(slot);
         c.getSession().write(MaplePacketCreator.enableActions());
         if (toUse != null && toUse.getQuantity() >= 1 && toUse.getItemId() == itemId) {
@@ -197,15 +197,15 @@ public class InventoryHandler {
                     boolean rewarded = false;
                     while (!rewarded) {
                         for (StructRewardItem reward : rewards.getRight()) {
-                            if (reward.prob > 0 && Randomizer.nextInt(rewards.getLeft()) < reward.prob) { // Total prob
-                                if (GameConstants.getInventoryType(reward.itemid) == MapleInventoryType.EQUIP) {
-                                    final IItem item = ii.getEquipById(reward.itemid);
-                                    if (reward.period > 0) {
-                                        item.setExpiration(System.currentTimeMillis() + (reward.period * 60 * 60 * 10));
+                            if (reward.data.prob > 0 && Randomizer.nextInt(rewards.getLeft()) < reward.data.prob) { // Total prob
+                                if (GameConstants.getInventoryType(reward.data.id) == MapleInventoryType.EQUIP) {
+                                    final IItem item = ii.getEquipById(reward.data.id);
+                                    if (reward.data.period > 0) {
+                                        item.setExpiration(System.currentTimeMillis() + (reward.data.period * 60 * 60 * 10));
                                     }
                                     MapleInventoryManipulator.addbyItem(c, item);
                                 } else {
-                                    MapleInventoryManipulator.addById(c, reward.itemid, reward.quantity, (byte) 0);
+                                    MapleInventoryManipulator.addById(c, reward.data.id, reward.data.quantity, (byte) 0);
                                 }
                                 MapleInventoryManipulator.removeById(c, GameConstants.getInventoryType(itemId), itemId, 1, false, false);
 

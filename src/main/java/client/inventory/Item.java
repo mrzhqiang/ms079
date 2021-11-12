@@ -115,15 +115,15 @@ public class Item implements IItem, Serializable {
 
     @Override
     public long getExpiration() {
-        return item.expiredate.toInstant(ZoneOffset.UTC).toEpochMilli();
+        return item.expiredate;
     }
 
     public void setExpiration(long expire) {
-        this.item.expiredate = LocalDateTime.ofInstant(Instant.ofEpochMilli(expire), ZoneOffset.UTC);
+        this.item.expiredate = expire;
     }
 
     public void setExpiration(LocalDateTime expiration) {
-        this.item.expiredate = expiration;
+        this.item.expiredate = expiration != null ? expiration.toInstant(ZoneOffset.UTC).toEpochMilli() : -1;
     }
 
     @Override

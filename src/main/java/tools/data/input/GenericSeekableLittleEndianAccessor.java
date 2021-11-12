@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.data.input;
 
 import org.slf4j.Logger;
@@ -46,7 +26,7 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
      *
      * @param bs The byte stream to wrap this around.
      */
-    public GenericSeekableLittleEndianAccessor(final SeekableInputStreamBytestream bs) {
+    public GenericSeekableLittleEndianAccessor(SeekableInputStreamBytestream bs) {
         super(bs);
         this.bs = bs;
     }
@@ -58,11 +38,11 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
      * @see tools.data.input.SeekableInputStreamBytestream#seek
      */
     @Override
-    public final void seek(final long offset) {
+    public void seek(long offset) {
         try {
             bs.seek(offset);
         } catch (IOException e) {
-            LOGGER.error("Seek failed" + e);
+            LOGGER.error("Seek failed", e);
         }
     }
 
@@ -74,11 +54,11 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
      * tools.data.input.SeekableInputStreamBytestream#getPosition
      */
     @Override
-    public final long getPosition() {
+    public long getPosition() {
         try {
             return bs.getPosition();
         } catch (IOException e) {
-            LOGGER.error("getPosition failed" + e);
+            LOGGER.error("getPosition failed", e);
             return -1;
         }
     }
@@ -89,7 +69,7 @@ public class GenericSeekableLittleEndianAccessor extends GenericLittleEndianAcce
      * @param num The number of bytes to skip.
      */
     @Override
-    public final void skip(final int num) {
+    public void skip(int num) {
         seek(getPosition() + num);
     }
 }

@@ -4,7 +4,6 @@ import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.element.data.Canvas;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 import java.util.Objects;
@@ -22,7 +21,7 @@ public final class Elements {
         if (element instanceof StringElement) {
             return ((StringElement) element).value();
         }
-        return element.value().toString();
+        return Objects.toString(element.value());
     }
 
     public static String ofString(WzElement<?> element, String defaultValue) {
@@ -35,7 +34,7 @@ public final class Elements {
         if (element instanceof StringElement) {
             return ((StringElement) element).value();
         }
-        return MoreObjects.firstNonNull(element.value().toString(), defaultValue);
+        return Objects.toString(element.value(), defaultValue);
     }
 
     public static String findString(WzElement<?> element, String name) {
@@ -47,7 +46,7 @@ public final class Elements {
         return element.findByName(name).map(Elements::ofString).orElse(defaultValue);
     }
 
-    public static int ofInt(WzElement<?> element) {
+    public static Integer ofInt(WzElement<?> element) {
         Preconditions.checkNotNull(element, "element == null");
         if (element instanceof IntElement) {
             return ((IntElement) element).value();
@@ -55,7 +54,7 @@ public final class Elements {
         return Numbers.ofInt(ofString(element));
     }
 
-    public static int ofInt(WzElement<?> element, int defaultValue) {
+    public static Integer ofInt(WzElement<?> element, Integer defaultValue) {
         if (element == null) {
             return defaultValue;
         }
@@ -66,16 +65,16 @@ public final class Elements {
         return Numbers.ofInt(ofString(element, String.valueOf(defaultValue)));
     }
 
-    public static int findInt(WzElement<?> element, String name) {
+    public static Integer findInt(WzElement<?> element, String name) {
         return findInt(element, name, 0);
     }
 
-    public static int findInt(WzElement<?> element, String name, int defaultValue) {
+    public static Integer findInt(WzElement<?> element, String name, int defaultValue) {
         Preconditions.checkNotNull(element, "element == null");
         return element.findByName(name).map(Elements::ofInt).orElse(defaultValue);
     }
 
-    public static short ofShort(WzElement<?> element) {
+    public static Short ofShort(WzElement<?> element) {
         Preconditions.checkNotNull(element, "element == null");
         if (element instanceof ShortElement) {
             return ((ShortElement) element).value();
@@ -83,16 +82,16 @@ public final class Elements {
         return Numbers.ofShort(ofString(element));
     }
 
-    public static short findShort(WzElement<?> element, String name) {
+    public static Short findShort(WzElement<?> element, String name) {
         return findShort(element, name, (short) 0);
     }
 
-    public static short findShort(WzElement<?> element, String name, short defaultValue) {
+    public static Short findShort(WzElement<?> element, String name, Short defaultValue) {
         Preconditions.checkNotNull(element, "element == null");
         return element.findByName(name).map(Elements::ofShort).orElse(defaultValue);
     }
 
-    public static float ofFloat(WzElement<?> element) {
+    public static Float ofFloat(WzElement<?> element) {
         Preconditions.checkNotNull(element, "element == null");
         if (element instanceof FloatElement) {
             return ((FloatElement) element).value();
@@ -100,16 +99,16 @@ public final class Elements {
         return Numbers.ofFloat(ofString(element));
     }
 
-    public static float findFloat(WzElement<?> element, String name) {
+    public static Float findFloat(WzElement<?> element, String name) {
         return findFloat(element, name, 0.f);
     }
 
-    public static float findFloat(WzElement<?> element, String name, float defaultValue) {
+    public static Float findFloat(WzElement<?> element, String name, Float defaultValue) {
         Preconditions.checkNotNull(element, "element == null");
         return element.findByName(name).map(Elements::ofFloat).orElse(defaultValue);
     }
 
-    public static double ofDouble(WzElement<?> element) {
+    public static Double ofDouble(WzElement<?> element) {
         Preconditions.checkNotNull(element, "element == null");
         if (element instanceof DoubleElement) {
             return ((DoubleElement) element).value();
@@ -117,11 +116,11 @@ public final class Elements {
         return Numbers.ofDouble(ofString(element));
     }
 
-    public static double findDouble(WzElement<?> element, String name) {
-        return findDouble(element, name, 0.f);
+    public static Double findDouble(WzElement<?> element, String name) {
+        return findDouble(element, name, 0.D);
     }
 
-    public static double findDouble(WzElement<?> element, String name, double defaultValue) {
+    public static Double findDouble(WzElement<?> element, String name, Double defaultValue) {
         Preconditions.checkNotNull(element, "element == null");
         return element.findByName(name).map(Elements::ofDouble).orElse(defaultValue);
     }
@@ -134,6 +133,7 @@ public final class Elements {
         return null;
     }
 
+    @SuppressWarnings("unused")
     public static Canvas findCanvas(WzElement<?> element, String name) {
         return findCanvas(element, name, null);
     }

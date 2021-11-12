@@ -1,8 +1,8 @@
 package client.inventory;
 
-import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItemAggregate;
-import com.github.mrzhqiang.maplestory.domain.query.QDPetAggregate;
-import com.github.mrzhqiang.maplestory.domain.query.QDRingAggregate;
+import com.github.mrzhqiang.maplestory.domain.query.QVInventoryItemAggregate;
+import com.github.mrzhqiang.maplestory.domain.query.QVPetAggregate;
+import com.github.mrzhqiang.maplestory.domain.query.QVRingAggregate;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,23 +65,23 @@ public class MapleInventoryIdentifier implements Serializable {
             return grabRunningUID();
         }
         int[] ids = new int[4];
-        ids[0] = new QDInventoryItemAggregate()
-                .select(QDInventoryItemAggregate.alias().uniqueid)
+        ids[0] = new QVInventoryItemAggregate()
+                .select(QVInventoryItemAggregate.alias().uniqueid)
                 .findOneOrEmpty()
                 .map(it -> it.uniqueid + 1)
                 .orElse(0);
-        ids[1] = new QDPetAggregate()
-                .select(QDPetAggregate.alias().petid)
+        ids[1] = new QVPetAggregate()
+                .select(QVPetAggregate.alias().petid)
                 .findOneOrEmpty()
                 .map(it -> it.petid + 1)
                 .orElse(0);
-        ids[2] = new QDRingAggregate()
-                .select(QDRingAggregate.alias().ringid)
+        ids[2] = new QVRingAggregate()
+                .select(QVRingAggregate.alias().ringid)
                 .findOneOrEmpty()
                 .map(it -> it.ringid + 1)
                 .orElse(0);
-        ids[3] = new QDRingAggregate()
-                .select(QDRingAggregate.alias().partnerringid)
+        ids[3] = new QVRingAggregate()
+                .select(QVRingAggregate.alias().partnerringid)
                 .findOneOrEmpty()
                 .map(it -> it.partnerringid + 1)
                 .orElse(0);

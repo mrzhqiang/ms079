@@ -52,7 +52,7 @@ public class DCharacter extends Model {
     @DbComment("运气")
     public Integer luk = 0;
     @NotNull
-    @Column(name = "int")
+    @Column(name = "int_")
     @DbComment("智力")
     public Integer intelligence = 0;
     @NotNull
@@ -141,7 +141,7 @@ public class DCharacter extends Model {
     @Column(name = "Jaguar")
     public Integer jaguar = 0;
     @NotNull
-    @Column(name = "rank")
+    @Column(name = "rank_")
     public Integer rank = 1;
     @NotNull
     @Column(name = "rankMove")

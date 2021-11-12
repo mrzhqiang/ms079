@@ -1,8 +1,12 @@
 package handling.world;
 
-import client.*;
+import client.BuddyEntry;
+import client.BuddyList;
 import client.BuddyList.BuddyAddResult;
 import client.BuddyList.BuddyOperation;
+import client.MapleCharacter;
+import client.MapleCoolDownValueHolder;
+import client.MapleDiseaseValueHolder;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.PetDataFactory;
@@ -12,6 +16,7 @@ import com.github.mrzhqiang.maplestory.domain.DGuild;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDFamily;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
+import com.github.mrzhqiang.maplestory.domain.query.QVCharacterAggregate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,7 +26,11 @@ import handling.channel.ChannelServer;
 import handling.channel.PlayerStorage;
 import handling.world.family.MapleFamily;
 import handling.world.family.MapleFamilyCharacter;
-import handling.world.guild.*;
+import handling.world.guild.MapleBBSThread;
+import handling.world.guild.MapleGuild;
+import handling.world.guild.MapleGuildAlliance;
+import handling.world.guild.MapleGuildCharacter;
+import handling.world.guild.MapleGuildSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.Timer.WorldTimer;
@@ -32,22 +41,27 @@ import tools.MaplePacketCreator;
 import tools.packet.PetPacket;
 
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class World {
+public final class World {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(World.class);
 
-    public static boolean isShutDown = false;
-
     public static void init() {
-        World.Find.init();
-        World.Guild.init();
-        World.Alliance.init();
-        World.Family.init();
-        World.Messenger.init();
-        World.Party.init();
+        Find.init();
+        Guild.init();
+        Alliance.init();
+        Family.init();
+        Messenger.init();
+        Party.init();
     }
 
     public static String getStatus() throws RemoteException {
@@ -159,9 +173,10 @@ public class World {
         private static final AtomicInteger RUNNING_PARTY_ID = new AtomicInteger();
 
         public static void init() {
-            int party = new QDCharacter().select("MAX(party)")
+            int party = new QVCharacterAggregate()
+                    .select(QVCharacterAggregate.alias().party)
                     .findOneOrEmpty()
-                    .map(character -> character.party)
+                    .map(it -> it.party)
                     .map(integer -> integer + 2)
                     .orElse(1);
             RUNNING_PARTY_ID.set(party);

@@ -2,14 +2,11 @@ package com.github.mrzhqiang.maplestory.config;
 
 import com.github.mrzhqiang.helper.math.Numbers;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import com.google.inject.name.Named;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -22,6 +19,7 @@ public final class ServerProperties {
     private final int flag;
     private final int onlineLimit;
     private final int charactersLimit;
+    private final int accountLimit;
     private final String address;
 
     private final boolean autoRegister;
@@ -65,6 +63,7 @@ public final class ServerProperties {
         this.flag = Numbers.ofInt(properties.getProperty("server.flag", "3"));
         this.onlineLimit = Numbers.ofInt(properties.getProperty("server.limit.online", "100"));
         this.charactersLimit = Numbers.ofInt(properties.getProperty("server.limit.characters", "3"));
+        this.accountLimit = Numbers.ofInt(properties.getProperty("server.limit.account", "1"));
         this.address = properties.getProperty("server.address", "127.0.0.1");
         this.autoRegister = Boolean.parseBoolean(properties.getProperty("server.register.auto", "true"));
         this.randDrop = Boolean.parseBoolean(properties.getProperty("server.rand.drop", "false"));
@@ -155,6 +154,10 @@ public final class ServerProperties {
 
     public int getCharactersLimit() {
         return charactersLimit;
+    }
+
+    public int getAccountLimit() {
+        return accountLimit;
     }
 
     public int getChannelPort() {

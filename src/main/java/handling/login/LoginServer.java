@@ -1,8 +1,8 @@
 package handling.login;
 
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.github.mrzhqiang.maplestory.di.Injectors;
+import com.google.common.collect.Maps;
 import handling.MapleServerHandler;
 import handling.mina.MapleCodecFactory;
 import org.apache.mina.core.buffer.IoBuffer;
@@ -16,51 +16,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Triple;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @Singleton
-public class LoginServer {
+public final class LoginServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginServer.class);
 
     private static final Set<String> LOGIN_IP_AUTH = new ConcurrentHashSet<>();
     private static final Map<Integer, Triple<String, String, Integer>> LOGIN_AUTH = new ConcurrentHashMap<>();
 
-    private Map<Integer, Integer> load = new HashMap<>();
+    private Map<Integer, Integer> load = Maps.newConcurrentMap();
 
-    private final int port;
     private final int maxCharacters;
     private final String serverName;
     private final boolean adminOnly;
 
-    private final MapleCodecFactory factory;
-    private final MapleServerHandler serverHandler;
-
     private static int flag;
     private static int userLimit;
     private static String eventMessage;
+
     private boolean finishedShutdown = true;
     private int usersOn = 0;
-    private IoAcceptor acceptor;
 
     @Inject
-    public LoginServer(ServerProperties properties, MapleCodecFactory factory) {
+    public LoginServer(ServerProperties properties) {
         LoginServer.flag = properties.getFlag();
-        this.port = properties.getLoginPort();
         LoginServer.userLimit = properties.getOnlineLimit();
         this.maxCharacters = properties.getCharactersLimit();
         this.serverName = properties.getName();
         LoginServer.eventMessage = properties.getLoginEventMessage();
         this.adminOnly = properties.isAdminLogin();
-        this.factory = factory;
-        this.serverHandler = new MapleServerHandler();
-        // fixme 循环依赖
-        this.serverHandler.setLoginServer(this);
     }
 
     public static void putLoginAuth(int chrid, String ip, String tempIp, int channel) {
@@ -84,23 +77,26 @@ public class LoginServer {
         LOGIN_IP_AUTH.add(ip);
     }
 
-    public void addChannel(final int channel) {
+    public void addChannel(int channel) {
         load.put(channel, 0);
     }
 
-    public void removeChannel(final int channel) {
+    public void removeChannel(int channel) {
         load.remove(channel);
     }
 
-    public void run_startup_configurations() {
+    public static void run_startup_configurations() {
+        // todo guice DI
         IoBuffer.setUseDirectBuffer(false);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
-        acceptor = new NioSocketAcceptor();
-        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(factory));
-        acceptor.setHandler(serverHandler);
+        IoAcceptor acceptor = new NioSocketAcceptor();
+        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(Injectors.get(MapleCodecFactory.class)));
+        acceptor.setHandler(Injectors.get(MapleServerHandler.class));
         //acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 30);
         ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
 
+        ServerProperties properties = Injectors.get(ServerProperties.class);
+        int port = properties.getLoginPort();
         try {
             acceptor.bind(new InetSocketAddress(port));
             LOGGER.info("登录器服务器绑定端口：" + port);
@@ -142,7 +138,7 @@ public class LoginServer {
         return load;
     }
 
-    public void setLoad(final Map<Integer, Integer> load_, final int usersOn_) {
+    public void setLoad(Map<Integer, Integer> load_, int usersOn_) {
         load = load_;
         usersOn = usersOn_;
     }
@@ -166,10 +162,6 @@ public class LoginServer {
 
     public static void setUserLimit(final int newLimit) {
         userLimit = newLimit;
-    }
-
-    public int getNumberOfSessions() {
-        return acceptor.getManagedSessions().size();
     }
 
     public boolean isAdminOnly() {

@@ -12,8 +12,9 @@ public class DWzQuestActData extends Model {
     @Id
     public Integer id;
     @NotNull
-    @Column(name = "questid")
-    public Integer questid;
+    @ManyToOne
+    @JoinColumn(name = "questid")
+    public DWzQuestData questData;
     @NotNull
     @Column(name = "name")
     public String name;

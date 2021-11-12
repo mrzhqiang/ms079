@@ -6,8 +6,6 @@ import com.google.common.base.Splitter;
 import org.jsoup.select.Elements;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * wz 文件。
@@ -55,7 +53,7 @@ public final class WzFile {
     public static String hideFormat(String filename) {
         Preconditions.checkNotNull(filename, "filename == null");
         if (filename.endsWith(FILE_SUFFIX) || filename.endsWith(FILE_INFIX)) {
-            return Splitter.on(".").splitToList(filename).get(0);
+            return Splitter.on(".").split(filename).iterator().next();
         }
         return filename;
     }

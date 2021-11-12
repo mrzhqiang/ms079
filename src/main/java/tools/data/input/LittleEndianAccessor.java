@@ -112,5 +112,5 @@ public interface LittleEndianAccessor {
      */
     long available();
 
-    String toString(final boolean b);
+    String toString(boolean b);
 }

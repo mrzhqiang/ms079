@@ -8,7 +8,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
 @Entity
 @Table(name = "bbs_threads")
@@ -40,4 +42,6 @@ public class DBbsThread extends Model {
     @Column(name = "localthreadid")
     public Integer localthreadid;
 
+    @OneToMany(mappedBy = "thread")
+    public List<DBbsReply> replys;
 }

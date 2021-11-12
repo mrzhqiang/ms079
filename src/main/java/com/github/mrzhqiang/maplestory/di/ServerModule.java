@@ -1,8 +1,8 @@
-package com.github.mrzhqiang.maplestory.config;
+package com.github.mrzhqiang.maplestory.di;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import javax.inject.Singleton;
 import com.google.inject.name.Named;
 
 import java.io.FileReader;
@@ -10,15 +10,11 @@ import java.io.Reader;
 import java.util.Properties;
 
 /**
- * 服务端配置。
+ * 服务器模块。
  */
-public final class ServerConfiguration extends AbstractModule {
+final class ServerModule extends AbstractModule {
 
-    public static final ServerConfiguration INSTANCE = new ServerConfiguration();
-
-    private ServerConfiguration() {
-        // inner instance
-    }
+    static final ServerModule INSTANCE = new ServerModule();
 
     private static final String CONFIG_FILE = "服务端配置.ini";
 
@@ -37,5 +33,4 @@ public final class ServerConfiguration extends AbstractModule {
         }
         return properties;
     }
-
 }

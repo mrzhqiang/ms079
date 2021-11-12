@@ -1,14 +1,14 @@
 package handling.mina;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
-@Singleton
-public class MapleCodecFactory implements ProtocolCodecFactory {
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+public final class MapleCodecFactory implements ProtocolCodecFactory {
 
     private final MaplePacketEncoder encoder;
     private final MaplePacketDecoder decoder;

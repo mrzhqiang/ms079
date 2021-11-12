@@ -1,6 +1,7 @@
 package com.github.mrzhqiang.maplestory.wz;
 
 import com.github.mrzhqiang.helper.Environments;
+import com.google.common.base.Splitter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -20,6 +22,8 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 /**
  * wz 文件管理工具。
+ * <p>
+ * 注意：未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。
  */
 public final class WzManage {
     private WzManage() {
@@ -37,9 +41,6 @@ public final class WzManage {
      * 默认值是 wz，可通过环境变量进行修改，也可以在启动时，使用 Dwz.path=wz 修改。
      */
     public static final File WZ_DIR = new File(System.getProperty(WZ_KEY, DEFAULT_WZ_PATH));
-    /**
-     * 未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。
-     */
     @SuppressWarnings("unused")
     public static final File BASE_DIR = new File(WZ_DIR, "Base.wz");
     public static final File CHARACTER_DIR = new File(WZ_DIR, "Character.wz");
@@ -87,10 +88,10 @@ public final class WzManage {
 
             String filename = stringFile.getName();
             Path target = Optional.of(filename)
-                    .map(it -> it.split("\\."))
-                    .filter(it -> it.length > 0)
+                    .map(it -> Splitter.on('.').split(it).iterator())
+                    .filter(Iterator::hasNext)
                     // xxx.img.xml >>> xxx
-                    .map(it -> it[0])
+                    .map(Iterator::next)
                     // resolve 方法：/path/to + args >>> /path/to/args
                     .map(out::resolve)
                     .orElse(out.resolve(filename));
@@ -107,7 +108,8 @@ public final class WzManage {
     }
 
     private static void writeElement(Path target, Element element) {
-        String parentName = element.parent().attr("name");
+        Element parent = element.parent();
+        String parentName = parent != null ? parent.attr("name") : "unknown";
         String name = element.val();
         // String.wz 中的文件，一般是 name 为第一个元素，如果存在下一个元素，则必定是 desc 描述
         String desc = Optional.ofNullable(element.nextElementSibling()).map(Element::val).orElse("(无描述)");

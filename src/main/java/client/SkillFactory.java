@@ -32,9 +32,9 @@ public final class SkillFactory {
                     element.findByName("summon/attack1/info")
                             .ifPresent(info -> {
                                 SummonSkillEntry sse = new SummonSkillEntry();
-                                sse.attackAfter = (short) Elements.findInt(info, "attackAfter", 999999);
-                                sse.type = (byte) Elements.findInt(info, "type", 0);
-                                sse.mobCount = (byte) Elements.findInt(info, "mobCount", 1);
+                                sse.attackAfter = Elements.findInt(info, "attackAfter", 999999).shortValue();
+                                sse.type = Elements.findInt(info, "type", 0).byteValue();
+                                sse.mobCount = Elements.findInt(info, "mobCount", 1).byteValue();
                                 SUMMON_SKILL_INFORMATION.put(skillId, sse);
                             });
                 }));

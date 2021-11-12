@@ -10,7 +10,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "inventoryitems")
@@ -45,19 +47,19 @@ public class DInventoryItem extends Model {
     public String gmLog;
     @NotNull
     @Column(name = "uniqueid")
-    public Integer uniqueid;
+    public Integer uniqueid = -1;
     @NotNull
     @Column(name = "flag")
-    public Integer flag;
+    public Integer flag = 0;
     @NotNull
     @Column(name = "expiredate")
-    public LocalDateTime expiredate;
+    public Long expiredate = -1L;
     @NotNull
     @Column(name = "type")
-    public Integer type;
+    public Integer type = 0;
     @NotNull
     @Column(name = "sender")
-    public String sender;
+    public String sender = "";
 
     @OneToOne(mappedBy = "item")
     public DInventoryEquipment equipment;

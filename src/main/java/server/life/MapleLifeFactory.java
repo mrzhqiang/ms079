@@ -88,9 +88,9 @@ public final class MapleLifeFactory {
                     stats.setHp(Elements.findInt(element, "info/maxHP"));
                     stats.setMp(Elements.findInt(element, "info/maxMP"));
                     stats.setExp(Elements.findInt(element, "info/exp"));
-                    stats.setLevel((short) Elements.findInt(element, "info/level"));
+                    stats.setLevel(Elements.findInt(element, "info/level").shortValue());
                     stats.setRemoveAfter(Elements.findInt(element, "info/removeAfter"));
-                    stats.setrareItemDropLevel((byte) Elements.findInt(element, "info/rareItemDropLevel"));
+                    stats.setrareItemDropLevel(Elements.findInt(element, "info/rareItemDropLevel").byteValue());
                     stats.setFixedDamage(Elements.findInt(element, "info/fixedDamage", -1));
                     stats.setOnlyNormalAttack(Elements.findInt(element, "info/onlyNormalAttack") > 0);
                     stats.setBoss(Elements.findInt(element, "info/boss") > 0
@@ -110,14 +110,14 @@ public final class MapleLifeFactory {
                     stats.setBuffToGive(Elements.findInt(element, "info/buff", -1));
                     stats.setFriendly(Elements.findInt(element, "info/damagedByMob") > 0);
                     stats.setNoDoom(Elements.findInt(element, "info/noDoom") > 0);
-                    stats.setCP((byte) Elements.findInt(element, "info/getCP"));
+                    stats.setCP(Elements.findInt(element, "info/getCP").byteValue());
                     stats.setPoint(Elements.findInt(element, "info/point"));
                     stats.setDropItemPeriod(Elements.findInt(element, "info/dropItemPeriod"));
-                    stats.setPhysicalDefense((short) Elements.findInt(element, "info/PDDamage"));
-                    stats.setMagicDefense((short) Elements.findInt(element, "info/MDDamage"));
-                    stats.setEva((short) Elements.findInt(element, "info/eva"));
+                    stats.setPhysicalDefense(Elements.findInt(element, "info/PDDamage").shortValue());
+                    stats.setMagicDefense(Elements.findInt(element, "info/MDDamage").shortValue());
+                    stats.setEva(Elements.findInt(element, "info/eva").shortValue());
                     stats.setSelfDHP(Elements.findInt(element, "info/selfDestruction/hp"));
-                    stats.setSelfD((byte) Elements.findInt(element, "info/selfDestruction/action", -1));
+                    stats.setSelfD(Elements.findInt(element, "info/selfDestruction/action", -1).byteValue());
                     element.findByName("info/firstAttack").ifPresent(attack -> {
                         if (attack instanceof FloatElement) {
                             stats.setFirstAttack(Math.round(Elements.ofFloat(attack)) > 0);

@@ -20,7 +20,7 @@
         <mysql-connector-java.version>8.0.25</mysql-connector-java.version>
         <helper.version>2021.1.3</helper.version>
         <jsoup.version>1.14.3</jsoup.version>
-        <ebean.version>12.12.1</ebean.version>
+        <ebean.version>12.12.3</ebean.version>
         <guice.version>5.0.1</guice.version>
         <slf4j-api.version>1.7.32</slf4j-api.version>
         <logback.version>1.2.6</logback.version>
@@ -59,6 +59,16 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${guice.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxswing</artifactId>
+            <version>0.27.0</version>
         </dependency>
 
         <dependency>

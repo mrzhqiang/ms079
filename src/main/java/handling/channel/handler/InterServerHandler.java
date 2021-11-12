@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.NPCScriptManager;
-import com.github.mrzhqiang.maplestory.config.ServerConfiguration;
 import server.maps.FieldLimitType;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
@@ -318,7 +317,7 @@ public class InterServerHandler {
         c.getSession().write(MaplePacketCreator.weirdStatUpdate());
     }
 
-    public static final void ChangeChannel(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void ChangeChannel(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
         if (c.getPlayer().getTrade() != null || !chr.isAlive() || chr.getEventInstance() != null || chr.getMap() == null || FieldLimitType.ChannelSwitch.check(chr.getMap().getFieldLimit())) {
             c.getSession().write(MaplePacketCreator.enableActions());
             return;

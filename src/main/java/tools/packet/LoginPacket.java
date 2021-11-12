@@ -139,8 +139,8 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static MaplePacket getGenderNeeded(final MapleClient client) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+    public static MaplePacket getGenderNeeded(MapleClient client) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("getGenderNeeded--------------------");
@@ -151,8 +151,8 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static MaplePacket getAuthSuccessRequest(final MapleClient client) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+    public static MaplePacket getAuthSuccessRequest(MapleClient client) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("getAuthSuccessRequest--------------------");
@@ -207,7 +207,7 @@ public class LoginPacket {
     }
 
     public static MaplePacket getServerList(final int serverId, final String serverName, final Map<Integer, Integer> channelLoad) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("getServerList--------------------");
@@ -256,7 +256,7 @@ public class LoginPacket {
     }
 
     public static MaplePacket getEndOfServerList() {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("getEndOfServerList--------------------");
@@ -282,8 +282,8 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket getCharList(final boolean secondpw, final List<MapleCharacter> chars, int charslots) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+    public static MaplePacket getCharList(boolean secondpw, List<MapleCharacter> chars, int charslots) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("getCharList--------------------");
@@ -293,7 +293,7 @@ public class LoginPacket {
         mplew.writeInt(0); // 40 42 0F 00
         mplew.write(chars.size()); // 1
 
-        for (final MapleCharacter chr : chars) {
+        for (MapleCharacter chr : chars) {
             addCharEntry(mplew, chr, !chr.isGM() && chr.getLevel() >= 10, false);
         }
         mplew.writeShort(3); // second pw request
@@ -315,8 +315,8 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    public static final MaplePacket charNameResponse(final String charname, final boolean nameUsed) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+    public static MaplePacket charNameResponse(String charname, boolean nameUsed) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
 
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("charNameResponse--------------------");
@@ -328,7 +328,8 @@ public class LoginPacket {
         return mplew.getPacket();
     }
 
-    private static final void addCharEntry(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr, boolean ranking, boolean viewAll) {
+    private static void addCharEntry(MaplePacketLittleEndianWriter mplew, MapleCharacter chr,
+                                     boolean ranking, boolean viewAll) {
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("addCharEntry--------------------");
         }

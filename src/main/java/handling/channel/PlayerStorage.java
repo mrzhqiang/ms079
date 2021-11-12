@@ -128,7 +128,7 @@ public class PlayerStorage {
         return toreturn;
     }
 
-    public final MapleCharacter getCharacterByName(final String name) {
+    public MapleCharacter getCharacterByName(String name) {
         rL.lock();
         try {
             return nameToChar.get(name.toLowerCase());

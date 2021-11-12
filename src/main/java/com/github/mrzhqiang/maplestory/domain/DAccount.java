@@ -52,7 +52,7 @@ public class DAccount extends Model {
     @NotNull
     @Column(name = "loggedin")
     @DbComment("登录状态")
-    public Integer loggedIn = 0;
+    public Integer loggedIn;
     @WhenModified
     @Column(name = "lastlogin")
     @DbComment("上次登录时间")
@@ -64,16 +64,16 @@ public class DAccount extends Model {
     public LocalDateTime created;
     @NotNull
     @DbComment("生日")
-    public LocalDate birthday = LocalDate.now();
+    public LocalDate birthday;
     @NotNull
     @DbComment("是否禁用")
-    public Integer banned = 0;
+    public Integer banned;
     @Column(name = "banreason")
     @DbComment("禁用理由")
     public String banReason;
     @NotNull
     @DbComment("是否为 GM")
-    public Integer gm = 0;
+    public Integer gm;
     @DbComment("电子邮件")
     public String email;
     @Column(name = "macs")
@@ -82,26 +82,25 @@ public class DAccount extends Model {
     @NotNull
     @Column(name = "tempban")
     @DbComment("临时禁用时间")
-    public LocalDateTime tempBan = LocalDateTime.now().minusDays(1);
+    public LocalDateTime tempBan;
     @Column(name = "greason")
     public Integer gReason;
     @Column(name = "ACash")
-    public Integer aCash = 0;
+    public Integer aCash;
     @Column(name = "mPoints")
     public Integer mPoint;
     @NotNull
-    // todo Enum 10 is ??
     @Column(name = "gender")
-    public Integer gender = 10;
+    public Integer gender;
     @Length(64)
     @Column(name = "SessionIP")
     public String sessionIP;
     @NotNull
     @Column(name = "points")
-    public Integer point = 0;
+    public Integer point;
     @NotNull
     @Column(name = "vpoints")
-    public Integer vPoint = 0;
+    public Integer vPoint;
     @Column(name = "lastlogon")
     public LocalDateTime lastLogon;
     @Length(255)
@@ -119,15 +118,15 @@ public class DAccount extends Model {
     public Integer vip;
     @NotNull
     @Column(name = "money")
-    public Integer money = 0;
+    public Integer money;
     @NotNull
     @Column(name = "moneyb")
-    public Integer moneyB = 0;
+    public Integer moneyB;
     @NotNull
     @Column(name = "lastGainHM")
-    public Long lastGainHM = 0L;
+    public Long lastGainHM;
     @Column(name = "paypalNX")
-    public Integer paypalNX = 0;
+    public Integer paypalNX;
 
     @OneToMany(mappedBy = "account")
     public List<DCharacter> characters;

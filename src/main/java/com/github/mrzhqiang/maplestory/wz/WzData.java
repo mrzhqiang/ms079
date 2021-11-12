@@ -1,28 +1,59 @@
 package com.github.mrzhqiang.maplestory.wz;
 
 import com.google.common.base.Preconditions;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import java.io.File;
 
 /**
- * wz 数据。
+ * wz 数据工具。
  * <p>
- * 这是一系列数据的单例实现，包含相关目录和文件。
- * <p>
- * 枚举类是最好的单例。
+ * 包含指定 wz 目录下的子目录及文件。
  */
 public enum WzData {
 
+    /**
+     * 玩家相关
+     */
     CHARACTER(WzManage.CHARACTER_DIR),
+    /**
+     * todo 弄清楚含义
+     */
     ETC(WzManage.ETC_DIR),
+    /**
+     * 道具
+     */
     ITEM(WzManage.ITEM_DIR),
+    /**
+     * 地图
+     */
     MAP(WzManage.MAP_DIR),
+    /**
+     * 怪物
+     */
     MOB(WzManage.MOB_DIR),
+    /**
+     * NPC
+     */
     NPC(WzManage.NPC_DIR),
+    /**
+     * 任务
+     */
     QUEST(WzManage.QUEST_DIR),
+    /**
+     * 反应堆？？
+     */
     REACTOR(WzManage.REACTOR_DIR),
+    /**
+     * 技能
+     */
     SKILL(WzManage.SKILL_DIR),
+    /**
+     * 文本
+     */
     STRING(WzManage.STRING_DIR),
+    /* 以下属于客户端内容，服务器保留这些文件，但不解析 */
 //    BASE(WzFiles.BASE_DIR),
 //    EFFECT(WzFiles.EFFECT_DIR),
 //    MORPH(WzFiles.MORPH_DIR),
@@ -32,19 +63,17 @@ public enum WzData {
     ;
 
     /**
-     * 将文件内容解析并加载到相应的 ConcurrentHashMap（支持并发操作的内存缓存） 中。
+     * 加载所有的 wz 文件。
      * <p>
-     * 这个方法可以重复调用，以更新修改后的内容。
-     * <p>
-     * 注意：如果新增或删除 xml 文件以及文件中的内容，此方法将不保证得到预期的效果。
+     * 注意：被删除的 wz 文件需要重启才能从内存中清除，之所以不立即清除的原因是，我们需要保证线程安全。
+     *
+     * @return 基于 RxJava 的流。
      */
-    public static synchronized void load() {
-        for (WzData data : WzData.values()) {
-            // 只是修改内容，可以重加载。
-            // 如果是删除了某些内容，则必须重启服务器，以防止程序异常。
-//            data.root.clean();
-            data.directory.parse();
-        }
+    public static Flowable<WzDirectory> load() {
+        return Flowable.fromArray(WzData.values())
+                .subscribeOn(Schedulers.io())
+                .map(WzData::directory)
+                .doOnNext(WzDirectory::parse);
     }
 
     /**
@@ -53,12 +82,13 @@ public enum WzData {
     private final WzDirectory directory;
 
     /**
-     * @param wzFile 单个 wz 顶级目录。
+     * @param directory wz 目录。
      */
-    WzData(File wzFile) {
-        Preconditions.checkNotNull(wzFile, "wz file == null");
-        Preconditions.checkArgument(wzFile.exists(), "wz file %s is not exists", wzFile);
-        this.directory = new WzDirectory(wzFile.toPath());
+    WzData(File directory) {
+        Preconditions.checkNotNull(directory, "wz directory == null");
+        Preconditions.checkArgument(directory.exists(),
+                "wz directory %s is not exists", directory);
+        this.directory = new WzDirectory(directory.toPath());
     }
 
     /**

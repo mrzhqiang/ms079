@@ -5,7 +5,6 @@ import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.mrzhqiang.maplestory.config.ServerConfiguration;
 import tools.HexTool;
 
 import java.io.ByteArrayOutputStream;

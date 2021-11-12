@@ -3,14 +3,15 @@ package handling.channel;
 import KinMS.db.AutoCherryMSEventManager;
 import client.MapleCharacter;
 import client.MapleClient;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.di.Injectors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import constants.ServerConstants;
 import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
 import handling.MapleServerHandler;
 import handling.cashshop.CashShopServer;
-import handling.login.LoginServer;
 import handling.mina.MapleCodecFactory;
 import handling.world.CheaterData;
 import org.apache.mina.core.buffer.IoBuffer;
@@ -40,7 +41,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ChannelServer implements Serializable {
+public final class ChannelServer implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ChannelServer.class);
 
@@ -54,10 +55,12 @@ public class ChannelServer implements Serializable {
     private String serverMessage, key, ip, serverName;
     private boolean shutdown = false, finishedShutdown = false, MegaphoneMuteState = false, adminOnly = false;
     private PlayerStorage players;
-    private final MapleServerHandler serverHandler;
     private IoAcceptor acceptor;
+
+    private final MapleServerHandler serverHandler;
     private final MapleMapFactory mapFactory;
     private final MapleCodecFactory codecFactory;
+
     private EventScriptManager eventSM;
     private static final Map<Integer, ChannelServer> INSTANCE_CACHED = new ConcurrentHashMap<>();
     private final Map<MapleSquadType, MapleSquad> mapleSquads = new ConcurrentEnumMap<MapleSquadType, MapleSquad>(MapleSquadType.class);
@@ -77,14 +80,13 @@ public class ChannelServer implements Serializable {
 //        mapFactory.setChannel(channel);
 //    }
     @Inject
-    public ChannelServer(LoginServer loginServer, MapleCodecFactory codecFactory) {
+    public ChannelServer(MapleCodecFactory codecFactory, MapleServerHandler serverHandler) {
         this.mapFactory = new MapleMapFactory();
         /*
          * this.channel = channel; mapFactory = new MapleMapFactory();
          * mapFactory.setChannel(channel);
          */
-        this.serverHandler = new MapleServerHandler();
-        this.serverHandler.setLoginServer(loginServer);
+        this.serverHandler = serverHandler;
         this.serverHandler.setChannel(channel);
         this.codecFactory = codecFactory;
     }
@@ -163,7 +165,7 @@ public class ChannelServer implements Serializable {
 
         //temporary while we dont have !addchannel
         INSTANCE_CACHED.remove(channel);
-        serverHandler.getLoginServer().removeChannel(channel);
+        serverHandler.handler.loginServer.removeChannel(channel);
         setFinishShutdown();
 //        if (threadToNotify != null) {
 //            synchronized (threadToNotify) {
@@ -189,7 +191,7 @@ public class ChannelServer implements Serializable {
         chr.getClient().getSession().write(MaplePacketCreator.serverMessage(serverMessage));
     }
 
-    public final PlayerStorage getPlayerStorage() {
+    public PlayerStorage getPlayerStorage() {
         if (players == null) { //wth
             players = new PlayerStorage(channel); //wthhhh
         }
@@ -251,7 +253,7 @@ public class ChannelServer implements Serializable {
         this.channel = channel;
         this.mapFactory.setChannel(channel);
         INSTANCE_CACHED.put(channel, this);
-        serverHandler.getLoginServer().addChannel(channel);
+        serverHandler.handler.loginServer.addChannel(channel);
     }
 
     public static Collection<ChannelServer> getAllInstances() {
@@ -357,13 +359,13 @@ public class ChannelServer implements Serializable {
         }
     }
 
-    public static void startChannel_Main(Injector injector) {
-        int ch = ServerConstants.properties.getChannelCount();
+    public static void startChannel_Main() {
+        int ch = Injectors.get(ServerProperties.class).getChannelCount();
         if (ch > 10) {
             ch = 10;
         }
         for (int i = 0; i < ch; i++) {
-            ChannelServer channelServer = injector.getInstance(ChannelServer.class);
+            ChannelServer channelServer = Injectors.get(ChannelServer.class);
             channelServer.setChannel(i + 1);
             channelServer.run_startup_configurations();
         }
@@ -709,7 +711,7 @@ public class ChannelServer implements Serializable {
                                 chr.getClient().disconnect(true, false, false);
                             }
                         }
-                    } catch (Exception ex) {
+                    } catch (Exception ignored) {
                     }
                     chrs = ch.getPlayerStorage().getAllCharactersThreadSafe();
                     if (chr.getClient() != c) {
@@ -733,11 +735,11 @@ public class ChannelServer implements Serializable {
                                 chr.getClient().disconnect(true, false, false);
                             }
                         }
-                    } catch (Exception ex) {
+                    } catch (Exception ignored) {
                     }
                 }
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 

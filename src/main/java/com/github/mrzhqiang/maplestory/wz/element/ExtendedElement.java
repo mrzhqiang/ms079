@@ -7,6 +7,10 @@ import javax.annotation.Nullable;
 
 /**
  * 扩展标签元素。
+ * <p>
+ * 在 Map.wz 目录下，此扩展标签元素可能存在重复 name 的子元素。
+ * <p>
+ * 为此，我们在 BaseWzElement 中增加了 sameChildren 列表以保证所有子元素不被丢失。
  */
 public final class ExtendedElement extends BaseWzElement<Void> {
 

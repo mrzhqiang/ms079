@@ -4,6 +4,8 @@ import client.ISkill;
 import client.LoginCrypto;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.di.Injectors;
 import com.github.mrzhqiang.maplestory.domain.DAccount;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
@@ -11,6 +13,8 @@ import com.github.mrzhqiang.maplestory.domain.DWzCustomLife;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItem;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import constants.ServerConstants.PlayerGMRank;
 import client.MapleClient;
 import client.MapleDisease;
@@ -110,7 +114,13 @@ public class AdminCommand {
     public static class 关闭地图 extends closemap {
     }
 
+    @Singleton
     public static class 注册 extends register {
+
+        @Inject
+        public 注册(AutoRegister register) {
+            super(register);
+        }
     }
 
     public static class 满属性 extends maxstats {
@@ -268,14 +278,21 @@ public class AdminCommand {
         }
     }
 
+    @Singleton
     public static class Shutdown extends CommandExecute {
 
-        private static Thread t = null;
+        private final ShutdownServer server;
+        private Thread t = null;
 
-        public int execute(MapleClient c, String splitted[]) {
+        @Inject
+        public Shutdown(ShutdownServer server) {
+            this.server = server;
+        }
+
+        public int execute(MapleClient c, String[] splitted) {
             c.getPlayer().dropMessage(6, "关闭服务器...");
             if (t == null || !t.isAlive()) {
-                t = new Thread(server.ShutdownServer.getInstance());
+                t = new Thread(server);
                 t.start();
             } else {
                 c.getPlayer().dropMessage(6, "已在执行中...");
@@ -284,54 +301,61 @@ public class AdminCommand {
         }
 
         public String getMessage() {
-            return new StringBuilder().append("!shutdown - 关闭服务器").toString();
+            return "!shutdown - 关闭服务器";
         }
     }
 
+    @Singleton
     public static class ShutdownTime extends CommandExecute {
 
         private static ScheduledFuture<?> ts = null;
-        private int minutesLeft = 0;
         private static Thread t = null;
 
-        public int execute(MapleClient c, String splitted[]) {
+        private final ShutdownServer server;
 
+        private int minutesLeft = 0;
+
+        @Inject
+        public ShutdownTime(ShutdownServer server) {
+            this.server = server;
+        }
+
+        public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 2) {
                 return 0;
             }
+
             minutesLeft = Integer.parseInt(splitted[1]);
             c.getPlayer().dropMessage(6, "服务器将在 " + minutesLeft + "分钟后关闭. 请尽速关闭精灵商人 并下线.");
             if (ts == null && (t == null || !t.isAlive())) {
-                t = new Thread(ShutdownServer.getInstance());
-                ts = EventTimer.getInstance().register(new Runnable() {
-
-                    public void run() {
-                        if (minutesLeft == 0) {
-                            ShutdownServer.getInstance().run();
-                            t.start();
-                            ts.cancel(false);
-                            return;
-                        }
-                        StringBuilder message = new StringBuilder();
-                        message.append("[冒险岛公告] 服务器将在 ");
-                        message.append(minutesLeft);
-                        message.append("分钟后关闭. 请尽速关闭精灵商人 并下线.");
-                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, message.toString()).getBytes());
-                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverMessage(message.toString()).getBytes());
-                        for (ChannelServer cs : ChannelServer.getAllInstances()) {
-                            cs.setServerMessage("服务器将于 " + minutesLeft + " 分钟后开启");
-                        }
-                        minutesLeft--;
+                t = new Thread(server);
+                ts = EventTimer.getInstance().register(() -> {
+                    if (minutesLeft == 0) {
+                        server.run();
+                        t.start();
+                        ts.cancel(false);
+                        return;
                     }
+
+                    StringBuilder message = new StringBuilder();
+                    message.append("[冒险岛公告] 服务器将在 ");
+                    message.append(minutesLeft);
+                    message.append("分钟后关闭. 请尽速关闭精灵商人 并下线.");
+                    World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, message.toString()).getBytes());
+                    World.Broadcast.broadcastMessage(MaplePacketCreator.serverMessage(message.toString()).getBytes());
+                    for (ChannelServer cs : ChannelServer.getAllInstances()) {
+                        cs.setServerMessage("服务器将于 " + minutesLeft + " 分钟后关闭");
+                    }
+                    minutesLeft--;
                 }, 60000);
             } else {
-                c.getPlayer().dropMessage(6, new StringBuilder().append("服务器关闭时间修改为 ").append(minutesLeft).append("分钟后，请稍等服务器关闭").toString());
+                c.getPlayer().dropMessage(6, "服务器关闭时间修改为 " + minutesLeft + "分钟后，请稍等服务器关闭");
             }
             return 1;
         }
 
         public String getMessage() {
-            return new StringBuilder().append("!shutdowntime <秒数> - 关闭服务器").toString();
+            return "!shutdowntime <秒数> - 关闭服务器";
         }
     }
 
@@ -1779,24 +1803,24 @@ public class AdminCommand {
 
     public static class CharInfo extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient client, String[] splitted) {
 
             if (splitted.length < 2) {
                 return 0;
             }
-            final StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
             MapleCharacter other;
             String name = splitted[1];
             int ch = World.Find.findChannel(name);
             if (ch <= 0) {
-                c.getPlayer().dropMessage(6, "玩家必须在线");
+                client.getPlayer().dropMessage(6, "玩家必须在线");
                 return 0;
             }
             other = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
 
             if (other == null) {
                 builder.append("角色不存在");
-                c.getPlayer().dropMessage(6, builder.toString());
+                client.getPlayer().dropMessage(6, builder.toString());
             } else {
                 if (other.getClient().getLastPing() <= 0) {
                     other.getClient().sendPing();
@@ -1862,7 +1886,7 @@ public class AdminCommand {
                 builder.append(other.getClient().getSessionIPAddress());
                 other.getClient().DebugMessage(builder);
 
-                c.getPlayer().dropMessage(6, builder.toString());
+                client.getPlayer().dropMessage(6, builder.toString());
             }
             return 1;
         }
@@ -2793,7 +2817,7 @@ public class AdminCommand {
             MapleCharacter player = c.getPlayer();
             try {
                 player.dropMessage(6, "Making playerNPC...");
-                MapleClient cs = new MapleClient(null, null, new MockIOSession());
+                MapleClient cs = new MapleClient(null, null, new MockIOSession(), Injectors.get(ServerProperties.class));
                 MapleCharacter chhr = MapleCharacter.loadCharFromDB(MapleCharacterUtil.getIdByName(splitted[1]), cs, false);
                 if (chhr == null) {
                     player.dropMessage(6, splitted[1] + " 不存在");
@@ -3711,6 +3735,12 @@ public class AdminCommand {
 
     public static class register extends CommandExecute {
 
+        private final AutoRegister register;
+
+        public register(AutoRegister register) {
+            this.register = register;
+        }
+
         @Override
         public int execute(MapleClient c, String[] splitted) {
             String acc = null;
@@ -3724,7 +3754,7 @@ public class AdminCommand {
                 c.getPlayer().dropMessage("账号或密码异常");
                 return 0;
             }
-            boolean ACCexist = AutoRegister.getAccountExists(acc);
+            boolean ACCexist = register.getAccountExists(acc);
             if (ACCexist) {
                 c.getPlayer().dropMessage("帐号已被使用");
                 return 0;

@@ -1,7 +1,7 @@
 package constants;
 
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 public class OtherSettings {
 

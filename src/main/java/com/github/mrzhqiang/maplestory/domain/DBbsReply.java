@@ -13,8 +13,9 @@ public class DBbsReply extends Model {
     @Column(name = "replyid")
     public Integer id;
     @NotNull
-    @Column(name = "threadid")
-    public Integer threadid;
+    @ManyToOne
+    @JoinColumn(name = "threadid")
+    public DBbsThread thread;
     @NotNull
     @Column(name = "postercid")
     public Integer postercid;

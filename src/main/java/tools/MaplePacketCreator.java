@@ -4183,7 +4183,7 @@ public class MaplePacketCreator {
         mplew.write(guild.getLogoColor());
         mplew.writeMapleAsciiString(guild.getNotice());
         mplew.writeInt(guild.getGP());
-        mplew.writeInt(guild.getAllianceId() > 0 ? guild.getAllianceId() : 0);
+        mplew.writeInt(Math.max(guild.getAllianceId(), 0));
     }
 
     private static void getGuildInfo2(MaplePacketLittleEndianWriter mplew, MapleGuild guild, MapleCharacter chr) {
@@ -4748,11 +4748,11 @@ public class MaplePacketCreator {
         if (ServerConstants.properties.isPacketDebugLogger()) {
             LOGGER.debug("addThread--------------------");
         }
-        mplew.writeInt(rs.localthreadID);
+        mplew.writeInt(rs.entity.localthreadid);
         mplew.writeInt(rs.ownerID);
-        mplew.writeMapleAsciiString(rs.name);
-        mplew.writeLong(PacketHelper.getKoreanTimestamp(rs.timestamp));
-        mplew.writeInt(rs.icon);
+        mplew.writeMapleAsciiString(rs.entity.name);
+        mplew.writeLong(PacketHelper.getKoreanTimestamp(rs.entity.timestamp));
+        mplew.writeInt(rs.entity.icon);
         mplew.writeInt(rs.getReplyCount());
     }
 
@@ -4765,12 +4765,12 @@ public class MaplePacketCreator {
         mplew.writeShort(SendPacketOpcode.BBS_OPERATION.getValue());
         mplew.write(7);
 
-        mplew.writeInt(thread.localthreadID);
+        mplew.writeInt(thread.entity.localthreadid);
         mplew.writeInt(thread.ownerID);
-        mplew.writeLong(PacketHelper.getKoreanTimestamp(thread.timestamp));
-        mplew.writeMapleAsciiString(thread.name);
+        mplew.writeLong(PacketHelper.getKoreanTimestamp(thread.entity.timestamp));
+        mplew.writeMapleAsciiString(thread.entity.name);
         mplew.writeMapleAsciiString(thread.text);
-        mplew.writeInt(thread.icon);
+        mplew.writeInt(thread.entity.icon);
         mplew.writeInt(thread.getReplyCount());
         for (MapleBBSReply reply : thread.replies.values()) {
             mplew.writeInt(reply.reply.id);

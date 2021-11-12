@@ -2,7 +2,7 @@ package handling.world.guild;
 
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 
-public class MapleGuildCharacter {
+public final class MapleGuildCharacter {
 
     public final DCharacter character;
     private int channel;

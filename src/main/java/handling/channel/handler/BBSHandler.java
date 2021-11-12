@@ -144,7 +144,7 @@ public class BBSHandler {
         final List<MapleBBSThread> bbsList = World.Guild.getBBS(c.getPlayer().getGuildId());
         if (bbsList != null) {
             for (MapleBBSThread t : bbsList) {
-                if (t != null && t.localthreadID == localthreadid) {
+                if (t != null && t.entity.localthreadid == localthreadid) {
                     c.getSession().write(MaplePacketCreator.showThread(t));
                 }
             }

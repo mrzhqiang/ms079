@@ -1,24 +1,3 @@
-/*
- This file is part of the ZeroFusion MapleStory Server
- Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
- ZeroFusion organized by "RMZero213" <RMZero213@hotmail.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.events;
 
 import com.github.mrzhqiang.maplestory.domain.DWzOxData;
@@ -30,15 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class MapleOxQuizFactory {
+public final class MapleOxQuizFactory {
 
     private boolean initialized = false;
-    private Map<Pair<Integer, Integer>, MapleOxQuizEntry> questionCache;
-    private static MapleOxQuizFactory instance = new MapleOxQuizFactory();
-
-    public MapleOxQuizFactory() {
-        questionCache = new HashMap<Pair<Integer, Integer>, MapleOxQuizEntry>();
-    }
+    private final Map<Pair<Integer, Integer>, MapleOxQuizEntry> questionCache = new HashMap<>();
+    private static final MapleOxQuizFactory instance = new MapleOxQuizFactory();
 
     public static MapleOxQuizFactory getInstance() {
         return instance;
@@ -49,7 +24,7 @@ public class MapleOxQuizFactory {
     }
 
     public Entry<Pair<Integer, Integer>, MapleOxQuizEntry> grabRandomQuestion() {
-        final int size = questionCache.size();
+        int size = questionCache.size();
         while (true) {
             for (Entry<Pair<Integer, Integer>, MapleOxQuizEntry> oxquiz : questionCache.entrySet()) {
                 if (Randomizer.nextInt(size) == 0) {
@@ -70,7 +45,7 @@ public class MapleOxQuizFactory {
     }
 
     public static MapleOxQuizEntry getOxEntry(int questionSet, int questionId) {
-        return getInstance().getOxQuizEntry(new Pair<Integer, Integer>(questionSet, questionId));
+        return getInstance().getOxQuizEntry(new Pair<>(questionSet, questionId));
     }
 
     public static MapleOxQuizEntry getOxEntry(Pair<Integer, Integer> pair) {

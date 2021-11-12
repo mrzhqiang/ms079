@@ -7,9 +7,12 @@ import javax.persistence.*;
 
 @SuppressWarnings("EntityIdMissingInspection")
 @Entity
-@View(name = "inventoryitems")
-public class DInventoryItemAggregate {
+@View(name = "rings")
+public class VRingAggregate {
 
     @Max
-    public Integer uniqueid;
+    public Integer ringid;
+
+    @Max
+    public Integer partnerringid;
 }

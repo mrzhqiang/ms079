@@ -21,6 +21,7 @@
 package constants;
 
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.di.Injectors;
 import handling.login.Balloon;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,14 +43,13 @@ public class ServerConstants {
     public static final int MTS_MESO = 5000; //mesos needed
     public static final int CHANNEL_COUNT = 200;
     //服务端输出操作
-    public static boolean autoRegister = false;
     public static boolean Super_password = false;
     public static String superpw = "";
     public static final List<Balloon> lBalloon = new ArrayList<>();
     public static boolean preventLockAccount = true;
 
-    // todo DI IoC
-    public static ServerProperties properties;
+    public static final ServerProperties properties = Injectors.get(ServerProperties.class);
+    public static boolean autoRegister = properties.isAutoRegister();
 
     public static boolean getAutoReg() {
         return autoRegister;
@@ -86,11 +86,6 @@ public class ServerConstants {
                 return 10;
         }
         return 0;
-    }
-
-    public static void setProperties(ServerProperties instance) {
-        properties = instance;
-        autoRegister = instance.isAutoRegister();
     }
 
     public static enum PlayerGMRank {

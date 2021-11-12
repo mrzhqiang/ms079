@@ -1,9 +1,12 @@
 package server;
 
-public class StructRewardItem {
+import com.github.mrzhqiang.maplestory.domain.DWzItemRewardData;
 
-    public int itemid;
-    public long period;
-    public int prob, quantity;
-    public String effect, worldmsg;
+public final class StructRewardItem {
+
+    public final DWzItemRewardData data;
+
+    public StructRewardItem(DWzItemRewardData data) {
+        this.data = data;
+    }
 }

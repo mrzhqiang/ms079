@@ -65,9 +65,9 @@ public final class MapleReactorFactory {
                                     }
                                 }
                                 foundState = true;
-                                byte state = (byte) Elements.findInt(event0, "state");
-                                byte timeOut = (byte) Elements.findInt(event, "timeOut", -1);
-                                boolean two = (byte) Elements.findInt(event0, "2") > 0;
+                                byte state = Elements.findInt(event0, "state").byteValue();
+                                byte timeOut = Elements.findInt(event, "timeOut", -1).byteValue();
+                                boolean two = Elements.findInt(event0, "2").byteValue() > 0;
                                 boolean clickArea = event0.findByName("clickArea").isPresent();
                                 byte touch = (byte) (two || clickArea || (type == 9) ? 1 : canTouch ? 2 : 0);
                                 newStats.addState(i, type, reactItem, state, timeOut, touch);

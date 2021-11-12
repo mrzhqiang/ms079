@@ -16,27 +16,27 @@ public class LoginWorker {
 
     private static long lastUpdate = 0;
 
-    public static void registerClient(final MapleClient c, LoginServer loginServer) {
-        if (loginServer.isAdminOnly() && !c.isGm()) {
-            c.getSession().write(MaplePacketCreator.serverNotice(1, "服务器正在维护中"));
-            c.getSession().write(LoginPacket.getLoginFailed(7));
+    public static void registerClient(MapleClient client, LoginServer loginServer) {
+        if (loginServer.isAdminOnly() && !client.isGm()) {
+            client.getSession().write(MaplePacketCreator.serverNotice(1, "服务器正在维护中"));
+            client.getSession().write(LoginPacket.getLoginFailed(7));
             return;
         }
 
-        if (System.currentTimeMillis() - lastUpdate > 600000) { // Update once every 10 minutes
+        if (System.currentTimeMillis() - lastUpdate > 600000) { // 每10分钟更新一次
             lastUpdate = System.currentTimeMillis();
-            final Map<Integer, Integer> load = ChannelServer.getChannelLoad();
+            Map<Integer, Integer> load = ChannelServer.getChannelLoad();
             int usersOn = 0;
 
             if (load == null || load.size() <= 0) { // In an unfortunate event that client logged in before load
                 lastUpdate = 0;
-                c.getSession().write(LoginPacket.getLoginFailed(7));
+                client.getSession().write(LoginPacket.getLoginFailed(7));
 
                 return;
             }
             double loads = load.size();
-            double userlimit = loginServer.getUserLimit();
-            final double loadFactor = 1200 / ((double) loginServer.getUserLimit() / load.size());
+            double userlimit = LoginServer.getUserLimit();
+            double loadFactor = 1200 / ((double) LoginServer.getUserLimit() / load.size());
             for (Entry<Integer, Integer> entry : load.entrySet()) {
                 usersOn += entry.getValue();
                 load.put(entry.getKey(), Math.min(1200, (int) (entry.getValue() * loadFactor)));
@@ -47,29 +47,29 @@ public class LoginWorker {
 
         }
 
-        if (c.finishLogin() == 0) {
-            if (c.getGender() == 10) {
-                c.getSession().write(LoginPacket.getGenderNeeded(c));
+        if (client.finishLogin() == 0) {
+            if (client.getGender() == 10) {
+                client.getSession().write(LoginPacket.getGenderNeeded(client));
             } else {
-                c.getSession().write(LoginPacket.getAuthSuccessRequest(c));
-                c.getSession().write(LoginPacket.getServerList(0, loginServer.getServerName(), loginServer.getLoad()));
-                c.getSession().write(LoginPacket.getEndOfServerList());
+                client.getSession().write(LoginPacket.getAuthSuccessRequest(client));
+                client.getSession().write(LoginPacket.getServerList(0, loginServer.getServerName(), loginServer.getLoad()));
+                client.getSession().write(LoginPacket.getEndOfServerList());
 
             }
-            c.setIdleTask(PingTimer.getInstance().schedule(() -> {
-//                    c.getSession().close();
+            client.setIdleTask(PingTimer.getInstance().schedule(() -> {
+//                    client.getSession().close();
             }, 10 * 60 * 10000));
         } else {
-            if (c.getGender() == 10) {
-                c.getSession().write(LoginPacket.getGenderNeeded(c));
+            if (client.getGender() == 10) {
+                client.getSession().write(LoginPacket.getGenderNeeded(client));
 
             } else {
-                c.getSession().write(LoginPacket.getAuthSuccessRequest(c));
-                c.getSession().write(LoginPacket.getServerList(0, loginServer.getServerName(), loginServer.getLoad()));
-                c.getSession().write(LoginPacket.getEndOfServerList());
+                client.getSession().write(LoginPacket.getAuthSuccessRequest(client));
+                client.getSession().write(LoginPacket.getServerList(0, loginServer.getServerName(), loginServer.getLoad()));
+                client.getSession().write(LoginPacket.getEndOfServerList());
 
             }
-           /* c.getSession().write(LoginPacket.getLoginFailed(7));
+           /* client.getSession().write(LoginPacket.getLoginFailed(7));
 
             LOGGER.debug("登录Z");
             return;*/

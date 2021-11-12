@@ -1,8 +1,7 @@
 package handling.mina;
 
 import client.MapleClient;
-import com.google.inject.Singleton;
-import constants.ServerConstants;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
 import org.apache.mina.core.buffer.IoBuffer;
@@ -18,23 +17,28 @@ import tools.MapleCustomEncryption;
 import tools.data.input.ByteArrayByteStream;
 import tools.data.input.GenericLittleEndianAccessor;
 
+import javax.inject.Inject;
 import java.util.concurrent.locks.Lock;
 
-@Singleton
-public class MaplePacketEncoder implements ProtocolEncoder {
+public final class MaplePacketEncoder implements ProtocolEncoder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaplePacketEncoder.class);
 
+    private final ServerProperties properties;
+
+    @Inject
+    public MaplePacketEncoder(ServerProperties properties) {
+        this.properties = properties;
+    }
+
     @Override
-    public void encode(final IoSession session, final Object message, final ProtocolEncoderOutput out) throws Exception {
-        final MapleClient client = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);
-
+    public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
+        MapleClient client = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);
         if (client != null) {
-            final MapleAESOFB send_crypto = client.getSendCrypto();
-
-            //final byte[] inputInitialPacket = ((byte[]) message);
-            final byte[] inputInitialPacket = ((MaplePacket) message).getBytes();
-            if (ServerConstants.properties.isPacketLogger()) {
+            MapleAESOFB send_crypto = client.getSendCrypto();
+            byte[] inputInitialPacket = ((MaplePacket) message).getBytes();
+            // todo Netty LoggingHandler
+            if (properties.isPacketLogger()) {
                 int packetLen = inputInitialPacket.length;
                 int pHeader = readFirstShort(inputInitialPacket);
                 String pHeaderStr = Integer.toHexString(pHeader).toUpperCase();
@@ -69,14 +73,14 @@ public class MaplePacketEncoder implements ProtocolEncoder {
                 }
 
             }
-            final byte[] unencrypted = new byte[inputInitialPacket.length];
+            byte[] unencrypted = new byte[inputInitialPacket.length];
             System.arraycopy(inputInitialPacket, 0, unencrypted, 0, inputInitialPacket.length); // Copy the input > "unencrypted"
-            final byte[] ret = new byte[unencrypted.length + 4]; // Create new bytes with length = "unencrypted" + 4
+            byte[] ret = new byte[unencrypted.length + 4]; // Create new bytes with length = "unencrypted" + 4
 
-            final Lock mutex = client.getLock();
+            Lock mutex = client.getLock();
             mutex.lock();
             try {
-                final byte[] header = send_crypto.getPacketHeader(unencrypted.length);
+                byte[] header = send_crypto.getPacketHeader(unencrypted.length);
                 MapleCustomEncryption.encryptData(unencrypted); // Encrypting Data
                 send_crypto.crypt(unencrypted); // Crypt it with IV
                 System.arraycopy(header, 0, ret, 0, 4); // Copy the header > "Ret", first 4 bytes

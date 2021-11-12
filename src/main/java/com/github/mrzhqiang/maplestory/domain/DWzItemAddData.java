@@ -12,8 +12,9 @@ public class DWzItemAddData extends Model {
     @Id
     public Integer id;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    @ManyToOne
+    @JoinColumn(name = "itemid")
+    public DWzItemData itemData;
     @NotNull
     @Column(name = "key")
     public String key;

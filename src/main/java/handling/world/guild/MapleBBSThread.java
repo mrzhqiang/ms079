@@ -2,48 +2,48 @@ package handling.world.guild;
 
 import com.github.mrzhqiang.maplestory.domain.DBbsReply;
 import com.github.mrzhqiang.maplestory.domain.DBbsThread;
-import com.github.mrzhqiang.maplestory.domain.query.QDBbsReply;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapleBBSThread implements java.io.Serializable {
+public final class MapleBBSThread {
 
-    public static final long serialVersionUID = 3565477792085301248L;
-    public String name, text;
-    public long timestamp;
-    public int localthreadID, guildID, ownerID, icon;
-    public Map<Integer, MapleBBSReply> replies = new HashMap<>();
+    public final Map<Integer, MapleBBSReply> replies = new HashMap<>();
 
-    public final DBbsThread thread;
+    public final DBbsThread entity;
 
-    public MapleBBSThread(DBbsThread thread) {
-        this.thread = thread;
-        new QDBbsReply().threadid.eq(thread.id).findEach(data -> replies.put(data.id, new MapleBBSReply(data)));
+    public String text;
+    public int ownerID;
+
+    public MapleBBSThread(DBbsThread entity) {
+        this.entity = entity;
+        for (DBbsReply data : entity.replys) {
+            replies.put(data.id, new MapleBBSReply(data));
+        }
     }
 
-    public MapleBBSThread(final int localthreadID, final String name, final String text, final long timestamp,
-                          final int guildID, final int ownerID, final int icon) {
-        this.thread = null;
-        this.localthreadID = localthreadID;
-        this.name = name;
+    public MapleBBSThread(int localthreadID, String name, String text, long timestamp, int guildID, int ownerID, int icon) {
+        this.entity = new DBbsThread();
+        this.entity.localthreadid = localthreadID;
+        this.entity.name = name;
+        this.entity.timestamp = timestamp;
+        this.entity.guild = new QDGuild().id.eq(guildID).findOne();
+        this.entity.icon = icon;
         this.text = text;
-        this.timestamp = timestamp;
-        this.guildID = guildID;
         this.ownerID = ownerID;
-        this.icon = icon;
     }
 
-    public final int getReplyCount() {
+    public int getReplyCount() {
         return replies.size();
     }
 
-    public final boolean isNotice() {
-        return localthreadID == 0;
+    public boolean isNotice() {
+        return entity.localthreadid == 0;
     }
 
-    public static class MapleBBSReply implements java.io.Serializable {
+    public static class MapleBBSReply {
 
         public final DBbsReply reply;
 
@@ -51,7 +51,7 @@ public class MapleBBSThread implements java.io.Serializable {
             this.reply = reply;
         }
 
-        public MapleBBSReply(final int replyid, final int ownerID, final String content, final long timestamp) {
+        public MapleBBSReply(int replyid, int ownerID, String content, long timestamp) {
             this.reply = new DBbsReply();
             this.reply.id = replyid;
             this.reply.postercid = ownerID;
@@ -60,13 +60,13 @@ public class MapleBBSThread implements java.io.Serializable {
         }
     }
 
-    public static class ThreadComparator implements Comparator<MapleBBSThread>, java.io.Serializable {
+    public static class ThreadComparator implements Comparator<MapleBBSThread> {
 
         @Override
         public int compare(MapleBBSThread o1, MapleBBSThread o2) {
-            if (o1.localthreadID < o2.localthreadID) {
+            if (o1.entity.localthreadid < o2.entity.localthreadid) {
                 return 1;
-            } else if (o1.localthreadID == o2.localthreadID) {
+            } else if (o1.entity.localthreadid.equals(o2.entity.localthreadid)) {
                 return 0;
             } else {
                 return -1; //opposite here as oldest is last, newest is first

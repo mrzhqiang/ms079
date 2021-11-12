@@ -3,6 +3,8 @@ package client;
 import client.anticheat.CheatTracker;
 import client.inventory.*;
 import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.di.Injectors;
 import com.github.mrzhqiang.maplestory.domain.*;
 import com.github.mrzhqiang.maplestory.domain.query.*;
 import com.github.mrzhqiang.maplestory.wz.WzData;
@@ -265,7 +267,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (optional.isPresent()) {
             DAccount account = optional.get();
 
-            ret.client.setAccountName(account.name);
+//            ret.client.setAccountName(account.name);
             ret.acash = account.aCash;
             ret.maplepoints = account.mPoint;
             ret.points = account.point;
@@ -440,7 +442,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.lastmonthfameids = ct.famedcharacters;
         ret.storage = (MapleStorage) ct.storage;
         ret.cs = (CashShop) ct.cs;
-        client.setAccountName(ct.accountname);
+//        client.setAccountName(ct.accountname);
         ret.acash = ct.ACash;
         ret.lastGainHM = ct.lastGainHM;
         ret.maplepoints = ct.MaplePoints;
@@ -535,7 +537,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             DAccount account = new QDAccount().id.eq(ret.accountid).findOne();
             if (account != null) {
-                ret.getClient().setAccountName(account.name);
+//                ret.getClient().setAccountName(account.name);
                 ret.lastGainHM = account.lastGainHM;
                 ret.acash = account.aCash;
                 ret.maplepoints = account.mPoint;
@@ -680,6 +682,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     private void setCharacter(DCharacter one) {
+        this.character = one;
         this.mount_id = one.mountid;
         this.name = one.name;
         this.level = one.level;
@@ -713,12 +716,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.mapid = one.map;
         this.initialSpawnPoint = one.spawnPoint;
         this.world = one.world;
-        this.guildid = one.guild.id;
+        this.guildid = one.guild == null ? 0 : one.guild.id;
         this.guildrank = one.guildRank;
         this.allianceRank = one.allianceRank;
         this.currentrep = one.currentRep;
         this.totalrep = one.totalRep;
-        this.makeMFC(one.family.id, one.senior.id, one.junior1.id, one.junior2.id);
+        if (one.family != null && one.senior != null && one.junior1 != null && one.junior2 != null) {
+            this.makeMFC(one.family.id, one.senior.id, one.junior1.id, one.junior2.id);
+        }
         if (this.guildid > 0) {
             this.mgc = new MapleGuildCharacter(this.character, client.getChannel(), true);
         }
@@ -729,7 +734,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.rankMove = one.rankMove;
         this.jobRank = one.jobRank;
         this.jobRankMove = one.jobRankMove;
-        this.marriageId = one.marriage.id;
+        if (one.marriage != null) {
+            this.marriageId = one.marriage.id;
+        }
         this.charmessage = one.charMessage;
         this.expression = one.expression;
         this.constellation = one.constellation;
@@ -2001,7 +2008,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getId() {
-        return id;
+        return character.id;
     }
 
     public String getName() {
@@ -3921,7 +3928,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGuildId() {
-        return guildid;
+        return character.guild.id;
     }
 
     public byte getGuildRank() {
@@ -5136,9 +5143,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public MapleCharacter cloneLooks() {
-        MapleClient cs = new MapleClient(null, null, new MockIOSession());
+        MapleClient cs = new MapleClient(null, null, new MockIOSession(), Injectors.get(ServerProperties.class));
 
-        final int minus = (getId() + Randomizer.nextInt(getId())); // really randomize it, dont want it to fail
+        int minus = (getId() + Randomizer.nextInt(getId())); // really randomize it, dont want it to fail
 
         MapleCharacter ret = new MapleCharacter(true);
         ret.id = minus;
@@ -5212,7 +5219,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.lastfametime = lastfametime;
         ret.storage = storage;
         ret.cs = this.cs;
-        ret.client.setAccountName(client.getAccountName());
+//        ret.client.setAccountName(client.getAccountName());
         ret.acash = acash;
         ret.lastGainHM = lastGainHM;
         ret.maplepoints = maplepoints;
@@ -5232,7 +5239,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         for (int i = 0; i < clones.length; i++) {
             if (clones[i].get() == null) {
-                final MapleCharacter newp = cloneLooks();
+                MapleCharacter newp = cloneLooks();
                 map.addPlayer(newp);
                 map.broadcastMessage(MaplePacketCreator.updateCharLook(newp));
                 map.movePlayer(newp, getPosition());
@@ -5373,7 +5380,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return jobRankMove;
     }
 
-    public void changeChannel(final int channel) {
+    public void changeChannel(int channel) {
         Integer energyLevel = getBuffedValue(MapleBuffStat.ENERGY_CHARGE);
         if (energyLevel != null && energyLevel > 0) {
             setBuffedValue(MapleBuffStat.ENERGY_CHARGE, Integer.valueOf(energyLevel));

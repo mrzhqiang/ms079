@@ -28,8 +28,7 @@ public class MapleGuildRanking {
                 showLevelRank();
                 showMesoRank();
             } catch (Exception ex) {
-                ex.printStackTrace();
-                LOGGER.error("Could not update rankings");
+                LOGGER.error("Could not update rankings", ex);
             }
         }, 60 * 60 * 1000, 60 * 60 * 1000);
     }

@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools;
 
 /**
@@ -35,8 +15,7 @@ public class MapleCustomEncryption {
      * @param data The data to encrypt.
      * @return The encrypted data.
      */
-    public static final byte[] encryptData(final byte data[]) {
-
+    public static byte[] encryptData(byte[] data) {
         for (int j = 0; j < 6; j++) {
             byte remember = 0;
             byte dataLength = (byte) (data.length & 0xFF);
@@ -78,17 +57,17 @@ public class MapleCustomEncryption {
      * @param data The data to decrypt.
      * @return The decrypted data.
      */
-    public static final byte[] decryptData(final byte data[]) {
+    public static byte[] decryptData(byte[] data) {
         for (int j = 1; j <= 6; j++) {
             byte remember = 0;
             byte dataLength = (byte) (data.length & 0xFF);
-            byte nextRemember = 0;
+            byte nextRemember;
 
             if (j % 2 == 0) {
                 for (int i = 0; i < data.length; i++) {
                     byte cur = data[i];
                     cur = (byte) (cur - 72);
-                    cur = (byte) ((cur ^ 0xFFFFFFFF) & 0xFF);
+                    cur = (byte) ((~cur) & 0xFF);
                     cur = BitTools.rollLeft(cur, dataLength & 0xFF);
                     nextRemember = cur;
                     cur = (byte) (cur ^ remember);

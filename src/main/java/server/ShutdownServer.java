@@ -1,7 +1,7 @@
 package server;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
@@ -17,12 +17,9 @@ import tools.MaplePacketCreator;
 import java.util.Set;
 
 @Singleton
-public class ShutdownServer implements Runnable {
+public final class ShutdownServer implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShutdownServer.class);
-
-    public static boolean running = false;
-    public int mode = 0;
 
     private final LoginServer loginServer;
 
@@ -31,38 +28,8 @@ public class ShutdownServer implements Runnable {
         this.loginServer = loginServer;
     }
 
-    public static ShutdownServer getInstance() {
-        return new ShutdownServer(null);
-    }
-
-    /*
-     * @Override public void run() { synchronized (this) { if (running) { //Run
-     * once! return; } running = true; } World.isShutDown = true; try { for
-     * (ChannelServer cs : ChannelServer.getAllInstances()) { cs.setShutdown();
-     * } LoginServer.shutdown(); Integer[] chs =
-     * ChannelServer.getAllInstance().toArray(new Integer[0]);
-     *
-     * for (int i : chs) { try { ChannelServer cs =
-     * ChannelServer.getInstance(i); synchronized (this) { cs.shutdown(this); //
-     * try { // this.wait(); // } catch (InterruptedException ex) { // } } }
-     * catch (Exception e) { e.printStackTrace(); } } //
-     * CashShopServer.shutdown(); World.Guild.save(); World.Alliance.save();
-     * World.Family.save(); DatabaseConnection.closeAll(); } catch (SQLException
-     * e) { LOGGER.error("THROW" + e); } WorldTimer.getInstance().stop();
-     * MapTimer.getInstance().stop(); MobTimer.getInstance().stop();
-     * BuffTimer.getInstance().stop(); CloneTimer.getInstance().stop();
-     * EventTimer.getInstance().stop(); EtcTimer.getInstance().stop();
-     *
-     * try { Thread.sleep(5000); } catch (Exception e) { //shutdown }
-     * System.exit(0); //not sure if this is really needed for ChannelServer }
-     */
-    public void shutdown() {
-        run();
-    }
-
     @Override
     public void run() {
-
         //Timer
         Timer.WorldTimer.getInstance().stop();
         Timer.MapTimer.getInstance().stop();
@@ -102,7 +69,7 @@ public class ShutdownServer implements Runnable {
                 cs.setFinishShutdown();
                 cs.shutdown();
             } catch (Exception e) {
-                LOGGER.debug("频道" + String.valueOf(channel) + " 关闭错误.");
+                LOGGER.error("频道" + channel + " 关闭错误.", e);
             }
         }
 
@@ -130,10 +97,9 @@ public class ShutdownServer implements Runnable {
         try {
             Thread.sleep(1000);
         } catch (Exception e) {
-            LOGGER.debug("关闭服务端错误 - 2" + e);
+            LOGGER.error("关闭服务端错误 - 2", e);
 
         }
         System.exit(0);
-
     }
 }

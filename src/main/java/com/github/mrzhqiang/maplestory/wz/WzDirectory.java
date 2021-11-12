@@ -26,11 +26,21 @@ public final class WzDirectory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WzDirectory.class);
 
-    // key 字符串为目录名称，带 .wz 后缀。不会导致冲突，因为重名目录属于子目录中的 dirs
+    /**
+     * wz 目录下的子目录。
+     * <p>
+     * key 字符串为目录名称，带 .wz 后缀。不会导致冲突，因为重名目录属于子目录中的 dirs 实例。
+     */
     private final Map<String, WzDirectory> dirs = Maps.newConcurrentMap();
-    // key 字符串为文件名称，不带 .xml 后缀。不会导致冲突，因为重名文件属于子目录中的 files
+    /**
+     * wz 目录下的文件。
+     * <p>
+     * key 字符串为文件名称，不带 .xml 后缀。不会导致冲突，因为重名文件属于子目录中的 files 实例。
+     */
     private final Map<String, WzFile> files = Maps.newConcurrentMap();
-    // 当前目录的路径
+    /**
+     * 当前目录路径。
+     */
     private final Path path;
 
     /**
@@ -38,6 +48,7 @@ public final class WzDirectory {
      */
     WzDirectory(Path path) {
         Preconditions.checkNotNull(path, "path == null");
+        Preconditions.checkState(Files.exists(path), "path %s is not exists", path);
         this.path = path;
     }
 
@@ -104,7 +115,7 @@ public final class WzDirectory {
         try {
             Files.list(path).forEach(this::attemptParse);
         } catch (IOException e) {
-            LOGGER.error("无法列出 {} 目录：{}", path, e);
+            LOGGER.error("无法解析 {} 目录：{}", path, e);
         }
     }
 
@@ -113,6 +124,7 @@ public final class WzDirectory {
             String fileName = path.getFileName().toString();
             if (Files.isDirectory(path)) {
                 WzDirectory directory = new WzDirectory(path);
+                directory.parse();
                 dirs.put(fileName, directory);
             } else {
                 Elements data = Jsoup.parse(path.toFile(), "UTF-8").body().children();

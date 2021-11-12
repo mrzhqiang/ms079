@@ -1,23 +1,3 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package tools.data.input;
 
 import java.io.IOException;
@@ -42,7 +22,7 @@ public class ByteArrayByteStream implements SeekableInputStreamBytestream {
      *
      * @param arr Array of bytes to wrap the stream around.
      */
-    public ByteArrayByteStream(final byte[] arr) {
+    public ByteArrayByteStream(byte[] arr) {
         this.arr = arr;
     }
 
@@ -66,7 +46,7 @@ public class ByteArrayByteStream implements SeekableInputStreamBytestream {
      * tools.data.input.SeekableInputStreamBytestream#seek(long)
      */
     @Override
-    public void seek(final long offset) throws IOException {
+    public void seek(long offset) throws IOException {
         pos = (int) offset;
     }
 
@@ -106,7 +86,7 @@ public class ByteArrayByteStream implements SeekableInputStreamBytestream {
     }
 
     @Override
-    public String toString(final boolean b) {
+    public String toString(boolean b) {
         String nows = "";
         if (arr.length - pos > 0) {
             byte[] now = new byte[arr.length - pos];

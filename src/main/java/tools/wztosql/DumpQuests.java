@@ -71,7 +71,7 @@ public class DumpQuests {
                         if (reqData != null) {
                             reqData.childrenStream().forEach(req -> {
                                 DWzQuestReqData reqdata = new DWzQuestReqData();
-                                reqdata.questid = id;
+                                reqdata.questData = new QDWzQuestData().id.eq(id).findOne();
                                 reqdata.type = finalI;
                                 if (MapleQuestRequirementType.getByWZName(req.name()) == MapleQuestRequirementType.UNDEFINED) {
                                     return; //un-needed
@@ -149,7 +149,7 @@ public class DumpQuests {
                                         return; //un-needed
                                     }
                                     DWzQuestActData actdata = new DWzQuestActData();
-                                    actdata.questid = id;
+                                    actdata.questData = new QDWzQuestData().id.eq(id).findOne();
                                     actdata.type = finalI;
                                     actdata.name = act.name();
                                     if (act.name().equals("sp")) {
@@ -256,7 +256,7 @@ public class DumpQuests {
                                                     d.childrenStream().forEach(c ->
                                                             c.childrenStream().forEach(b -> {
                                                                 DWzQuestPartyData partyData = new DWzQuestPartyData();
-                                                                partyData.questid = id;
+                                                                partyData.questData = new QDWzQuestData().id.eq(id).findOne();
                                                                 partyData.rank = d.name();
                                                                 partyData.mode = c.name();
                                                                 partyData.property = b.name();

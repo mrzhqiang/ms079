@@ -1,10 +1,12 @@
 package client;
 
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import com.github.mrzhqiang.maplestory.domain.DAccount;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DCharacterSlot;
 import com.github.mrzhqiang.maplestory.domain.DMacBans;
 import com.github.mrzhqiang.maplestory.domain.query.*;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import constants.GameConstants;
 import constants.ServerConstants;
@@ -24,6 +26,8 @@ import tools.FileoutputUtil;
 import tools.MapleAESOFB;
 import tools.packet.LoginPacket;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.script.ScriptEngine;
 import java.io.Serializable;
 import java.sql.ResultSet;
@@ -42,68 +46,59 @@ public class MapleClient implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleClient.class);
 
-    public static final transient byte LOGIN_NOTLOGGEDIN = 0;
-    public static final transient byte LOGIN_SERVER_TRANSITION = 1;
-    public static final transient byte LOGIN_LOGGEDIN = 2;
-    public static final transient byte LOGIN_WAITING = 3;
-    public static final transient byte CASH_SHOP_TRANSITION = 4;
-    public static final transient byte LOGIN_CS_LOGGEDIN = 5;
-    public static final transient byte CHANGE_CHANNEL = 6;
-    //ZlhssMS.MaxCharacters
-    public static final int DEFAULT_CHARSLOT = ServerConstants.properties.getCharactersLimit();//最大角色数量
+    public static final transient int LOGIN_NOTLOGGEDIN = 0;
+    public static final transient int LOGIN_SERVER_TRANSITION = 1;
+    public static final transient int LOGIN_LOGGEDIN = 2;
+    public static final transient int LOGIN_WAITING = 3;
+    public static final transient int CASH_SHOP_TRANSITION = 4;
+    public static final transient int LOGIN_CS_LOGGEDIN = 5;
+    public static final transient int CHANGE_CHANNEL = 6;
+
     public static final String CLIENT_KEY = "CLIENT";
     public static final String EMPTY_MAC = "00-00-00-00-00-00";
-    private transient MapleAESOFB send;
-    private transient MapleAESOFB receive;
-    private transient IoSession session;
+
+    private final transient MapleAESOFB send;
+    private final transient MapleAESOFB receive;
+    private final transient IoSession session;
+    private final ServerProperties properties;
+
+    private int charslots;
+
     private MapleCharacter player;
     private DAccount account;
     private int channel = 1;
-    private int accId = 1;
     private int world;
-    private int charslots = DEFAULT_CHARSLOT;
-    private boolean loggedIn = false, serverTransition = false;
-    private String accountName;
     private transient long lastPong = 0, lastPing = 0;
     private boolean monitored = false, receiving = true;
     public boolean gm;
-    private int gender = -1;
     public transient short loginAttempt = 0;
     private transient List<Integer> allowedChar = new LinkedList<>();
     private transient Set<String> macs = new HashSet<String>();
     private transient Map<String, ScriptEngine> engines = new HashMap<String, ScriptEngine>();
     private transient ScheduledFuture<?> idleTask = null;
-    private transient String secondPassword, salt2; // To be used only on login
+    private transient String secondPassword, salt2; // 仅在登录时使用
     private final transient Lock mutex = new ReentrantLock(true);
     private final transient Lock npc_mutex = new ReentrantLock();
     private final static Lock login_mutex = new ReentrantLock(true);
     private transient String tempIP = "";
-    private DebugWindow debugWindow;
 
-    public MapleClient(MapleAESOFB send, MapleAESOFB receive, IoSession session) {
+    public MapleClient(MapleAESOFB send, MapleAESOFB receive, IoSession session, ServerProperties properties) {
         this.send = send;
         this.receive = receive;
         this.session = session;
+        this.properties = properties;
+        this.charslots = properties.getCharactersLimit();
     }
 
-    public final MapleAESOFB getReceiveCrypto() {
-        return receive;
-    }
-
-    public final MapleAESOFB getSendCrypto() {
+    public MapleAESOFB getSendCrypto() {
         return send;
     }
 
-    public void StartWindow() {
-        if (this.debugWindow != null) {
-            this.debugWindow.dispose();
-        }
-        this.debugWindow = new DebugWindow();
-        this.debugWindow.setVisible(true);
-        this.debugWindow.setC(this);
+    public MapleAESOFB getReceiveCrypto() {
+        return receive;
     }
 
-    public final IoSession getSession() {
+    public IoSession getSession() {
         return session;
     }
 
@@ -115,11 +110,11 @@ public class MapleClient implements Serializable {
         this.tempIP = s;
     }
 
-    public final Lock getLock() {
+    public Lock getLock() {
         return mutex;
     }
 
-    public final Lock getNPCLock() {
+    public Lock getNPCLock() {
         return npc_mutex;
     }
 
@@ -139,7 +134,7 @@ public class MapleClient implements Serializable {
         allowedChar.add(id);
     }
 
-    public final boolean login_Auth(final int id) {
+    public boolean login_Auth(final int id) {
         return allowedChar.contains(id);
     }
 
@@ -171,7 +166,7 @@ public class MapleClient implements Serializable {
     }
 
     public boolean isLoggedIn() {
-        return loggedIn;
+        return account.loggedIn == LOGIN_LOGGEDIN;
     }
 
     private Calendar getTempBanCalendar(ResultSet rs) throws SQLException {
@@ -216,7 +211,7 @@ public class MapleClient implements Serializable {
         String ip = session.getRemoteAddress().toString();
         // remove port
         if (ip.contains(":")) {
-            ip = ip.split(":")[0];
+            ip = Splitter.on(':').split(ip).iterator().next();
         }
         // endsWith == like value%
         return new QDIPBans().ip.startsWith(ip).exists();
@@ -231,7 +226,7 @@ public class MapleClient implements Serializable {
 
     private void loadMacsIfNescessary() throws SQLException {
         if (macs.isEmpty()) {
-            DAccount one = new QDAccount().id.eq(accId).findOne();
+            DAccount one = account;
             if (one != null) {
                 if (one.mac != null) {
                     String[] macData = one.mac.split(", ");
@@ -288,7 +283,7 @@ public class MapleClient implements Serializable {
         try {
             int state = getLoginState();
             if (state > MapleClient.LOGIN_NOTLOGGEDIN && state != MapleClient.LOGIN_WAITING) { // already loggedin
-                loggedIn = false;
+//                loggedIn = false;
                 return 7;
             }
             updateLoginState(MapleClient.LOGIN_LOGGEDIN, Objects.equals(getSessionIPAddress(), "/127.0.0.1") ? null : getSessionIPAddress());
@@ -315,7 +310,7 @@ public class MapleClient implements Serializable {
                 }
                 byte loginstate = 0;//getLoginState();
                 if (loginstate > MapleClient.LOGIN_NOTLOGGEDIN) { // already loggedin
-                    loggedIn = false;
+//                    loggedIn = false;
                     loginok = 7;
                 } else {
                     boolean updatePasswordHash = false;
@@ -338,7 +333,7 @@ public class MapleClient implements Serializable {
                         loginok = 0;
                         updatePasswordHashtosha1 = true;
                     } else {
-                        loggedIn = false;
+//                        loggedIn = false;
                         loginok = 4;
                     }
                     if (secondPassword != null) {
@@ -370,12 +365,12 @@ public class MapleClient implements Serializable {
                 //!ServerConfig.防卡号=true来控制强制登陆,为了让卡号了也能进游戏
                 //if (!ServerConstants.防卡号 && getLoginState() > MapleClient.LOGIN_NOTLOGGEDIN) { // already loggedin
                 if (loginstate > MapleClient.LOGIN_NOTLOGGEDIN) { // already loggedin
-                    loggedIn = false;
+//                    loggedIn = false;
                     loginok = 7;
                 } else {
                     boolean updatePasswordHash = false;
                     boolean updatePasswordHashtosha1 = false;
-                    // Check if the passwords are correct here. :B
+                    // 在这里检查密码是否正确。
                     if (LoginCryptoLegacy.isLegacyPassword(account.password)
                             && LoginCryptoLegacy.checkPassword(pwd, account.password)) {
                         // Check if a password upgrade is needed.
@@ -390,7 +385,7 @@ public class MapleClient implements Serializable {
                         loginok = 0;
                         updatePasswordHashtosha1 = true;
                     } else {
-                        loggedIn = false;
+//                        loggedIn = false;
                         loginok = 4;
                     }
                     if (updatePasswordHash) {
@@ -405,12 +400,8 @@ public class MapleClient implements Serializable {
                         account.save();
                     }
                     if (loginok == 0) {
-                        ChannelServer.forceRemovePlayerByAccId(this, accId);
+                        ChannelServer.forceRemovePlayerByAccId(this, account.id);
                         updateLoginState(MapleClient.LOGIN_NOTLOGGEDIN, getSessionIPAddress());
-                    }
-                    if (loginstate > MapleClient.LOGIN_NOTLOGGEDIN) { // already loggedin
-                        loggedIn = false;
-                        loginok = 7;
                     }
                 }
             }
@@ -463,11 +454,11 @@ public class MapleClient implements Serializable {
     }
 
     public void setAccID(int id) {
-        this.accId = id;
+        this.account.id = id;
     }
 
     public int getAccID() {
-        return this.accId;
+        return this.account.id;
     }
 
     public void updateLoginState(int newstate) {
@@ -481,13 +472,13 @@ public class MapleClient implements Serializable {
             account.sessionIP = SessionID;
         }
         account.save();
-        if (newstate == MapleClient.LOGIN_NOTLOGGEDIN || newstate == MapleClient.LOGIN_WAITING) {
-            loggedIn = false;
-            serverTransition = false;
-        } else {
-            serverTransition = (newstate == MapleClient.LOGIN_SERVER_TRANSITION || newstate == MapleClient.CHANGE_CHANNEL);
-            loggedIn = !serverTransition;
-        }
+//        if (newstate == MapleClient.LOGIN_NOTLOGGEDIN || newstate == MapleClient.LOGIN_WAITING) {
+//            loggedIn = false;
+//            serverTransition = false;
+//        } else {
+//            serverTransition = (newstate == MapleClient.LOGIN_SERVER_TRANSITION || newstate == MapleClient.CHANGE_CHANNEL);
+//            loggedIn = !serverTransition;
+//        }
     }
 
     public final void updateSecondPassword() {
@@ -498,22 +489,20 @@ public class MapleClient implements Serializable {
     }
 
     public final void updateGender() {
-        // todo just save
-        account.gender = gender;
-        account.save();
     }
 
     public int getLoginState() { // TODO hide?
         int state = account.loggedIn;
 
         if (state == MapleClient.LOGIN_SERVER_TRANSITION || state == MapleClient.CHANGE_CHANNEL) {
-            boolean timeout = LocalDateTime.now().isAfter(account.lastLogin.minusSeconds(20));
+            // time out > 20
+            boolean timeout = LocalDateTime.now().isAfter(account.lastLogin.plusSeconds(20));
             if (timeout) { // connecting to chanserver timeout
                 state = MapleClient.LOGIN_NOTLOGGEDIN;
                 updateLoginState(state, getSessionIPAddress());
             }
         }
-        loggedIn = state == MapleClient.LOGIN_LOGGEDIN;
+//        account.loggedIn = state;
         return state;
     }
 
@@ -632,7 +621,7 @@ public class MapleClient implements Serializable {
                         }
                     }
                     if (bl != null) {
-                        if (!serverTransition && isLoggedIn()) {
+                        if (account.loggedIn != LOGIN_SERVER_TRANSITION && isLoggedIn()) {
                             World.Buddy.loggedOff(namez, idz, channel, bl.getBuddiesIds(), gmLevel, hidden);
                         } else { // Change channel
                             World.Buddy.loggedOn(namez, idz, channel, bl.getBuddiesIds(), gmLevel, hidden);
@@ -665,7 +654,7 @@ public class MapleClient implements Serializable {
                         chrp.setOnline(false);
                         World.Party.updateParty(party.getId(), PartyOperation.LOG_ONOFF, chrp);
                     }
-                    if (!serverTransition && isLoggedIn()) {
+                    if (account.loggedIn != LOGIN_SERVER_TRANSITION && isLoggedIn()) {
                         World.Buddy.loggedOff(namez, idz, channel, bl.getBuddiesIds(), gmLevel, hidden);
                     } else { // Change channel
                         World.Buddy.loggedOn(namez, idz, channel, bl.getBuddiesIds(), gmLevel, hidden);
@@ -688,7 +677,7 @@ public class MapleClient implements Serializable {
                 }
             }
         }
-        if (!serverTransition && isLoggedIn()) {
+        if (account.loggedIn != LOGIN_SERVER_TRANSITION && isLoggedIn()) {
             updateLoginState(MapleClient.LOGIN_NOTLOGGEDIN, getSessionIPAddress());
         }
     }
@@ -783,12 +772,13 @@ public class MapleClient implements Serializable {
         return 1;
     }
 
-    public final int getGender() {
-        return gender;
+    public int getGender() {
+        return account.gender;
     }
 
-    public final void setGender(final byte gender) {
-        this.gender = gender;
+    public void setGender(int gender) {
+        new QDAccount().id.eq(account.id).asUpdate().set("gender", gender).update();
+        account.gender = gender;
     }
 
     public final String getSecondPassword() {
@@ -799,23 +789,23 @@ public class MapleClient implements Serializable {
         this.secondPassword = secondPassword;
     }
 
-    public final String getAccountName() {
-        return accountName;
+    public String getAccountName() {
+        return account.name;
     }
 
-    public final void setAccountName(final String accountName) {
-        this.accountName = accountName;
-    }
+//    public void setAccountName(String accountName) {
+//        account = new QDAccount().name.eq(accountName).findOne();
+//    }
 
-    public final void setChannel(final int channel) {
+    public void setChannel(int channel) {
         this.channel = channel;
     }
 
-    public final int getWorld() {
+    public int getWorld() {
         return world;
     }
 
-    public final void setWorld(final int world) {
+    public void setWorld(int world) {
         this.world = world;
     }
 
@@ -859,11 +849,11 @@ public class MapleClient implements Serializable {
         }, 15000); // note: idletime gets added to this too
     }
 
-    public static String getLogMessage(final MapleClient cfor, final String message) {
+    public static String getLogMessage(MapleClient cfor, String message) {
         return getLogMessage(cfor, message, new Object[0]);
     }
 
-    public static String getLogMessage(final MapleCharacter cfor, final String message) {
+    public static String getLogMessage(MapleCharacter cfor, String message) {
         return getLogMessage(cfor == null ? null : cfor.getClient(), message);
     }
 
@@ -871,8 +861,8 @@ public class MapleClient implements Serializable {
         return getLogMessage(cfor == null ? null : cfor.getClient(), message, parms);
     }
 
-    public static String getLogMessage(final MapleClient cfor, final String message, final Object... parms) {
-        final StringBuilder builder = new StringBuilder();
+    public static String getLogMessage(MapleClient cfor, String message, Object... parms) {
+        StringBuilder builder = new StringBuilder();
         if (cfor != null) {
             if (cfor.getPlayer() != null) {
                 builder.append("<");
@@ -908,7 +898,7 @@ public class MapleClient implements Serializable {
         return Collections.unmodifiableSet(macs);
     }
 
-    public final boolean isGm() {
+    public boolean isGm() {
         return account.gm > 0;
     }
 
@@ -948,16 +938,16 @@ public class MapleClient implements Serializable {
         if (isGm()) {
             return 15;
         }
-        if (charslots != DEFAULT_CHARSLOT) {
+        if (charslots != properties.getCharactersLimit()) {
             return charslots; //save a sql
         }
 
-        DCharacterSlot one = new QDCharacterSlot().accid.eq(accId).worldid.eq(world).findOne();
+        DCharacterSlot one = new QDCharacterSlot().account.eq(account).worldid.eq(world).findOne();
         if (one != null) {
             charslots = one.charslots;
         } else {
             one = new DCharacterSlot();
-            one.accid = accId;
+            one.account = account;
             one.worldid = world;
             one.charslots = charslots;
             one.save();
@@ -971,7 +961,7 @@ public class MapleClient implements Serializable {
         }
         charslots++;
 
-        DCharacterSlot one = new QDCharacterSlot().worldid.eq(world).accid.eq(accId).findOne();
+        DCharacterSlot one = new QDCharacterSlot().worldid.eq(world).account.eq(account).findOne();
         if (one != null) {
             one.charslots = charslots;
             one.save();
@@ -1070,6 +1060,8 @@ public class MapleClient implements Serializable {
     }
 
     public void loadAccountData(int accountID) {
-        account = new QDAccount().id.eq(accountID).findOne();
+        if (account == null) {
+            account = new QDAccount().id.eq(accountID).findOne();
+        }
     }
 }

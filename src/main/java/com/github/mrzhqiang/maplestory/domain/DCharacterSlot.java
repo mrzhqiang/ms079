@@ -6,6 +6,8 @@ import io.ebean.annotation.NotNull;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -15,8 +17,9 @@ public class DCharacterSlot extends Model {
     @Id
     public Integer id;
     @NotNull
-    @Column(name = "accid")
-    public Integer accid;
+    @ManyToOne
+    @JoinColumn(name = "accid")
+    public DAccount account;
     @NotNull
     @Column(name = "worldid")
     public Integer worldid;

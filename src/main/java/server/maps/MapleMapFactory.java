@@ -105,8 +105,8 @@ public class MapleMapFactory {
         Vector p2 = Vector.of(x2, y2);
         int id = Numbers.ofInt(element.name());
         MapleFoothold foothold = new MapleFoothold(p1, p2, id);
-        foothold.setPrev((short) Elements.findInt(element, "prev"));
-        foothold.setNext((short) Elements.findInt(element, "next"));
+        foothold.setPrev(Elements.findInt(element, "prev").shortValue());
+        foothold.setNext(Elements.findInt(element, "next").shortValue());
         if (x1 < bound.left.x) {
             bound.left = Vector.of(x1, bound.left.y);
         }
@@ -220,7 +220,7 @@ public class MapleMapFactory {
                             if (life instanceof MapleMonster) {
                                 MapleMonster mob = (MapleMonster) life;
                                 int mobTime = Elements.findInt(lifeChildren, "mobTime");
-                                byte team = (byte) Elements.findInt(lifeChildren, "team", -1);
+                                byte team = Elements.findInt(lifeChildren, "team", -1).byteValue();
                                 String message = mob.getId() == bossId ? msg : null;
                                 map.addMonsterSpawn(mob, mobTime, team, message);
                             } else {
@@ -244,7 +244,7 @@ public class MapleMapFactory {
             }
         }
         addAreaBossSpawn(map);
-        short createMobInterval = (short) Elements.findInt(mapData, "info/createMobInterval", 9000);
+        short createMobInterval = Elements.findInt(mapData, "info/createMobInterval", 9000).shortValue();
         map.setCreateMobInterval(createMobInterval);
         map.loadMonsterRate(true);
         map.setNodes(loadNodes(mapid, mapData));
@@ -254,7 +254,7 @@ public class MapleMapFactory {
                     .ifPresent(stream -> stream.forEach(reactorChildren -> {
                         String id = Elements.findString(reactorChildren, "id");
                         if (!Strings.isNullOrEmpty(id)) {
-                            byte direction = (byte) Elements.findInt(reactorChildren, "f");
+                            byte direction = Elements.findInt(reactorChildren, "f").byteValue();
                             map.spawnReactor(loadReactor(reactorChildren, id, direction));
                         }
                     }));

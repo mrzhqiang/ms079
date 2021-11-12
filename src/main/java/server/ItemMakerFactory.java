@@ -66,10 +66,10 @@ public class ItemMakerFactory {
 
     private ItemMakerCreateEntry getItemMakerCreateEntry(WzElement<?> element) {
         int reqLevelInt = Elements.findInt(element, "reqLevel");
-        byte reqMakerLevel = (byte) Elements.findInt(element, "reqSkillLevel");
+        byte reqMakerLevel = Elements.findInt(element, "reqSkillLevel").byteValue();
         int cost = Elements.findInt(element, "meso");
         int quantity = Elements.findInt(element, "itemNum");
-        byte totalupgrades = (byte) Elements.findInt(element, "tuc");
+        byte totalupgrades = Elements.findInt(element, "tuc").byteValue();
         int stimulator = Elements.findInt(element, "catalyst");
         ItemMakerCreateEntry entry = new ItemMakerCreateEntry(
                 cost, reqLevelInt, reqMakerLevel, quantity, totalupgrades, stimulator);
@@ -86,7 +86,7 @@ public class ItemMakerFactory {
 
     private GemCreateEntry getGemCreateEntry(WzElement<?> element) {
         int reqLevel = Elements.findInt(element, "reqLevel");
-        byte reqSkillLevel = (byte) Elements.findInt(element, "reqSkillLevel");
+        byte reqSkillLevel = Elements.findInt(element, "reqSkillLevel").byteValue();
         int cost = Elements.findInt(element, "meso");
         int quantity = Elements.findInt(element, "itemNum");
         GemCreateEntry entry = new GemCreateEntry(cost, reqLevel, reqSkillLevel, quantity);

@@ -3,13 +3,10 @@ package server;
 import client.MapleCharacter;
 import client.SkillFactory;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
@@ -24,6 +21,8 @@ import server.events.MapleOxQuizFactory;
 import server.quest.MapleQuest;
 import tools.FileoutputUtil;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -43,10 +42,8 @@ public final class ApplicationStarter {
 
     @Inject
     public ApplicationStarter(ServerProperties properties,
-                              CashShopServer shopServer,
-                              LoginServer loginServer,
-                              Database database,
-                              Shutdown shutdown) {
+                              CashShopServer shopServer, LoginServer loginServer,
+                              Database database, Shutdown shutdown) {
         this.properties = properties;
         this.shopServer = shopServer;
         this.loginServer = loginServer;
@@ -58,7 +55,7 @@ public final class ApplicationStarter {
         return shutdown;
     }
 
-    public void startServer(Injector injector) {
+    public void startServer() {
         if (properties.isAdminLogin()) {
             LOGGER.info(">>> 登录模式：只允许管理员登录");
         } else {
@@ -70,18 +67,15 @@ public final class ApplicationStarter {
             LOGGER.info(">>> 注册模式：手动（目前未实现网页注册、程序注册，需要使用 GM 工具手动创建账号）");
         }
 
-        LOGGER.info(">>> 重置 [账号状态]");
-        Stopwatch resetWatch = Stopwatch.createStarted();
-        @SuppressWarnings("SqlWithoutWhere")
-        int loggedIn = database.sqlUpdate("UPDATE accounts SET loggedin = 0").execute();
-        @SuppressWarnings("SqlWithoutWhere")
-        int lastGainHM = database.sqlUpdate("UPDATE accounts SET lastGainHM = 0").execute();
-        LOGGER.info("<<< [账号状态] 重置完毕，耗时：{}，影响行数：loggedin={} lastGainHM={}", resetWatch.stop(), loggedIn, lastGainHM);
-
         LOGGER.info(">>> 初始化 [NPC数据]");
         Stopwatch npcWatch = Stopwatch.createStarted();
-        WzData.load();
+        WzData.load().blockingSubscribe();
         LOGGER.info("<<< [NPC数据] 初始化完毕，耗时：{}", npcWatch.stop());
+
+        LOGGER.info(">>> 重置 [账号状态]");
+        Stopwatch resetWatch = Stopwatch.createStarted();
+        int count = database.update(DAccount.class).set("loggedin", 0).set("lastGainHM", 0L).update();
+        LOGGER.info("<<< [账号状态] 重置完毕，耗时：{}，影响行数：{}", resetWatch.stop(), count);
 
         Stopwatch worldWatch = Stopwatch.createStarted();
         LOGGER.info(">>> 初始化 [世界服务器]");
@@ -145,12 +139,12 @@ public final class ApplicationStarter {
 
         LOGGER.info(">>> 初始化 [登录服务器]");
         Stopwatch loginWatch = Stopwatch.createStarted();
-        loginServer.run_startup_configurations();
+        LoginServer.run_startup_configurations();
         LOGGER.info("<<< [登录服务器] 初始化完毕，耗时：{}", loginWatch.stop());
 
         LOGGER.info(">>> 初始化 [频道服务器]");
         Stopwatch channelWatch = Stopwatch.createStarted();
-        ChannelServer.startChannel_Main(injector);
+        ChannelServer.startChannel_Main();
         LOGGER.info("<<< [频道服务器] 初始化完毕，耗时：{}", channelWatch.stop());
 
         LOGGER.info(">>> 初始化 [商城服务器]");

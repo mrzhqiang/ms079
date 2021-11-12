@@ -1,6 +1,8 @@
 package handling.world.family;
 
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDFamily;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,10 +10,12 @@ import java.util.List;
 public class MapleFamilyCharacter implements java.io.Serializable {
 
     public static final long serialVersionUID = 2058609046116597760L;
-    private int level, id, channel = -1, jobid, familyid, seniorid, currentrep, totalrep, junior1, junior2;
-    private boolean online;
-    private List<Integer> pedigree = new ArrayList<>(); //recalculate
+
+    private int channel = -1;
+    private List<Integer> pedigree = new ArrayList<>();
     private int descendants = 0;
+
+    private boolean online;
 
     public final DCharacter character;
 
@@ -22,15 +26,15 @@ public class MapleFamilyCharacter implements java.io.Serializable {
     }
 
     public int getLevel() {
-        return level;
+        return character.level;
     }
 
     public void setLevel(int l) {
-        level = l;
+        character.level = l;
     }
 
     public int getId() {
-        return id;
+        return character.id;
     }
 
     public void setChannel(int ch) {
@@ -42,59 +46,59 @@ public class MapleFamilyCharacter implements java.io.Serializable {
     }
 
     public int getJobId() {
-        return jobid;
+        return character.job;
     }
 
     public void setJobId(int job) {
-        jobid = job;
+        character.job = job;
     }
 
     public int getCurrentRep() {
-        return currentrep;
+        return character.currentRep;
     }
 
     public void setCurrentRep(int cr) {
-        this.currentrep = cr;
+        character.currentRep = cr;
     }
 
     public int getTotalRep() {
-        return totalrep;
+        return character.totalRep;
     }
 
     public void setTotalRep(int tr) {
-        this.totalrep = tr;
+        character.totalRep = tr;
     }
 
     public int getJunior1() {
-        return junior1;
+        return character.junior1.id;
     }
 
     public int getJunior2() {
-        return junior2;
+        return character.junior2.id;
     }
 
     public void setJunior1(int trs) {
-        junior1 = trs;
+        character.junior1 = new QDCharacter().id.eq(trs).findOne();
     }
 
     public void setJunior2(int trs) {
-        junior2 = trs;
+        character.junior2 = new QDCharacter().id.eq(trs).findOne();
     }
 
     public int getSeniorId() {
-        return seniorid;
+        return character.senior.id;
     }
 
     public void setSeniorId(int si) {
-        this.seniorid = si;
+        character.senior = new QDCharacter().id.eq(si).findOne();
     }
 
     public int getFamilyId() {
-        return familyid;
+        return character.family != null ? character.family.id : 0;
     }
 
     public void setFamilyId(int fi) {
-        this.familyid = fi;
+        character.family = new QDFamily().id.eq(fi).findOne();
     }
 
     public boolean isOnline() {
@@ -112,26 +116,26 @@ public class MapleFamilyCharacter implements java.io.Serializable {
         }
 
         MapleFamilyCharacter o = (MapleFamilyCharacter) other;
-        return (o.getId() == id && o.getName().equals(character.name));
+        return (o.getId() == character.id && o.getName().equals(character.name));
     }
 
     public void setOnline(boolean f) {
         online = f;
     }
 
-    public List<MapleFamilyCharacter> getAllJuniors(MapleFamily fam) { //to be used scarcely
-        List<MapleFamilyCharacter> ret = new ArrayList<MapleFamilyCharacter>();
+    public List<MapleFamilyCharacter> getAllJuniors(MapleFamily fam) {
+        List<MapleFamilyCharacter> ret = new ArrayList<>();
         ret.add(this);
-        if (junior1 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior1);
+        if (character.junior1 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior1.id);
             if (chr != null) {
                 ret.addAll(chr.getAllJuniors(fam));
                 //} else {
                 //	junior1 = 0;
             }
         }
-        if (junior2 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior2);
+        if (character.junior2 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior2.id);
             if (chr != null) {
                 ret.addAll(chr.getAllJuniors(fam));
                 //} else {
@@ -141,11 +145,11 @@ public class MapleFamilyCharacter implements java.io.Serializable {
         return ret;
     }
 
-    public List<MapleFamilyCharacter> getOnlineJuniors(MapleFamily fam) { //to be used scarcely
-        List<MapleFamilyCharacter> ret = new ArrayList<MapleFamilyCharacter>();
+    public List<MapleFamilyCharacter> getOnlineJuniors(MapleFamily fam) {
+        List<MapleFamilyCharacter> ret = new ArrayList<>();
         ret.add(this);
-        if (junior1 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior1);
+        if (character.junior1 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior1.id);
             if (chr != null) {
                 if (chr.isOnline()) {
                     ret.add(chr);
@@ -166,8 +170,8 @@ public class MapleFamilyCharacter implements java.io.Serializable {
                 //	junior1 = 0;
             }
         }
-        if (junior2 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior2);
+        if (character.junior2 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior2.id);
             if (chr != null) {
                 if (chr.isOnline()) {
                     ret.add(chr);
@@ -195,29 +199,29 @@ public class MapleFamilyCharacter implements java.io.Serializable {
         return pedigree;
     }
 
-    public void resetPedigree(MapleFamily fam) { //not in order
+    public void resetPedigree(MapleFamily fam) {
         pedigree = new ArrayList<>();
-        pedigree.add(id); //lol
-        if (seniorid > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(seniorid);
+        pedigree.add(character.id); //lol
+        if (character.senior != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.senior.id);
             if (chr != null) {
-                pedigree.add(seniorid);
+                pedigree.add(character.senior.id);
                 if (chr.getSeniorId() > 0) {
                     pedigree.add(chr.getSeniorId());
                 }
-                if (chr.getJunior1() > 0 && chr.getJunior1() != id) {
+                if (chr.getJunior1() > 0 && chr.getJunior1() != character.id) {
                     pedigree.add(chr.getJunior1());
-                } else if (chr.getJunior2() > 0 && chr.getJunior2() != id) {
+                } else if (chr.getJunior2() > 0 && chr.getJunior2() != character.id) {
                     pedigree.add(chr.getJunior2());
                 }
                 //} else {
                 //	seniorid = 0;
             }
         }
-        if (junior1 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior1);
+        if (character.junior1 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior1.id);
             if (chr != null) {
-                pedigree.add(junior1);
+                pedigree.add(character.junior1.id);
                 if (chr.getJunior1() > 0) {
                     pedigree.add(chr.getJunior1());
                 }
@@ -228,10 +232,10 @@ public class MapleFamilyCharacter implements java.io.Serializable {
                 //	junior1 = 0;
             }
         }
-        if (junior2 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior2);
+        if (character.junior2 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior2.id);
             if (chr != null) {
-                pedigree.add(junior2);
+                pedigree.add(character.junior2.id);
                 if (chr.getJunior1() > 0) {
                     pedigree.add(chr.getJunior1());
                 }
@@ -252,14 +256,14 @@ public class MapleFamilyCharacter implements java.io.Serializable {
     public int resetDescendants(MapleFamily fam) { //advisable to only start this with leader. resets EVERYONE
         //recursion.
         descendants = 0;
-        if (junior1 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior1);
+        if (character.junior1 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior1.id);
             if (chr != null) {
                 descendants += 1 + chr.resetDescendants(fam);
             }
         }
-        if (junior2 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior2);
+        if (character.junior2 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior2.id);
             if (chr != null) {
                 descendants += 1 + chr.resetDescendants(fam);
             }
@@ -270,14 +274,14 @@ public class MapleFamilyCharacter implements java.io.Serializable {
     public int resetGenerations(MapleFamily fam) { //advisable to only start this with leader. resets EVERYONE
         //recursion. this field is NOT stored so please be advised
         int descendants1 = 0, descendants2 = 0;
-        if (junior1 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior1);
+        if (character.junior1 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior1.id);
             if (chr != null) {
                 descendants1 = chr.resetGenerations(fam);
             }
         }
-        if (junior2 > 0) {
-            MapleFamilyCharacter chr = fam.getMFC(junior2);
+        if (character.junior2 != null) {
+            MapleFamilyCharacter chr = fam.getMFC(character.junior2.id);
             if (chr != null) {
                 descendants2 = chr.resetGenerations(fam);
             }
@@ -288,10 +292,10 @@ public class MapleFamilyCharacter implements java.io.Serializable {
 
     public int getNoJuniors() {
         int ret = 0;
-        if (junior1 > 0) {
+        if (character.junior1 != null) {
             ret++;
         }
-        if (junior2 > 0) {
+        if (character.junior2 != null) {
             ret++;
         }
         return ret;

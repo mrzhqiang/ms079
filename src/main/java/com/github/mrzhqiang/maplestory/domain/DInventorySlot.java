@@ -16,7 +16,7 @@ public class DInventorySlot extends Model {
     public DCharacter character;
     @Column(name = "equip")
     public Integer equip;
-    @Column(name = "use")
+    @Column(name = "use_")
     public Integer use;
     @Column(name = "setup")
     public Integer setup;

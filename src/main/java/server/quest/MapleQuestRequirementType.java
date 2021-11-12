@@ -1,34 +1,34 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.quest;
 
-public enum MapleQuestRequirementType {
-    UNDEFINED(-1), job(0), item(1), quest(2), lvmin(3), lvmax(4), end(5), mob(6), npc(7), fieldEnter(8), interval(9), startscript(10), endscript(10), pet(11), pettamenessmin(12), mbmin(13), questComplete(14), pop(15), skill(16), mbcard(17), subJobFlags(18), dayByDay(19), normalAutoStart(20);
 
-    public MapleQuestRequirementType getITEM() {
-        return item;
-    }
+public enum MapleQuestRequirementType {
+    UNDEFINED(-1),
+    JOB(0),
+    ITEM(1),
+    QUEST(2),
+    LV_MIN(3),
+    LV_MAX(4),
+    END(5),
+    MOB(6),
+    NPC(7),
+    FIELD_ENTER(8),
+    INTERVAL(9),
+    START_SCRIPT(10),
+    END_SCRIPT(10),
+    PET(11),
+    PET_TAMENESS_MIN(12),
+    MB_MIN(13),
+    QUEST_COMPLETE(14),
+    POP(15),
+    SKILL(16),
+    MB_CARD(17),
+    SUB_JOB_FLAGS(18),
+    DAY_BY_DAY(19),
+    NORMAL_AUTO_START(20);
+
     final byte type;
 
-    private MapleQuestRequirementType(int type) {
+    MapleQuestRequirementType(int type) {
         this.type = (byte) type;
     }
 
@@ -37,9 +37,9 @@ public enum MapleQuestRequirementType {
     }
 
     public static MapleQuestRequirementType getByType(byte type) {
-        for (MapleQuestRequirementType l : MapleQuestRequirementType.values()) {
-            if (l.getType() == type) {
-                return l;
+        for (MapleQuestRequirementType requirementType : MapleQuestRequirementType.values()) {
+            if (requirementType.getType() == type) {
+                return requirementType;
             }
         }
         return null;

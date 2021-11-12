@@ -12,20 +12,22 @@ import constants.GameConstants;
 import tools.Pair;
 
 import java.io.Serializable;
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MapleQuestRequirement implements Serializable {
 
     private static final long serialVersionUID = 9179541993413738569L;
-    private MapleQuest quest;
-    private MapleQuestRequirementType type;
+
+    private final MapleQuestRequirementType type;
+    private final MapleQuest quest;
+    public final DWzQuestReqData data;
+
     private int intStore;
     private String stringStore;
     private List<Pair<Integer, Integer>> dataStore;
-
-    public final DWzQuestReqData data;
 
     public MapleQuestRequirement(MapleQuest quest, MapleQuestRequirementType type, DWzQuestReqData data) {
         this.type = type;
@@ -33,13 +35,13 @@ public class MapleQuestRequirement implements Serializable {
         this.data = data;
 
         switch (type) {
-            case pet:
-            case mbcard:
-            case mob:
-            case item:
-            case quest:
-            case skill:
-            case job:
+            case PET:
+            case MB_CARD:
+            case MOB:
+            case ITEM:
+            case QUEST:
+            case SKILL:
+            case JOB:
                 this.dataStore = new LinkedList<>();
                 String[] first = data.intStoresFirst.split(", ");
                 String[] second = data.intStoresSecond.split(", ");
@@ -53,38 +55,38 @@ public class MapleQuestRequirement implements Serializable {
                 }
                 break;
             //case partyQuest_S:
-            case dayByDay:
-            case normalAutoStart:
-            case subJobFlags:
-            case fieldEnter:
-            case pettamenessmin:
-            case npc:
-            case questComplete:
-            case pop:
-            case interval:
-            case mbmin:
-            case lvmax:
-            case lvmin:
+            case DAY_BY_DAY:
+            case NORMAL_AUTO_START:
+            case SUB_JOB_FLAGS:
+            case FIELD_ENTER:
+            case PET_TAMENESS_MIN:
+            case NPC:
+            case QUEST_COMPLETE:
+            case POP:
+            case INTERVAL:
+            case MB_MIN:
+            case LV_MAX:
+            case LV_MIN:
                 this.intStore = Integer.parseInt(data.stringStore);
                 break;
-            case end:
+            case END:
                 this.stringStore = data.stringStore;
         }
     }
 
     public boolean check(MapleCharacter c, Integer npcid) {
         switch (type) {
-            case job:
-                for (Pair a : this.dataStore) {
-                    if ((((Integer) a.getRight()).intValue() == c.getJob()) || (c.isGM())) {
+            case JOB:
+                for (Pair<Integer, Integer> a : this.dataStore) {
+                    if ((a.getRight() == c.getJob()) || (c.isGM())) {
                         return true;
                     }
                 }
                 return false;
-            case skill:
+            case SKILL:
                 for (Pair<Integer, Integer> a : this.dataStore) {
                     boolean acquire = a.getRight() > 0;
-                    int skill = ((Integer) a.getLeft()).intValue();
+                    int skill = a.getLeft();
                     ISkill skil = SkillFactory.getSkill(skill);
                     if (acquire) {
                         if (skil.isFourthJob()) {
@@ -101,21 +103,18 @@ public class MapleQuestRequirement implements Serializable {
                 }
 
                 return true;
-            case quest:
+            case QUEST:
                 for (Pair<Integer, Integer> a : this.dataStore) {
-                    MapleQuestStatus q = c.getQuest(MapleQuest.getInstance(((Integer) a.getLeft()).intValue()));
-                    int state = ((Integer) a.getRight()).intValue();
+                    MapleQuestStatus q = c.getQuest(MapleQuest.getInstance(a.getLeft()));
+                    int state = a.getRight();
                     if (state != 0) {
-                        if ((q == null) && (state == 0)) {
-                            continue;
-                        }
                         if ((q == null) || (q.getStatus() != state)) {
                             return false;
                         }
                     }
                 }
                 return true;
-            case item:
+            case ITEM:
                 for (Pair<Integer, Integer> a : this.dataStore) {
                     int itemId = a.getLeft();
                     short quantity = 0;
@@ -129,37 +128,37 @@ public class MapleQuestRequirement implements Serializable {
                     }
                 }
                 return true;
-            case lvmin:
+            case LV_MIN:
                 return c.getLevel() >= this.intStore;
-            case lvmax:
+            case LV_MAX:
                 return c.getLevel() <= this.intStore;
-            case end:
+            case END:
                 String timeStr = this.stringStore;
                 if ((timeStr == null) || (timeStr.length() <= 0)) {
                     return true;
                 }
-                Calendar cal = Calendar.getInstance();
-                cal.set(Integer.parseInt(timeStr.substring(0, 4)), Integer.parseInt(timeStr.substring(4, 6)), Integer.parseInt(timeStr.substring(6, 8)), Integer.parseInt(timeStr.substring(8, 10)), 0);
-                return cal.getTimeInMillis() >= System.currentTimeMillis();
-            case mob:
+                LocalDateTime endTime = DateTimeFormatter.ofPattern("yyyyMMddHH").parse(timeStr, LocalDateTime::from);
+                // return cal.getTimeInMillis() >= System.currentTimeMillis();
+                return LocalDateTime.now().isBefore(endTime);
+            case MOB:
                 for (Pair<Integer, Integer> a : this.dataStore) {
-                    int mobId = ((Integer) a.getLeft()).intValue();
-                    int killReq = ((Integer) a.getRight()).intValue();
+                    int mobId = a.getLeft();
+                    int killReq = a.getRight();
                     if (c.getQuest(this.quest).getMobKills(mobId) < killReq) {
                         return false;
                     }
                 }
                 return true;
-            case npc:
-                return (npcid == null) || (npcid.intValue() == this.intStore);
-            case fieldEnter:
+            case NPC:
+                return (npcid == null) || (npcid == this.intStore);
+            case FIELD_ENTER:
                 if (this.intStore > 0) {
                     return this.intStore == c.getMapId();
                 }
                 return true;
-            case mbmin:
+            case MB_MIN:
                 return c.getMonsterBook().getSeen() >= this.intStore;
-            case mbcard:
+            case MB_CARD:
                 for (Pair<Integer, Integer> a : this.dataStore) {
                     int cardId = a.getLeft();
                     int killReq = a.getRight();
@@ -168,20 +167,20 @@ public class MapleQuestRequirement implements Serializable {
                     }
                 }
                 return true;
-            case pop:
+            case POP:
                 return c.getFame() >= this.intStore;
-            case questComplete:
+            case QUEST_COMPLETE:
                 return c.getNumQuest() >= this.intStore;
-            case interval:
+            case INTERVAL:
                 return (c.getQuest(this.quest).getStatus() != 2) || (c.getQuest(this.quest).getCompletionTime() <= System.currentTimeMillis() - this.intStore * 60 * 1000L);
-            case pet:
+            case PET:
                 for (Pair<Integer, Integer> a : this.dataStore) {
                     if (c.getPetById(a.getRight()) != -1) {
                         return true;
                     }
                 }
                 return false;
-            case pettamenessmin:
+            case PET_TAMENESS_MIN:
                 for (MaplePet pet : c.getPets()) {
                     if ((pet.getSummoned()) && (pet.getCloseness() >= this.intStore)) {
                         return true;
@@ -198,7 +197,7 @@ public class MapleQuestRequirement implements Serializable {
                     }
                 }
                 return sRankings >= 5;*/
-            case subJobFlags:
+            case SUB_JOB_FLAGS:
                 return c.getSubcategory() == (intStore / 2);
             /*case craftMin:
             case willMin:
