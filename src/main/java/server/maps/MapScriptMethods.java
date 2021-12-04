@@ -20,22 +20,20 @@
  */
 package server.maps;
 
-import java.awt.Point;
-
 import client.MapleClient;
 import client.MapleQuestStatus;
 import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.domain.Gender;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import scripting.EventManager;
 import scripting.NPCScriptManager;
-import server.Randomizer;
 import server.MapleItemInformationProvider;
+import server.Randomizer;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
 import server.life.OverrideMonsterStats;
 import server.quest.MapleQuest;
 import server.quest.MapleQuest.MedalQuest;
-import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.packet.UIPacket;
 
@@ -643,7 +641,7 @@ public class MapScriptMethods {
             }
             case goAdventure: {
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/goAdventure/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/goAdventure/Scene1", -1));
@@ -651,27 +649,27 @@ public class MapScriptMethods {
                 break;
             }
             case crash_Dragon:
-                showIntro(c, "Effect/Direction4.img/crash/Scene" + (c.getPlayer().getGender() == 0 ? "0" : "1"));
+                showIntro(c, "Effect/Direction4.img/crash/Scene" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1"));
                 break;
             case getDragonEgg:
-                showIntro(c, "Effect/Direction4.img/getDragonEgg/Scene" + (c.getPlayer().getGender() == 0 ? "0" : "1"));
+                showIntro(c, "Effect/Direction4.img/getDragonEgg/Scene" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1"));
                 break;
             case meetWithDragon:
-                showIntro(c, "Effect/Direction4.img/meetWithDragon/Scene" + (c.getPlayer().getGender() == 0 ? "0" : "1"));
+                showIntro(c, "Effect/Direction4.img/meetWithDragon/Scene" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1"));
                 break;
             case PromiseDragon:
-                showIntro(c, "Effect/Direction4.img/PromiseDragon/Scene" + (c.getPlayer().getGender() == 0 ? "0" : "1"));
+                showIntro(c, "Effect/Direction4.img/PromiseDragon/Scene" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1"));
                 break;
             case evanPromotion:
                 switch (c.getPlayer().getMapId()) {
                     case 900090000:
-                        data = "Effect/Direction4.img/promotion/Scene0" + (c.getPlayer().getGender() == 0 ? "0" : "1");
+                        data = "Effect/Direction4.img/promotion/Scene0" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1");
                         break;
                     case 900090001:
                         data = "Effect/Direction4.img/promotion/Scene1";
                         break;
                     case 900090002:
-                        data = "Effect/Direction4.img/promotion/Scene2" + (c.getPlayer().getGender() == 0 ? "0" : "1");
+                        data = "Effect/Direction4.img/promotion/Scene2" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1");
                         break;
                     case 900090003:
                         data = "Effect/Direction4.img/promotion/Scene3";
@@ -779,7 +777,7 @@ public class MapScriptMethods {
             }
             case goArcher: {//弓箭手职业体验动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/archer/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/archer/Scene1", -1));
@@ -789,7 +787,7 @@ public class MapScriptMethods {
             }
             case goPirate: {//海盗职业体验动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/pirate/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/pirate/Scene1", -1));
@@ -798,7 +796,7 @@ public class MapScriptMethods {
             }
             case goRogue: {//飞侠职业体验动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/rogue/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/rogue/Scene1", -1));
@@ -807,7 +805,7 @@ public class MapScriptMethods {
             }
             case goMagician: {//魔法师职业体验动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/magician/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/magician/Scene1", -1));
@@ -816,7 +814,7 @@ public class MapScriptMethods {
             }
             case goSwordman: {//战士职业体验动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/swordman/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/swordman/Scene1", -1));
@@ -825,7 +823,7 @@ public class MapScriptMethods {
             }
             case goLith: {//南港开往明珠港坐船动画
                 c.getSession().write(UIPacket.IntroLock(true));
-                if (c.getPlayer().getGender() == 0) {
+                if (c.getPlayer().getGender() == Gender.MALE) {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/goLith/Scene0", -1));
                 } else {
                     c.getSession().write(UIPacket.showWZEffectS("Effect/Direction3.img/goLith/Scene1", -1));
@@ -846,16 +844,16 @@ public class MapScriptMethods {
                         data = "Effect/Direction1.img/aranTutorial/Scene0";
                         break;
                     case 914090011:
-                        data = "Effect/Direction1.img/aranTutorial/Scene1" + (c.getPlayer().getGender() == 0 ? "0" : "1");
+                        data = "Effect/Direction1.img/aranTutorial/Scene1" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1");
                         break;
                     case 914090012:
-                        data = "Effect/Direction1.img/aranTutorial/Scene2" + (c.getPlayer().getGender() == 0 ? "0" : "1");
+                        data = "Effect/Direction1.img/aranTutorial/Scene2" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1");
                         break;
                     case 914090013:
                         data = "Effect/Direction1.img/aranTutorial/Scene3";
                         break;
                     case 914090100:
-                        data = "Effect/Direction1.img/aranTutorial/HandedPoleArm" + (c.getPlayer().getGender() == 0 ? "0" : "1");
+                        data = "Effect/Direction1.img/aranTutorial/HandedPoleArm" + (c.getPlayer().getGender() == Gender.MALE ? "0" : "1");
                         break;
                     case 914090200:
                         data = "Effect/Direction1.img/aranTutorial/Maha";

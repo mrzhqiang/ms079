@@ -1,29 +1,40 @@
 package handling.world;
 
-import client.*;
+import client.BuddyEntry;
+import client.ISkill;
+import client.MapleCharacter;
+import client.MapleQuestStatus;
+import client.SkillEntry;
+import client.inventory.MapleMount;
+import client.inventory.MaplePet;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import server.quest.MapleQuest;
+import tools.Pair;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import client.inventory.MapleMount;
-import client.inventory.MaplePet;
-import com.github.mrzhqiang.maplestory.domain.DCharacter;
-import server.quest.MapleQuest;
-import tools.Pair;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CharacterTransfer implements Externalizable {
 
+    public long ACash;
+    public long MaplePoints;
+    public long vpoints;
+    public long points;
     public int characterid, accountid, exp,
             beans, meso, hair, face, mapid, guildid,
-            partyid, messengerid, mBookCover, dojo, ACash, MaplePoints,
-            mount_itemid, mount_exp, points, vpoints, marriageId,
+            partyid, messengerid, mBookCover, dojo,
+            mount_itemid, mount_exp, marriageId,
             familyid, seniorid, junior1, junior2, currentrep, totalrep, expression, constellation, blood, month, day, battleshipHP, prefix, mount_id, skillzq, bosslog, grname, jzname, mrsjrw, mrsgrw, mrsbossrw, mrfbrw, hythd, mrsgrwa, mrsbossrwa, mrfbrwa, mrsgrws, mrsbossrws, mrfbrws, mrsgrwas, mrsbossrwas, mrfbrwas, ddj, vip, djjl,qiandao;
-    public int channel, dojoRecord, gender, gmLevel, guildrank, alliancerank, clonez, fairyExp, buddysize, world, initialSpawnPoint, skinColor, mount_level, mount_Fatigue, subcategory;
+    public int channel, dojoRecord, gmLevel, guildrank, alliancerank, clonez, fairyExp, buddysize, world, initialSpawnPoint, skinColor, mount_level, mount_Fatigue, subcategory;
+    public Gender gender;
     public long lastfametime, TranferTime, lastGainHM;
     public String tempIP;
     public String name, accountname, BlessOfFairy, chalkboard, charmessage;
@@ -33,13 +44,13 @@ public class CharacterTransfer implements Externalizable {
     public int[] savedlocation, wishlist, rocks, remainingSp, regrocks;
     public byte[] petStore;
     public boolean DebugMessage;
-    public Map<Integer, Integer> mbook = new LinkedHashMap<Integer, Integer>();
+    public Map<Integer, Integer> mbook = new LinkedHashMap<>();
     public Map<Integer, Pair<Integer, Integer>> keymap = new LinkedHashMap<>();
-    public final List<Integer> finishedAchievements = new ArrayList<Integer>(), famedcharacters = new ArrayList<Integer>();
-    public final Map<BuddyEntry, Boolean> buddies = new LinkedHashMap<BuddyEntry, Boolean>();
-    public final Map<Integer, Object> Quest = new LinkedHashMap<Integer, Object>(); // Questid instead of MapleQuest, as it's huge. Cant be transporting MapleQuest.java
-    public Map<Integer, String> InfoQuest = new LinkedHashMap<Integer, String>();
-    public final Map<Integer, SkillEntry> Skills = new LinkedHashMap<Integer, SkillEntry>(); // Skillid instead of Skill.java, as it's huge. Cant be transporting Skill.java and MapleStatEffect.java
+    public final List<Integer> finishedAchievements = new ArrayList<>(), famedcharacters = new ArrayList<>();
+    public final Map<BuddyEntry, Boolean> buddies = new LinkedHashMap<>();
+    public final Map<Integer, Object> Quest = new LinkedHashMap<>(); // Questid instead of MapleQuest, as it's huge. Cant be transporting MapleQuest.java
+    public Map<Integer, String> InfoQuest = new LinkedHashMap<>();
+    public final Map<Integer, SkillEntry> Skills = new LinkedHashMap<>(); // Skillid instead of Skill.java, as it's huge. Cant be transporting Skill.java and MapleStatEffect.java
 
     public CharacterTransfer() {
     }
@@ -54,7 +65,7 @@ public class CharacterTransfer implements Externalizable {
         this.vpoints = chr.getVPoints();
         this.name = chr.getName();
         this.fame = chr.getFame();
-        this.gender = (byte) chr.getGender();
+        this.gender = chr.getGender();
         this.level = chr.getLevel();
         this.str = chr.getStat().getStr();
         this.dex = chr.getStat().getDex();
@@ -79,8 +90,8 @@ public class CharacterTransfer implements Externalizable {
         this.marriageId = chr.getMarriageId();
         this.world = chr.getWorld();
         this.guildid = chr.getGuildId();
-        this.guildrank = (byte) chr.getGuildRank();
-        this.alliancerank = (byte) chr.getAllianceRank();
+        this.guildrank = chr.getGuildRank();
+        this.alliancerank = chr.getAllianceRank();
         this.gmLevel = (byte) chr.getGMLevel();
         this.points = chr.getPoints();
         this.fairyExp = chr.getFairyExp();
@@ -179,9 +190,7 @@ public class CharacterTransfer implements Externalizable {
         this.wishlist = chr.getWishlist();
         this.rocks = chr.getRocks();
         this.regrocks = chr.getRegRocks();
-        for (final Integer zz : chr.getFamedCharacters()) {
-            this.famedcharacters.add(zz);
-        }
+        this.famedcharacters.addAll(chr.getFamedCharacters());
         this.lastfametime = chr.getLastFameTime();
         this.storage = chr.getStorage();
         this.cs = chr.getCashInventory();
@@ -207,7 +216,7 @@ public class CharacterTransfer implements Externalizable {
         this.MaplePoints = in.readInt();
         this.name = in.readUTF();
         this.fame = in.readShort();
-        this.gender = in.readByte();
+        this.gender = Gender.of(in.readByte());
         this.level = in.readShort();
         this.str = in.readShort();
         this.dex = in.readShort();
@@ -305,11 +314,10 @@ public class CharacterTransfer implements Externalizable {
             int job = in.readInt();
 
             // fixme 可能存在问题
-            DCharacter character = new DCharacter();
-            character.id = chrId;
-            character.name = name;
-            character.level = level;
-            character.job = job;
+            DCharacter character = new QDCharacter().id.eq(chrId).findOne();
+            character.setName(name);
+            character.setLevel(level);
+            character.setJob(job);
             buddies.put(new BuddyEntry(character, group, channel, visible), in.readBoolean());
         }
 
@@ -377,11 +385,11 @@ public class CharacterTransfer implements Externalizable {
         out.writeInt(this.accountid);
         out.writeUTF(this.accountname);
         out.writeByte(this.channel);
-        out.writeInt(this.ACash);
-        out.writeInt(this.MaplePoints);
+        out.writeInt((int) this.ACash);
+        out.writeInt((int) this.MaplePoints);
         out.writeUTF(this.name);
         out.writeShort(this.fame);
-        out.writeByte(this.gender);
+        out.writeByte(this.gender.getCodeByte());
         out.writeShort(this.level);
         out.writeShort(this.str);
         out.writeShort(this.dex);
@@ -395,8 +403,8 @@ public class CharacterTransfer implements Externalizable {
         out.writeShort(this.hpApUsed);
         out.writeShort(this.remainingAp);
         out.writeByte(this.remainingSp.length);
-        for (int i = 0; i < this.remainingSp.length; i++) {
-            out.writeInt(this.remainingSp[i]);
+        for (int j : this.remainingSp) {
+            out.writeInt(j);
         }
         out.writeInt(this.beans);
         out.writeInt(this.meso);
@@ -411,8 +419,8 @@ public class CharacterTransfer implements Externalizable {
         out.writeByte(this.guildrank);
         out.writeByte(this.alliancerank);
         out.writeByte(this.gmLevel);
-        out.writeInt(this.points);
-        out.writeInt(this.vpoints);
+        out.writeInt((int) this.points);
+        out.writeInt((int) this.vpoints);
         out.writeByte(this.BlessOfFairy == null ? 0 : 1);
         if (this.BlessOfFairy != null) {
             out.writeUTF(this.BlessOfFairy);
@@ -492,12 +500,12 @@ public class CharacterTransfer implements Externalizable {
 
         out.writeShort(this.finishedAchievements.size());
         for (final Integer zz : finishedAchievements) {
-            out.writeInt(zz.intValue());
+            out.writeInt(zz);
         }
 
         out.writeInt(this.famedcharacters.size());
         for (final Integer zz : famedcharacters) {
-            out.writeInt(zz.intValue());
+            out.writeInt(zz);
         }
 
         out.writeShort(this.savedlocation.length);
@@ -533,8 +541,8 @@ public class CharacterTransfer implements Externalizable {
             out.writeInt(qs.getValue().right);
         }
         out.writeByte(petStore.length);
-        for (int i = 0; i < petStore.length; i++) {
-            out.writeByte(petStore[i]);
+        for (byte b : petStore) {
+            out.writeByte(b);
         }
     }
 }

@@ -1,8 +1,8 @@
 package tools.wztosql;
 
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.DWzMobSkillData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzMobSkillData;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -46,21 +46,21 @@ public class DumpMobSkills {
                             .ifPresent(wzElementStream -> wzElementStream.forEach(lvlz -> {
                                 int lvl = Numbers.ofInt(lvlz.name());
                                 try {
-                                    if (update && new QDWzMobSkillData().skillid.eq(id).level.eq(lvl).exists()) {
+                                    if (update && new QDWzMobSkillData().skillId.eq(id).level.eq(lvl).exists()) {
                                         return;
                                     }
                                     DWzMobSkillData skillData = new DWzMobSkillData();
-                                    skillData.id = id;
-                                    skillData.level = lvl;
-                                    skillData.hp = Elements.findInt(lvlz, "hp", 100);
-                                    skillData.mpcon = Elements.findInt(lvlz, "mpCon", 0);
-                                    skillData.x = Elements.findInt(lvlz, "x", 1);
-                                    skillData.y = Elements.findInt(lvlz, "y", 1);
-                                    skillData.time = Elements.findInt(lvlz, "time", 0);
-                                    skillData.prop = Elements.findInt(lvlz, "prop", 100);
-                                    skillData.limit = Elements.findInt(lvlz, "limit", 0);
-                                    skillData.spawneffect = Elements.findInt(lvlz, "summonEffect", 0);
-                                    skillData.interval = Elements.findInt(lvlz, "interval", 0);
+                                    skillData.setId(id);
+                                    skillData.setLevel(lvl);
+                                    skillData.setHp(Elements.findInt(lvlz, "hp", 100));
+                                    skillData.setMpCon(Elements.findInt(lvlz, "mpCon", 0));
+                                    skillData.setX(Elements.findInt(lvlz, "x", 1));
+                                    skillData.setY(Elements.findInt(lvlz, "y", 1));
+                                    skillData.setTime(Elements.findInt(lvlz, "time", 0));
+                                    skillData.setProp(Elements.findInt(lvlz, "prop", 100));
+                                    skillData.setLimit(Elements.findInt(lvlz, "limit", 0));
+                                    skillData.setSpawnEffect(Elements.findInt(lvlz, "summonEffect", 0));
+                                    skillData.setInterval(Elements.findInt(lvlz, "interval", 0));
 
                                     StringBuilder summ = new StringBuilder();
                                     List<Integer> toSummon = new ArrayList<>();
@@ -77,24 +77,24 @@ public class DumpMobSkills {
                                         }
                                         summ.append(summon);
                                     }
-                                    skillData.summons = summ.toString();
+                                    skillData.setSummons(summ.toString());
                                     if (lvlz.find("lt") != null) {
                                         Vector lt = Elements.findVector(lvlz, "lt");
-                                        skillData.ltx = lt.x;
-                                        skillData.lty = lt.y;
+                                        skillData.setLtx(lt.x);
+                                        skillData.setLty(lt.y);
                                     } else {
-                                        skillData.ltx = 0;
-                                        skillData.lty = 0;
+                                        skillData.setLtx(0);
+                                        skillData.setLty(0);
                                     }
                                     if (lvlz.find("rb") != null) {
                                         Vector rb = Elements.findVector(lvlz, "rb");
-                                        skillData.rbx = rb.x;
-                                        skillData.rby = rb.y;
+                                        skillData.setRbx(rb.x);
+                                        skillData.setRby(rb.y);
                                     } else {
-                                        skillData.rbx = 0;
-                                        skillData.rby = 0;
+                                        skillData.setRbx(0);
+                                        skillData.setRby(0);
                                     }
-                                    skillData.once = (Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0);
+                                    skillData.setOnce(Elements.findInt(lvlz, "summonOnce") > 0 ? 1 : 0);
                                     LOGGER.debug("Added skill: " + id + " level " + lvl);
                                     skillData.save();
                                 } catch (Exception ignore) {

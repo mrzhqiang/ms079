@@ -20,14 +20,15 @@
  */
 package tools;
 
-import java.net.SocketAddress;
 import org.apache.mina.core.filterchain.IoFilterChain;
 import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoService;
-import org.apache.mina.core.session.IoSessionConfig;
 import org.apache.mina.core.session.DummySession;
+import org.apache.mina.core.session.IoSessionConfig;
 import org.apache.mina.core.write.WriteRequest;
+
+import java.net.SocketAddress;
 
 /**
  * Represents a mock version of an IOSession to use a MapleClient instance

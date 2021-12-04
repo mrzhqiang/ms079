@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -14,22 +15,64 @@ import java.util.Date;
 public class DEventStats extends Model {
 
     @Id
-    @Column(name = "eventstatid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "event")
-    public String event;
+    String event;
     @NotNull
-    @Column(name = "instance")
-    public String instance;
+    String instance;
     @NotNull
-    @Column(name = "characterid")
-    public Integer characterid;
+    @Column(name = "character_id")
+    Integer characterId;
     @NotNull
-    @Column(name = "channel")
-    public Integer channel;
+    Integer channel;
     @NotNull
-    @Column(name = "time")
-    public Date time;
+    LocalDateTime time;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getEvent() {
+        return event;
+    }
+
+    public void setEvent(String event) {
+        this.event = event;
+    }
+
+    public String getInstance() {
+        return instance;
+    }
+
+    public void setInstance(String instance) {
+        this.instance = instance;
+    }
+
+    public Integer getCharacterId() {
+        return characterId;
+    }
+
+    public void setCharacterId(Integer characterId) {
+        this.characterId = characterId;
+    }
+
+    public Integer getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Integer channel) {
+        this.channel = channel;
+    }
+
+    public LocalDateTime getTime() {
+        return time;
+    }
+
+    public void setTime(LocalDateTime time) {
+        this.time = time;
+    }
 }

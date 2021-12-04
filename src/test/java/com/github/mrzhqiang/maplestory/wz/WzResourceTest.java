@@ -10,20 +10,20 @@ import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
-public class WzManageTest {
+public class WzResourceTest {
 
     private static final String BASE_WZ_EXPECTED =
             "[smap.img.xml, StandardPDD.img.xml, zmap.img.xml, zmap_cn.img.xml]";
 
     @Test
     public void testWzPath() {
-        File root = new File(WzManage.WZ_DIR, "/Base.wz");
+        File root = new File(WzResource.WZ_DIR, "/Base.wz");
         assertEquals(BASE_WZ_EXPECTED, Arrays.toString(root.list()));
     }
 
     @Test
     public void testJsoupXml() throws IOException {
-        File wz = new File(WzManage.WZ_DIR, "/Mob.wz/0100100.img.xml");
+        File wz = new File(WzResource.WZ_DIR, "/Mob.wz/0100100.img.xml");
         Elements imgdirs = Jsoup.parse(wz, "UTF-8").body().children();
         assertEquals("0100100.img", imgdirs.attr("name"));
         Elements info = imgdirs.select("imgdir[name=info]");

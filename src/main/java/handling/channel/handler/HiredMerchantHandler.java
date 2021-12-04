@@ -20,29 +20,27 @@
  */
 package handling.channel.handler;
 
-import java.util.List;
-import java.util.ArrayList;
-
-import client.inventory.IItem;
-import client.inventory.MapleInventoryType;
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
+import client.inventory.IItem;
+import client.inventory.ItemLoader;
+import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DHiredMerch;
 import com.github.mrzhqiang.maplestory.domain.query.QDHiredMerch;
 import constants.GameConstants;
-import client.inventory.ItemLoader;
 import handling.world.World;
-
-import java.util.Map;
-
 import server.MapleInventoryManipulator;
-import server.MerchItemPackage;
 import server.MapleItemInformationProvider;
+import server.MerchItemPackage;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
-import tools.packet.PlayerShopPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.PlayerShopPacket;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class HiredMerchantHandler {
 
@@ -266,11 +264,11 @@ public class HiredMerchantHandler {
         }
 
         MerchItemPackage pack = new MerchItemPackage();
-        pack.setPackageid(one.id);
-        pack.setMesos(one.mesos);
-        pack.setSentTime(one.time);
+        pack.setPackageid(one.getId());
+        pack.setMesos(one.getMesos());
+        pack.setSentTime(one.getTime());
 
-        Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.loadItems_hm(5, one.id, accountid);
+        Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.loadItems_hm(5, one.getId(), accountid);
         if (!items.isEmpty()) {
             List<IItem> iters = new ArrayList<>();
             for (Pair<IItem, MapleInventoryType> z : items.values()) {

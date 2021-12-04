@@ -20,18 +20,6 @@
  */
 package server;
 
-import java.util.ArrayList;
-
-import java.util.List;
-
-import java.util.Map;
-
-import java.util.Map.Entry;
-
-import tools.ArrayMap;
-
-import tools.Pair;
-
 public class MapleAchievements {
 
     /*private Map<Integer, MapleAchievement> achievements = new ArrayMap<Integer, MapleAchievement>();

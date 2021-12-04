@@ -22,7 +22,7 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
     // super(id, position, (short) 1, (byte) 0);
     public MapleHiredMerchEquip(DHiredMerchItem item) {
         super(item);
-        this.equipment = item.equipment;
+        this.equipment = item.getEquipment();
     }
 
     @Override
@@ -39,233 +39,233 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
 
     @Override
     public int getUpgradeSlots() {
-        return equipment.upgradeslots;
+        return equipment.getUpgradeSlots();
     }
 
     @Override
     public int getStr() {
-        return equipment.str;
+        return equipment.getStr();
     }
 
     @Override
     public int getDex() {
-        return equipment.dex;
+        return equipment.getDex();
     }
 
     @Override
     public int getInt() {
-        return equipment.intField;
+        return equipment.getIntelligence();
     }
 
     @Override
     public int getLuk() {
-        return equipment.luk;
+        return equipment.getLuk();
     }
 
     @Override
     public int getHp() {
-        return equipment.hp;
+        return equipment.getHp();
     }
 
     @Override
     public int getMp() {
-        return equipment.mp;
+        return equipment.getMp();
     }
 
     @Override
     public int getWatk() {
-        return equipment.watk;
+        return equipment.getWatk();
     }
 
     @Override
     public int getMatk() {
-        return equipment.matk;
+        return equipment.getMatk();
     }
 
     @Override
     public int getWdef() {
-        return equipment.wdef;
+        return equipment.getWdef();
     }
 
     @Override
     public int getMdef() {
-        return equipment.mdef;
+        return equipment.getMdef();
     }
 
     @Override
     public int getAcc() {
-        return equipment.acc;
+        return equipment.getAcc();
     }
 
     @Override
     public int getAvoid() {
-        return equipment.avoid;
+        return equipment.getAvoid();
     }
 
     @Override
     public int getHands() {
-        return equipment.hands;
+        return equipment.getHands();
     }
 
     @Override
     public int getSpeed() {
-        return equipment.speed;
+        return equipment.getSpeed();
     }
 
     @Override
     public int getJump() {
-        return equipment.jump;
+        return equipment.getJump();
     }
 
     public void setStr(int str) {
         if (str < 0) {
             str = 0;
         }
-        this.equipment.str = str;
+        this.equipment.setStr(str);
     }
 
     public void setDex(int dex) {
         if (dex < 0) {
             dex = 0;
         }
-        this.equipment.dex = dex;
+        this.equipment.setDex(dex);
     }
 
     public void setInt(int _int) {
         if (_int < 0) {
             _int = 0;
         }
-        this.equipment.intField = _int;
+        this.equipment.setIntelligence(_int);
     }
 
     public void setLuk(int luk) {
         if (luk < 0) {
             luk = 0;
         }
-        this.equipment.luk = luk;
+        this.equipment.setLuk(luk);
     }
 
     public void setHp(int hp) {
         if (hp < 0) {
             hp = 0;
         }
-        this.equipment.hp = hp;
+        this.equipment.setHp(hp);
     }
 
     public void setMp(int mp) {
         if (mp < 0) {
             mp = 0;
         }
-        this.equipment.mp = mp;
+        this.equipment.setMp(mp);
     }
 
     public void setWatk(int watk) {
         if (watk < 0) {
             watk = 0;
         }
-        this.equipment.watk = watk;
+        this.equipment.setWatk(watk);
     }
 
     public void setMatk(int matk) {
         if (matk < 0) {
             matk = 0;
         }
-        this.equipment.matk = matk;
+        this.equipment.setMatk(matk);
     }
 
     public void setWdef(int wdef) {
         if (wdef < 0) {
             wdef = 0;
         }
-        this.equipment.wdef = wdef;
+        this.equipment.setWdef(wdef);
     }
 
     public void setMdef(int mdef) {
         if (mdef < 0) {
             mdef = 0;
         }
-        this.equipment.mdef = mdef;
+        this.equipment.setMdef(mdef);
     }
 
     public void setAcc(int acc) {
         if (acc < 0) {
             acc = 0;
         }
-        this.equipment.acc = acc;
+        this.equipment.setAcc(acc);
     }
 
     public void setAvoid(int avoid) {
         if (avoid < 0) {
             avoid = 0;
         }
-        this.equipment.avoid = avoid;
+        this.equipment.setAvoid(avoid);
     }
 
     public void setHands(int hands) {
         if (hands < 0) {
             hands = 0;
         }
-        this.equipment.hands = hands;
+        this.equipment.setHands(hands);
     }
 
     public void setSpeed(int speed) {
         if (speed < 0) {
             speed = 0;
         }
-        this.equipment.speed = speed;
+        this.equipment.setSpeed(speed);
     }
 
     public void setJump(int jump) {
         if (jump < 0) {
             jump = 0;
         }
-        this.equipment.jump = jump;
+        this.equipment.setJump(jump);
     }
 
     public void setUpgradeSlots(int upgradeSlots) {
-        this.equipment.upgradeslots = upgradeSlots;
+        this.equipment.setUpgradeSlots(upgradeSlots);
     }
 
     @Override
     public int getLevel() {
-        return equipment.level;
+        return equipment.getLevel();
     }
 
     public void setLevel(int level) {
-        this.equipment.level = level;
+        this.equipment.setLevel(level);
     }
 
     @Override
     public int getViciousHammer() {
-        return equipment.viciousHammer;
+        return equipment.getViciousHammer();
     }
 
     public void setViciousHammer(int ham) {
-        equipment.viciousHammer = ham;
+        equipment.setViciousHammer(ham);
     }
 
     @Override
     public int getItemEXP() {
-        return equipment.itemEXP;
+        return equipment.getItemExp();
     }
 
     public void setItemEXP(int itemEXP) {
         if (itemEXP < 0) {
             itemEXP = 0;
         }
-        this.equipment.itemEXP = itemEXP;
+        this.equipment.setItemExp(itemEXP);
     }
 
     @Override
     public int getEquipExp() {
-        if (equipment.itemEXP <= 0) {
+        if (equipment.getItemExp() <= 0) {
             return 0;
         }
         //aproximate value
         if (GameConstants.isWeapon(getItemId())) {
-            return equipment.itemEXP / IEquip.WEAPON_RATIO;
+            return equipment.getItemExp() / IEquip.WEAPON_RATIO;
         } else {
-            return equipment.itemEXP / IEquip.ARMOR_RATIO;
+            return equipment.getItemExp() / IEquip.ARMOR_RATIO;
         }
     }
 
@@ -290,7 +290,7 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
      */
     @Override
     public int getExpPercentage() {
-        return this.equipment.itemEXP;
+        return this.equipment.getItemExp();
     }
 
     /*@Override
@@ -334,55 +334,55 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
 
     @Override
     public int getDurability() {
-        return equipment.durability;
+        return equipment.getDurability();
     }
 
     public void setDurability(int dur) {
-        this.equipment.durability = dur;
+        this.equipment.setDurability(dur);
     }
 
     @Override
     public int getEnhance() {
-        return equipment.enhance;
+        return equipment.getEnhance();
     }
 
     public void setEnhance(int en) {
-        this.equipment.enhance = en;
+        this.equipment.setEnhance(en);
     }
 
     @Override
     public int getPotential1() {
-        return equipment.potential1;
+        return equipment.getPotential1();
     }
 
     public void setPotential1(int en) {
-        this.equipment.potential1 = en;
+        this.equipment.setPotential1(en);
     }
 
     @Override
     public int getPotential2() {
-        return equipment.potential2;
+        return equipment.getPotential2();
     }
 
     public void setPotential2(int en) {
-        this.equipment.potential2 = en;
+        this.equipment.setPotential2(en);
     }
 
     @Override
     public int getPotential3() {
-        return equipment.potential3;
+        return equipment.getPotential3();
     }
 
     public void setPotential3(int en) {
-        this.equipment.potential3 = en;
+        this.equipment.setPotential3(en);
     }
 
     @Override
     public int getState() {
-        int pots = equipment.potential1 + equipment.potential2 + equipment.potential3;
-        if (equipment.potential1 >= 30000 || equipment.potential2 >= 30000 || equipment.potential3 >= 30000) {
+        int pots = equipment.getPotential1() + equipment.getPotential2() + equipment.getPotential3();
+        if (equipment.getPotential1() >= 30000 || equipment.getPotential2() >= 30000 || equipment.getPotential3() >= 30000) {
             return 7;
-        } else if (equipment.potential1 >= 20000 || equipment.potential2 >= 20000 || equipment.potential3 >= 20000) {
+        } else if (equipment.getPotential1() >= 20000 || equipment.getPotential2() >= 20000 || equipment.getPotential3() >= 20000) {
             return 6;
         } else if (pots >= 1) {
             return 5;
@@ -410,20 +410,20 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
 
     @Override
     public int getHpR() {
-        return equipment.hpR;
+        return equipment.getHpR();
     }
 
     public void setHpR(int hp) {
-        this.equipment.hpR = hp;
+        this.equipment.setHpR(hp);
     }
 
     @Override
     public int getMpR() {
-        return equipment.mpR;
+        return equipment.getMpR();
     }
 
     public void setMpR(int mp) {
-        this.equipment.mpR = mp;
+        this.equipment.setMpR(mp);
     }
 
     public void gainItemLevel() {
@@ -431,14 +431,14 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
     }
 
     public void gainItemExp(MapleClient c, int gain, boolean timeless) {
-        this.equipment.itemEXP += gain;
+        this.equipment.setItemExp(equipment.getItemExp() + gain);
         int expNeeded = 0;
         if (timeless) {
             expNeeded = ExpTable.getTimelessItemExpNeededForLevel(this.itemLevel + 1);
         } else {
             expNeeded = ExpTable.getReverseItemExpNeededForLevel(this.itemLevel + 1);
         }
-        if (this.equipment.itemEXP >= expNeeded) {
+        if (this.equipment.getItemExp() >= expNeeded) {
             // gainItemLevel();
             gainItemLevel(c, timeless);
             //gainLevel();
@@ -451,46 +451,74 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
         for (Pair<String, Integer> stat : stats) {
             switch (stat.getLeft()) {
                 case "incDEX":
-                    equipment.dex += stat.getRight();
+                    Integer dex = equipment.getDex();
+                    dex += stat.getRight();
+                    equipment.setDex(dex);
                     break;
                 case "incSTR":
-                    equipment.str += stat.getRight();
+                    Integer str = equipment.getStr();
+                    str += stat.getRight();
+                    equipment.setStr(str);
                     break;
                 case "incINT":
-                    equipment.intField += stat.getRight();
+                    Integer intelligence = equipment.getIntelligence();
+                    intelligence += stat.getRight();
+                    equipment.setIntelligence(intelligence);
                     break;
                 case "incLUK":
-                    equipment.luk += stat.getRight();
+                    Integer luk = equipment.getLuk();
+                    luk += stat.getRight();
+                    equipment.setLuk(luk);
                     break;
                 case "incMHP":
-                    equipment.hp += stat.getRight();
+                    Integer hp = equipment.getHp();
+                    hp += stat.getRight();
+                    equipment.setHp(hp);
                     break;
                 case "incMMP":
-                    equipment.mp += stat.getRight();
+                    Integer mp = equipment.getMp();
+                    mp += stat.getRight();
+                    equipment.setMp(mp);
                     break;
                 case "incPAD":
-                    equipment.watk += stat.getRight();
+                    Integer watk = equipment.getWatk();
+                    watk += stat.getRight();
+                    equipment.setWatk(watk);
                     break;
                 case "incMAD":
-                    equipment.matk += stat.getRight();
+                    Integer matk = equipment.getMatk();
+                    matk += stat.getRight();
+                    equipment.setMatk(matk);
                     break;
                 case "incPDD":
-                    equipment.wdef += stat.getRight();
+                    Integer wdef = equipment.getWdef();
+                    wdef += stat.getRight();
+                    equipment.setWdef(wdef);
                     break;
                 case "incMDD":
-                    equipment.mdef += stat.getRight();
+                    Integer mdef = equipment.getMdef();
+                    mdef += stat.getRight();
+                    equipment.setMdef(mdef);
                     break;
                 case "incEVA":
-                    equipment.avoid += stat.getRight();
+                    Integer avoid = equipment.getAvoid();
+                    avoid += stat.getRight();
+                    equipment.setAvoid(avoid);
                     break;
                 case "incACC":
-                    equipment.acc += stat.getRight();
+                    Integer acc = equipment.getAcc();
+                    acc += stat.getRight();
+                    equipment.setAcc(acc);
                     break;
                 case "incSpeed":
-                    equipment.speed += stat.getRight();
+                    Integer speed = equipment.getSpeed();
+                    speed += stat.getRight();
+                    equipment.setSpeed(speed);
                     break;
                 case "incJump":
-                    equipment.jump += stat.getRight();
+                    Integer jump = equipment.getJump();
+                    jump += stat.getRight();
+                    equipment.setJump(jump);
                     break;
             }
         }
@@ -506,12 +534,12 @@ public class MapleHiredMerchEquip extends MapleHiredMerchItem implements IEquip,
 
     @Override
     public void setEquipLevel(int gf) {
-        this.equipment.itemlevel = gf;
+        this.equipment.setItemLevel(gf);
     }
 
     @Override
     public int getEquipLevel() {
-        return equipment.itemlevel;
+        return equipment.getItemLevel();
     }
 
     public int getCharmEXP() {

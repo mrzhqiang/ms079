@@ -4,6 +4,7 @@ import com.github.mrzhqiang.maplestory.domain.DAccount;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DGamePollReply;
 import com.github.mrzhqiang.maplestory.domain.DNote;
+import com.github.mrzhqiang.maplestory.domain.DNxCode;
 import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGamePollReply;
@@ -69,7 +70,7 @@ public class MapleCharacterUtil {
             return -1;
         }
 
-        return one.id;
+        return one.getId();
     }
 
     public static boolean PromptPoll(int accountid) {
@@ -83,8 +84,8 @@ public class MapleCharacterUtil {
         }
 
         DGamePollReply reply = new DGamePollReply();
-        reply.account = new QDAccount().id.eq(accountid).findOne();
-        reply.selectAns = selection;
+        reply.setAccount(new QDAccount().id.eq(accountid).findOne());
+        reply.setSelectAns(selection);
         reply.save();
 
         return true;
@@ -101,15 +102,15 @@ public class MapleCharacterUtil {
             return -1;
         }
 
-        if (one.secondPassword == null && one.salt2 == null) {
+        if (one.getSecondPassword() == null && one.getSecondSalt() == null) {
             return 0;
         }
 
-        if (one.secondPassword != null && one.salt2 != null) {
-            one.secondPassword = LoginCrypto.rand_r(one.secondPassword);
+        if (one.getSecondPassword() != null && one.getSecondSalt() != null) {
+            one.setSecondPassword(LoginCrypto.rand_r(one.getSecondPassword()));
         }
 
-        if (!check_ifPasswordEquals(one.secondPassword, password, one.salt2)) {
+        if (!check_ifPasswordEquals(one.getSecondPassword(), password, one.getSecondSalt())) {
             return 1;
         }
 
@@ -119,8 +120,8 @@ public class MapleCharacterUtil {
         } catch (Exception e) {
             return -2;
         }
-        one.secondPassword = SHA1hashedsecond;
-        one.salt2 = null;
+        one.setSecondPassword(SHA1hashedsecond);
+        one.setSecondSalt(null);
         one.save();
         return 2;
     }
@@ -141,7 +142,7 @@ public class MapleCharacterUtil {
         if (one == null) {
             return null;
         }
-        return new Pair<>(one.id, new Pair<>(one.account.id, one.gender));
+        return new Pair<>(one.getId(), new Pair<>(one.getAccount().getId(), one.getGender().getCodeInt()));
     }
 
     public static void setNXCodeUsed(String name, String code) {
@@ -150,23 +151,23 @@ public class MapleCharacterUtil {
 
     public static void sendNote(String to, String name, String msg, int fame) {
         DNote note = new DNote();
-        note.to = to;
-        note.from = name;
-        note.message = msg;
-        note.timestamp = System.currentTimeMillis();
-        note.gift = fame;
+        note.setTo(to);
+        note.setFrom(name);
+        note.setMessage(msg);
+        note.setTimestamp(System.currentTimeMillis());
+        note.setGift(fame);
         note.save();
     }
 
     public static boolean getNXCodeValid(String code, boolean validcode) throws SQLException {
-        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.valid > 0).orElse(validcode);
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.getValid() > 0).orElse(validcode);
     }
 
     public static int getNXCodeType(String code) throws SQLException {
-        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.type).orElse(-1);
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(DNxCode::getType).orElse(-1);
     }
 
     public static int getNXCodeItem(String code) throws SQLException {
-        return new QDNxCode().code.eq(code).findOneOrEmpty().map(it -> it.item).orElse(-1);
+        return new QDNxCode().code.eq(code).findOneOrEmpty().map(DNxCode::getItem).orElse(-1);
     }
 }

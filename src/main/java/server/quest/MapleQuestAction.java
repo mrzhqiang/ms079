@@ -1,9 +1,14 @@
 package server.quest;
 
-import client.*;
+import client.ISkill;
+import client.MapleCharacter;
+import client.MapleQuestStatus;
+import client.MapleStat;
+import client.SkillFactory;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DWzQuestActData;
+import com.github.mrzhqiang.maplestory.domain.Gender;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActItemData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActQuestData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActSkillData;
@@ -19,10 +24,11 @@ import tools.Pair;
 import tools.Triple;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class MapleQuestAction implements Serializable {
 
@@ -41,11 +47,11 @@ public class MapleQuestAction implements Serializable {
     public MapleQuestAction(MapleQuestActionType type, DWzQuestActData data, MapleQuest quest) {
         this.type = type;
         this.quest = quest;
-        this.intStore = data.intStore;
+        this.intStore = data.getIntStore();
 
-        String[] jobs = data.applicableJobs.split(", ");
-        if ((jobs.length <= 0) && (data.applicableJobs.length() > 0)) {
-            this.applicableJobs.add(Integer.parseInt(data.applicableJobs));
+        String[] jobs = data.getApplicableJobs().split(", ");
+        if ((jobs.length <= 0) && (data.getApplicableJobs().length() > 0)) {
+            this.applicableJobs.add(Integer.parseInt(data.getApplicableJobs()));
         }
 
         for (String j : jobs) {
@@ -57,25 +63,25 @@ public class MapleQuestAction implements Serializable {
         switch (type) {
             case item:
                 items = new ArrayList<>();
-                new QDWzQuestActItemData().uniqueid.eq(data.uniqueid).findEach(it ->
+                new QDWzQuestActItemData().uniqueId.eq(data.getUniqueId()).findEach(it ->
                         //, rs.getInt("jobEx")
-                        items.add(new QuestItem(it.itemid, it.count, it.period, it.gender, it.job,it.jobEx,it.prop)));
+                        items.add(new QuestItem(it.getItemId(), it.getCount(), it.getPeriod(), it.getGender(), it.getJob(),it.getJobEx(),it.getProp())));
                 break;
             case quest:
                 state = new ArrayList<>();
-                new QDWzQuestActQuestData().uniqueid.eq(data.uniqueid).findEach(it ->
-                        state.add(new Pair<>(it.quest, it.state)));
+                new QDWzQuestActQuestData().uniqueId.eq(data.getUniqueId()).findEach(it ->
+                        state.add(new Pair<>(it.getQuest(), it.getState())));
                 break;
             case skill:
                 skill = new ArrayList<>();
-                new QDWzQuestActSkillData().uniqueid.eq(data.uniqueid).findEach(it ->
-                        skill.add(new Triple<>(it.skillid, it.skillLevel, it.masterLevel)));
+                new QDWzQuestActSkillData().uniqueId.eq(data.getUniqueId()).findEach(it ->
+                        skill.add(new Triple<>(it.getSkillId(), it.getSkillLevel(), it.getMasterLevel())));
                 break;
         }
     }
 
     private static boolean canGetItem(QuestItem item, MapleCharacter chr) {
-        if (item.gender != 2 && item.gender >= 0 && item.gender != chr.getGender()) {
+        if (item.gender != 2 && item.gender >= 0 && item.gender != chr.getGender().getCodeByte()) {
             return false;
         }
         if (item.job > 0) {

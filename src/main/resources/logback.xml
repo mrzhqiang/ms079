@@ -1,31 +1,48 @@
 <configuration>
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!-- 日常运行日志，包括 ERROR 日志 -->
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home:-.}/logs/application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home:-.}/logs/application-log-%d{yyyy-MM-dd}.gz
-            </fileNamePattern>
+            <fileNamePattern>${application.home:-.}/logs/application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from [%logger] in %thread -
-                %message%n%xException
+            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from [%logger] in %thread - %message%n%xException
             </pattern>
         </encoder>
     </appender>
-
+    <!-- ERROR 日志，方便定位生产错误 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${application.home:-.}/logs/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${application.home:-.}/logs/error-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>365</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%logger] in %thread - %message%n%xException</pattern>
+        </encoder>
+    </appender>
+    <!-- 控制台输出，方便开发调试 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%date{MM-dd HH:mm:ss ZZZZ} %level [%thread] - %message%n%xException{10}</pattern>
         </encoder>
     </appender>
-
-    <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="FILE"/>
+    <!-- 异步追加到文件 -->
+    <appender name="ASYNC_INFO_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="INFO_FILE"/>
     </appender>
-
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="ERROR_FILE"/>
+    </appender>
+    <!-- INFO 级别日志交给 INFO_FILE 记录 -->
     <root level="INFO">
-        <appender-ref ref="ASYNCFILE"/>
+        <appender-ref ref="ASYNC_INFO_FILE"/>
         <appender-ref ref="STDOUT"/>
+    </root>
+    <!-- ERROR 级别日志交给 ERROR_FILE 记录 -->
+    <root level="ERROR">
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
     </root>
 
     <!-- TRACE 为开发初期的日志等级，后续将逐渐降为 DEBUG 甚至 INFO 级别 -->

@@ -5,23 +5,23 @@
         </encoder>
     </appender>
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="io.ebean.DDL" level="TRACE"/>
+    <logger name="io.ebean.DDL" level="INFO"/>
 
-    <logger name="io.ebean.SQL" level="TRACE"/>
-    <logger name="io.ebean.TXN" level="TRACE"/>
-    <logger name="io.ebean.SUM" level="TRACE"/>
+    <logger name="io.ebean.SQL" level="INFO"/>
+    <logger name="io.ebean.TXN" level="INFO"/>
+    <logger name="io.ebean.SUM" level="INFO"/>
 
     <!-- L2 logging -->
-    <logger name="io.ebean.cache.QUERY" level="TRACE"/>
-    <logger name="io.ebean.cache.BEAN" level="TRACE"/>
-    <logger name="io.ebean.cache.COLL" level="TRACE"/>
-    <logger name="io.ebean.cache.NATKEY" level="TRACE"/>
+    <logger name="io.ebean.cache.QUERY" level="INFO"/>
+    <logger name="io.ebean.cache.BEAN" level="INFO"/>
+    <logger name="io.ebean.cache.COLL" level="INFO"/>
+    <logger name="io.ebean.cache.NATKEY" level="INFO"/>
 
     <!-- Testing with Docker containers -->
-    <logger name="io.ebean.docker" level="TRACE"/>
+    <logger name="io.ebean.docker" level="INFO"/>
 
 </configuration>

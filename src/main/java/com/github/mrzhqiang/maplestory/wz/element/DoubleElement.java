@@ -1,6 +1,6 @@
 package com.github.mrzhqiang.maplestory.wz.element;
 
-import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import org.jsoup.nodes.Element;
 

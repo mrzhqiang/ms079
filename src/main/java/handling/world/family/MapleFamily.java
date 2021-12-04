@@ -5,6 +5,7 @@ import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DFamily;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDFamily;
+import com.google.common.base.Strings;
 import handling.MaplePacket;
 import handling.world.World;
 import org.slf4j.Logger;
@@ -40,51 +41,54 @@ public class MapleFamily implements java.io.Serializable {
 
     public MapleFamily(DFamily family) {
         this.family = family;
-        family.members.forEach(character -> {
+        family.getMembers().forEach(character -> {
             MapleFamilyCharacter familyCharacter = new MapleFamilyCharacter(character, -1, false);
-            members.put(character.id, familyCharacter);
+            members.put(character.getId(), familyCharacter);
         });
         members.forEach((integer, mapleFamilyCharacter) -> {
             DCharacter character = mapleFamilyCharacter.character;
             // mfc.getJunior1() > 0 && (getMFC(mfc.getJunior1()) == null || mfc.getId() == mfc.getJunior1())
-            if (character.junior1 != null
-                    && (!members.containsKey(character.junior1.id) || character.equals(character.junior1))) {
-                character.junior1 = null;
+            DCharacter junior1 = character.getJunior1();
+            if (junior1 != null
+                    && (!members.containsKey(junior1.getId()) || character.equals(junior1))) {
+                character.setJunior1(null);
             }
             // mfc.getJunior2() > 0 && (getMFC(mfc.getJunior2()) == null || mfc.getId() == mfc.getJunior2() || mfc.getJunior1() == mfc.getJunior2())
-            if (character.junior2 != null
-                    && (!members.containsKey(character.junior2.id) || character.equals(character.junior2) || character.junior2.equals(character.junior1))) {
-                character.junior2 = null;
+            DCharacter junior2 = character.getJunior2();
+            if (junior2 != null
+                    && (!members.containsKey(junior2.getId()) || character.equals(junior2) || junior2.equals(junior1))) {
+                character.setJunior2(null);
             }
             // mfc.getSeniorId() > 0 && (getMFC(mfc.getSeniorId()) == null || mfc.getId() == mfc.getSeniorId())
-            if (character.senior != null
-                    && (members.containsKey(character.senior.id)) || character.equals(character.senior)) {
-                character.senior = null;
+            DCharacter senior = character.getSenior();
+            if (senior != null
+                    && (members.containsKey(senior.getId())) || character.equals(senior)) {
+                character.setSenior(null);
             }
-            if (character.junior2 != null && character.junior1 == null) {
-                character.junior1 = character.junior2;
-                character.junior2 = null;
+            if (junior2 != null && junior1 == null) {
+                character.setJunior1(junior2);
+                character.setJunior2(null);
             }
-            if (character.junior1 != null) {
-                if (character.equals(character.junior1.junior1)) {
-                    character.junior1.junior1 = null;
+            if (junior1 != null) {
+                if (character.equals(junior1.getJunior1())) {
+                    junior1.setJunior1(null);
                 }
-                if (character.equals(character.junior1.junior2)) {
-                    character.junior1.junior2 = null;
+                if (character.equals(junior1.getJunior2())) {
+                    junior1.setJunior2(null);
                 }
-                if (!character.equals(character.junior1.senior)) {
-                    character.junior1.senior = character;
+                if (!character.equals(junior1.getSenior())) {
+                    junior1.setSenior(character);
                 }
             }
-            if (character.junior2 != null) {
-                if (character.equals(character.junior2.junior1)) {
-                    character.junior2.junior1 = null;
+            if (junior2 != null) {
+                if (character.equals(junior2.getJunior1())) {
+                    junior2.setJunior1(null);
                 }
-                if (character.equals(character.junior2.junior2)) {
-                    character.junior2.junior2 = null;
+                if (character.equals(junior2.getJunior2())) {
+                    junior2.setJunior2(null);
                 }
-                if (!character.equals(character.junior2.senior)) {
-                    character.junior2.senior = character;
+                if (!character.equals(junior2.getSenior())) {
+                    junior2.setSenior(character);
                 }
             }
         });
@@ -105,7 +109,7 @@ public class MapleFamily implements java.io.Serializable {
     }
 
     public void resetGens() {
-        MapleFamilyCharacter mfc = getMFC(family.leader.id);
+        MapleFamilyCharacter mfc = getMFC(family.getLeader().getId());
         if (mfc != null) {
             generations = mfc.resetGenerations(this);
         }
@@ -113,7 +117,7 @@ public class MapleFamily implements java.io.Serializable {
     }
 
     public void resetDescendants() { //not stored here, but rather in the MFC
-        MapleFamilyCharacter mfc = getMFC(family.leader.id);
+        MapleFamilyCharacter mfc = getMFC(family.getLeader().getId());
         if (mfc != null) {
             mfc.resetDescendants(this);
         }
@@ -146,14 +150,11 @@ public class MapleFamily implements java.io.Serializable {
     }
 
     public final int getLeaderId() {
-        return family.leader.id;
+        return family.getLeader().getId();
     }
 
     public final String getNotice() {
-        if (family.notice == null) {
-            return "";
-        }
-        return family.notice;
+        return Strings.nullToEmpty(family.getNotice());
     }
 
     public final String getLeaderName() {
@@ -222,7 +223,7 @@ public class MapleFamily implements java.io.Serializable {
         final MapleFamilyCharacter mgc = getMFC(cid);
         if (mgc != null && mgc.getFamilyId() == id) {
             if (mgc.isOnline() != online) {
-                broadcast(FamilyPacket.familyLoggedIn(online, mgc.getName()), cid, mgc.getId() == family.leader.id ? null : mgc.getPedigree());
+                broadcast(FamilyPacket.familyLoggedIn(online, mgc.getName()), cid, mgc.getId() == family.getLeader().getId() ? null : mgc.getPedigree());
             }
             mgc.setOnline(online);
             mgc.setChannel((byte) channel);
@@ -331,7 +332,7 @@ public class MapleFamily implements java.io.Serializable {
      */
     public final void leaveFamily(final MapleFamilyCharacter mgc, final boolean skipLeader) {
         bDirty = true;
-        if (mgc.getId() == family.leader.id && !skipLeader) {
+        if (mgc.getId() == family.getLeader().getId() && !skipLeader) {
             //disband
             leadername = null; //to disband family completely
             World.Family.disbandFamily(id);
@@ -381,10 +382,10 @@ public class MapleFamily implements java.io.Serializable {
             member.setJobId(mgc.getJob());
             member.setLevel((short) mgc.getLevel());
             if (old_level != mgc.getLevel()) {
-                this.broadcast(MaplePacketCreator.sendLevelup(true, mgc.getLevel(), mgc.getName()), mgc.getId(), mgc.getId() == family.leader.id ? null : member.getPedigree());
+                this.broadcast(MaplePacketCreator.sendLevelup(true, mgc.getLevel(), mgc.getName()), mgc.getId(), mgc.getId() == family.getLeader().getId() ? null : member.getPedigree());
             }
             if (old_job != mgc.getJob()) {
-                this.broadcast(MaplePacketCreator.sendJobup(true, mgc.getJob(), mgc.getName()), mgc.getId(), mgc.getId() == family.leader.id ? null : member.getPedigree());
+                this.broadcast(MaplePacketCreator.sendJobup(true, mgc.getJob(), mgc.getName()), mgc.getId(), mgc.getId() == family.getLeader().getId() ? null : member.getPedigree());
             }
         }
     }
@@ -404,21 +405,21 @@ public class MapleFamily implements java.io.Serializable {
     public static void setOfflineFamilyStatus(int familyid, int seniorid, int junior1, int junior2, int currentrep, int totalrep, int cid) {
         DCharacter one = new QDCharacter().id.eq(cid).findOne();
         if (one != null) {
-            one.family = new QDFamily().id.eq(familyid).findOne();
-            one.senior = new QDCharacter().id.eq(seniorid).findOne();
-            one.junior1 = new QDCharacter().id.eq(junior1).findOne();
-            one.junior1 = new QDCharacter().id.eq(junior2).findOne();
-            one.currentRep = currentrep;
-            one.totalRep = totalrep;
+            one.setFamily(new QDFamily().id.eq(familyid).findOne());
+            one.setSenior(new QDCharacter().id.eq(seniorid).findOne());
+            one.setJunior1(new QDCharacter().id.eq(junior1).findOne());
+            one.setJunior1(new QDCharacter().id.eq(junior2).findOne());
+            one.setCurrentRep(currentrep);
+            one.setTotalRep(totalrep);
             one.save();
         }
     }
 
     public static int createFamily(int leaderId) {
         DFamily family = new DFamily();
-        family.leader = new QDCharacter().id.eq(leaderId).findOne();
+        family.setLeader(new QDCharacter().id.eq(leaderId).findOne());
         family.save();
-        return family.id;
+        return family.getId();
     }
 
     public static void mergeFamily(MapleFamily newfam, MapleFamily oldfam) {
@@ -514,6 +515,6 @@ public class MapleFamily implements java.io.Serializable {
 
     public final void setNotice(final String notice) {
         this.changed = true;
-        this.family.notice = notice;
+        this.family.setNotice(notice);
     }
 }

@@ -7,6 +7,7 @@ import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
 import com.github.mrzhqiang.maplestory.domain.DPlayerNPCEquip;
+import com.github.mrzhqiang.maplestory.domain.Gender;
 import com.github.mrzhqiang.maplestory.domain.query.QDPlayerNPC;
 import com.github.mrzhqiang.maplestory.domain.query.QDPlayerNPCEquip;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
@@ -31,14 +32,14 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public PlayerNPC(DPlayerNPC npc, MapleCharacter chr) {
-        super(npc.scriptid, npc.name);
+        super(npc.getScriptId(), npc.getName());
         this.npc = npc;
-        setCoords(npc.x, npc.y, npc.dir, npc.foothold);
+        setCoords(npc.getX(), npc.getY(), npc.getDir(), npc.getFoothold());
 
         if (chr != null) {
             update(chr);
         } else {
-            String[] pet = npc.pets.split(",");
+            String[] pet = npc.getPets().split(",");
 
             for (int i = 0; i < 3; i++) {
                 if (pet[i] != null) {
@@ -48,8 +49,8 @@ public class PlayerNPC extends MapleNPC {
                 }
             }
 
-            new QDPlayerNPCEquip().npcid.eq(getId()).findEach(it ->
-                    equips.put(it.equippos, it.equipid));
+            new QDPlayerNPCEquip().npcId.eq(getId()).findEach(it ->
+                    equips.put(it.getEquipPos(), it.getEquipId()));
         }
     }
 
@@ -91,7 +92,7 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public void update(MapleCharacter chr) {
-        if (chr == null || npc.charid != chr.getId()) {
+        if (chr == null || npc.getCharId() != chr.getId()) {
             return; //不能使用名称，因为它实际上可能已经改变了..
         }
         setName(chr.getName());
@@ -116,8 +117,8 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public void destroy(boolean remove) {
-        new QDPlayerNPC().scriptid.eq(getId()).delete();
-        new QDPlayerNPCEquip().npcid.eq(getId()).delete();
+        new QDPlayerNPC().scriptId.eq(getId()).delete();
+        new QDPlayerNPCEquip().npcId.eq(getId()).delete();
 
         if (remove) {
             removeFromServer();
@@ -135,10 +136,10 @@ public class PlayerNPC extends MapleNPC {
 
         for (Entry<Integer, Integer> equip : equips.entrySet()) {
             DPlayerNPCEquip npcEquip = new DPlayerNPCEquip();
-            npcEquip.npcid = getId();
-            npcEquip.charid = getCharId();
-            npcEquip.equipid = equip.getValue();
-            npcEquip.equippos = equip.getKey();
+            npcEquip.setNpcId(getId());
+            npcEquip.setCharId(getCharId());
+            npcEquip.setEquipId(equip.getValue());
+            npcEquip.setEquipPos(equip.getKey());
             npcEquip.save();
         }
     }
@@ -148,43 +149,43 @@ public class PlayerNPC extends MapleNPC {
     }
 
     public int getSkin() {
-        return npc.skin;
+        return npc.getSkin();
     }
 
-    public int getGender() {
-        return npc.gender;
+    public Gender getGender() {
+        return npc.getGender();
     }
 
     public int getFace() {
-        return npc.face;
+        return npc.getFace();
     }
 
     public int getHair() {
-        return npc.hair;
+        return npc.getHair();
     }
 
     public int getCharId() {
-        return npc.charid;
+        return npc.getCharId();
     }
 
     public int getMapId() {
-        return npc.map;
+        return npc.getMap();
     }
 
     public void setSkin(int s) {
-        this.npc.skin = s;
+        this.npc.setSkin(s);
     }
 
     public void setFace(int f) {
-        this.npc.face = f;
+        this.npc.setFace(f);
     }
 
     public void setHair(int h) {
-        this.npc.hair = h;
+        this.npc.setHair(h);
     }
 
-    public void setGender(int g) {
-        this.npc.gender = g;
+    public void setGender(Gender g) {
+        this.npc.setGender(g);
     }
 
     public int getPet(int i) {

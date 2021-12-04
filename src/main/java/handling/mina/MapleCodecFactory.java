@@ -6,7 +6,6 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 public final class MapleCodecFactory implements ProtocolCodecFactory {
 

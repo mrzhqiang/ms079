@@ -2,6 +2,7 @@ package handling.world.guild;
 
 import com.github.mrzhqiang.maplestory.domain.DBbsReply;
 import com.github.mrzhqiang.maplestory.domain.DBbsThread;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 
 import java.util.Comparator;
@@ -19,18 +20,18 @@ public final class MapleBBSThread {
 
     public MapleBBSThread(DBbsThread entity) {
         this.entity = entity;
-        for (DBbsReply data : entity.replys) {
-            replies.put(data.id, new MapleBBSReply(data));
+        for (DBbsReply data : entity.getReplyList()) {
+            replies.put(data.getId(), new MapleBBSReply(data));
         }
     }
 
     public MapleBBSThread(int localthreadID, String name, String text, long timestamp, int guildID, int ownerID, int icon) {
         this.entity = new DBbsThread();
-        this.entity.localthreadid = localthreadID;
-        this.entity.name = name;
-        this.entity.timestamp = timestamp;
-        this.entity.guild = new QDGuild().id.eq(guildID).findOne();
-        this.entity.icon = icon;
+        this.entity.setLocalThreadId(localthreadID);
+        this.entity.setName(name);
+        this.entity.setTimestamp(timestamp);
+        this.entity.setGuild(new QDGuild().id.eq(guildID).findOne());
+        this.entity.setIcon(icon);
         this.text = text;
         this.ownerID = ownerID;
     }
@@ -40,7 +41,7 @@ public final class MapleBBSThread {
     }
 
     public boolean isNotice() {
-        return entity.localthreadid == 0;
+        return entity.getLocalThreadId() == 0;
     }
 
     public static class MapleBBSReply {
@@ -53,10 +54,10 @@ public final class MapleBBSThread {
 
         public MapleBBSReply(int replyid, int ownerID, String content, long timestamp) {
             this.reply = new DBbsReply();
-            this.reply.id = replyid;
-            this.reply.postercid = ownerID;
-            this.reply.content = content;
-            this.reply.timestamp = timestamp;
+            this.reply.setId(replyid);
+            this.reply.setPoster(new QDCharacter().id.eq(ownerID).findOne());
+            this.reply.setContent(content);
+            this.reply.setTimestamp(timestamp);
         }
     }
 
@@ -64,9 +65,9 @@ public final class MapleBBSThread {
 
         @Override
         public int compare(MapleBBSThread o1, MapleBBSThread o2) {
-            if (o1.entity.localthreadid < o2.entity.localthreadid) {
+            if (o1.entity.getLocalThreadId() < o2.entity.getLocalThreadId()) {
                 return 1;
-            } else if (o1.entity.localthreadid.equals(o2.entity.localthreadid)) {
+            } else if (o1.entity.getLocalThreadId().equals(o2.entity.getLocalThreadId())) {
                 return 0;
             } else {
                 return -1; //opposite here as oldest is last, newest is first

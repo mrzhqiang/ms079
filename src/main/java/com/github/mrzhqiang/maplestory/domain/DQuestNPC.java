@@ -12,30 +12,86 @@ import javax.persistence.Table;
 public class DQuestNPC extends Model {
 
     @Id
-    public Integer id;
-
+    Integer id;
     @Column(name = "npcid")
-    public Integer npcid;
+    Integer npcId;
+    Integer itemId;
+    Integer sl;
+    Integer zt;
+    String name;
+    Integer item;
+    Integer itemSl;
+    Integer money;
 
-    @Column(name = "itemid")
-    public Integer itemid;
+    public Integer getId() {
+        return id;
+    }
 
-    @Column(name = "sl")
-    public Integer sl;
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    @Column(name = "zt")
-    public Integer zt;
+    public Integer getNpcId() {
+        return npcId;
+    }
 
-    @Column(name = "name")
-    public String name;
+    public void setNpcId(Integer npcId) {
+        this.npcId = npcId;
+    }
 
-    @Column(name = "item")
-    public Integer item;
+    public Integer getItemId() {
+        return itemId;
+    }
 
-    @Column(name = "itemsl")
-    public Integer itemsl;
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
 
-    @Column(name = "money")
-    public Integer money;
+    public Integer getSl() {
+        return sl;
+    }
 
+    public void setSl(Integer sl) {
+        this.sl = sl;
+    }
+
+    public Integer getZt() {
+        return zt;
+    }
+
+    public void setZt(Integer zt) {
+        this.zt = zt;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getItem() {
+        return item;
+    }
+
+    public void setItem(Integer item) {
+        this.item = item;
+    }
+
+    public Integer getItemSl() {
+        return itemSl;
+    }
+
+    public void setItemSl(Integer itemSl) {
+        this.itemSl = itemSl;
+    }
+
+    public Integer getMoney() {
+        return money;
+    }
+
+    public void setMoney(Integer money) {
+        this.money = money;
+    }
 }

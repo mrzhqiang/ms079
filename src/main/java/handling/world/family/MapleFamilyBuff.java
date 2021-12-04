@@ -2,15 +2,16 @@ package handling.world.family;
 
 import client.MapleBuffStat;
 import client.MapleCharacter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ScheduledFuture;
 import server.MapleItemInformationProvider;
 import server.MapleStatEffect;
 import server.MapleStatEffect.CancelEffectAction;
-import server.Timer.BuffTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import tools.MaplePacketCreator;
 import tools.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 
 public class MapleFamilyBuff {
 
@@ -146,7 +147,7 @@ public class MapleFamilyBuff {
             chr.cancelEffect(eff, true, -1, effects);
             final long starttime = System.currentTimeMillis();
             final CancelEffectAction cancelAction = new CancelEffectAction(chr, eff, starttime);
-            final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, ((starttime + (duration * 60000)) - starttime));
+            final ScheduledFuture<?> schedule = Timer.BUFF.schedule(cancelAction, ((starttime + (duration * 60000)) - starttime));
             chr.registerEffect(eff, starttime, schedule, effects);
         }
     }

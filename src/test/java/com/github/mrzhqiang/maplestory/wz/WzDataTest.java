@@ -17,7 +17,7 @@ public class WzDataTest {
     @Test
     public void testData() {
         Stopwatch started = Stopwatch.createStarted();
-        WzData.load().subscribe();
+        WzResource.load().subscribe();
         WzDirectory root = WzData.STRING.directory();
         Optional<WzFile> cashImg = root.findFile("Cash.img");
         assertTrue(cashImg.isPresent());

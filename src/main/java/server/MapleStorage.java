@@ -37,9 +37,9 @@ public class MapleStorage implements Serializable {
 
     public static DStorage create(int id) {
         DStorage storage = new DStorage();
-        storage.account = new QDAccount().id.eq(id).findOne();
-        storage.slots = (4);
-        storage.meso = (0);
+        storage.setAccount(new QDAccount().id.eq(id).findOne());
+        storage.setSlots(4);
+        storage.setMeso(0);
         storage.save();
         return storage;
     }
@@ -137,19 +137,19 @@ public class MapleStorage implements Serializable {
         for (MapleInventoryType type : MapleInventoryType.values()) {
             typeItems.put(type, new ArrayList<>(items));
         }
-        c.getSession().write(MaplePacketCreator.getStorage(npcId, storage.slots, items, storage.meso));
+        c.getSession().write(MaplePacketCreator.getStorage(npcId, storage.getSlots(), items, storage.getMeso()));
     }
 
     public void sendStored(MapleClient c, MapleInventoryType type) {
-        c.getSession().write(MaplePacketCreator.storeStorage(storage.slots, type, typeItems.get(type)));
+        c.getSession().write(MaplePacketCreator.storeStorage(storage.getSlots(), type, typeItems.get(type)));
     }
 
     public void sendTakenOut(MapleClient c, MapleInventoryType type) {
-        c.getSession().write(MaplePacketCreator.takeOutStorage(storage.slots, type, typeItems.get(type)));
+        c.getSession().write(MaplePacketCreator.takeOutStorage(storage.getSlots(), type, typeItems.get(type)));
     }
 
     public int getMeso() {
-        return storage.meso;
+        return storage.getMeso();
     }
 
     public IItem findById(int itemId) {
@@ -166,29 +166,31 @@ public class MapleStorage implements Serializable {
             return;
         }
         changed = true;
-        this.storage.meso = meso;
+        this.storage.setMeso(meso);
     }
 
     public void sendMeso(MapleClient c) {
-        c.getSession().write(MaplePacketCreator.mesoStorage(storage.slots, storage.meso));
+        c.getSession().write(MaplePacketCreator.mesoStorage(storage.getSlots(), storage.getMeso()));
     }
 
     public boolean isFull() {
-        return items.size() >= storage.slots;
+        return items.size() >= storage.getSlots();
     }
 
     public int getSlots() {
-        return storage.slots;
+        return storage.getSlots();
     }
 
     public void increaseSlots(int gain) {
         changed = true;
-        this.storage.slots += gain;
+        Integer slots = this.storage.getSlots();
+        slots += gain;
+        storage.setSlots(slots);
     }
 
     public void setSlots(int set) {
         changed = true;
-        this.storage.slots = set;
+        this.storage.setSlots(set);
     }
 
     public void close() {

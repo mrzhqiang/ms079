@@ -99,29 +99,29 @@ public class MTSCart implements Serializable {
         }
 
         ItemLoader.saveItems(itemsWithType);
-        new QDMtsCart().characterid.eq(characterId).delete();
+        new QDMtsCart().characterId.eq(characterId).delete();
 
         for (int i : cart) {
             DMtsCart cart = new DMtsCart();
-            cart.characterid = characterId;
-            cart.itemid = i;
+            cart.setCharacterId(characterId);
+            cart.setItemId(i);
             cart.save();
         }
         if (owedNX > 0) {
             DMtsCart cart = new DMtsCart();
-            cart.characterid = characterId;
-            cart.itemid = -owedNX;
+            cart.setCharacterId(characterId);
+            cart.setItemId(-owedNX);
             cart.save();
         }
         //not Yet Sold 不应该保存在这里
     }
 
     public void loadCart() {
-        new QDMtsCart().characterid.eq(characterId).findEach(it -> {
-            if (it.itemid < 0) {
-                owedNX -= it.itemid;
-            } else if (MTSStorage.getInstance().check(it.itemid)) {
-                cart.add(it.itemid);
+        new QDMtsCart().characterId.eq(characterId).findEach(it -> {
+            if (it.getItemId() < 0) {
+                owedNX -= it.getItemId();
+            } else if (MTSStorage.getInstance().check(it.getItemId())) {
+                cart.add(it.getItemId());
             }
         });
     }

@@ -1,16 +1,16 @@
 package handling.channel;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.stream.Collectors;
-
 import com.github.mrzhqiang.maplestory.domain.DGuild;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import io.ebean.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.Timer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MapleGuildRanking {
 
@@ -22,7 +22,7 @@ public class MapleGuildRanking {
     private final List<mesoRankingInfo> ranks2 = new LinkedList<>();
 
     public void RankingUpdate() {
-        Timer.WorldTimer.getInstance().register(() -> {
+        Timer.WORLD.register(() -> {
             try {
                 reload();
                 showLevelRank();
@@ -61,7 +61,7 @@ public class MapleGuildRanking {
     private void reload() {
         ranks.clear();
 
-        new QDGuild().orderBy().GP.desc()
+        new QDGuild().orderBy().gp.desc()
                 .setMaxRows(50)
                 .findEach(data -> ranks.add(new GuildRankingInfo(data)));
     }
@@ -72,7 +72,7 @@ public class MapleGuildRanking {
                 .orderBy().level.desc()
                 .setMaxRows(100)
                 .findStream()
-                .map(it -> new levelRankingInfo(it.name, it.level, it.str, it.dex, it.intelligence, it.luk))
+                .map(it -> new levelRankingInfo(it.getName(), it.getLevel(), it.getStr(), it.getDex(), it.getIntelligence(), it.getLuk()))
                 .collect(Collectors.toList());
         ranks1.addAll(infoList);
     }
@@ -83,7 +83,7 @@ public class MapleGuildRanking {
         List<mesoRankingInfo> infos = DB.findNative(mesoRankingInfo.class,
                         "SELECT *, ( chr.meso + s.meso ) as money " +
                                 "FROM `characters` as chr , `storages` as s " +
-                                "WHERE chr.gm < 1 AND s.accountid = chr.accountid " +
+                                "WHERE chr.gm < 1 AND s.account_id = chr.account_id " +
                                 "ORDER BY money DESC LIMIT 20")
                 .findList();
         ranks2.addAll(infos);
@@ -177,27 +177,27 @@ public class MapleGuildRanking {
         }
 
         public String getName() {
-            return guild.name;
+            return guild.getName();
         }
 
         public int getGP() {
-            return guild.GP;
+            return guild.getGp();
         }
 
         public int getLogo() {
-            return guild.logo;
+            return guild.getLogo();
         }
 
         public int getLogoColor() {
-            return guild.logoColor;
+            return guild.getLogoColor();
         }
 
         public int getLogoBg() {
-            return guild.logoBG;
+            return guild.getLogoBg();
         }
 
         public int getLogoBgColor() {
-            return guild.logoBGColor;
+            return guild.getLogoBgColor();
         }
     }
 }

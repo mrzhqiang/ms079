@@ -11,7 +11,7 @@ import server.MapleCarnivalParty;
 import server.MapleItemInformationProvider;
 import server.MapleSquad;
 import server.MapleSquad.MapleSquadType;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
@@ -21,7 +21,12 @@ import tools.MaplePacketCreator;
 import tools.packet.UIPacket;
 
 import javax.script.ScriptException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -92,7 +97,7 @@ public class EventInstanceManager {
         if (disposed || eim == null) {
             return;
         }
-        eventTimer = EventTimer.getInstance().schedule(new Runnable() {
+        eventTimer = Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 if (disposed || eim == null || em == null) {
@@ -597,7 +602,7 @@ public class EventInstanceManager {
         if (disposed) {
             return;
         }
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 if (disposed || EventInstanceManager.this == null || em == null) {

@@ -1,13 +1,14 @@
 package handling.channel.handler;
 
-import java.util.ArrayList;
-import java.util.List;
 import client.MapleCharacter;
 import client.MapleClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BeanGame {
 

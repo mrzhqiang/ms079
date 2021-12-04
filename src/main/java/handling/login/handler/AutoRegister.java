@@ -3,10 +3,12 @@ package handling.login.handler;
 import client.LoginCrypto;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.Gender;
 import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -53,26 +55,24 @@ public final class AutoRegister {
     public void createAccount(String login, String pwd, String eip, String macs) {
         int macCount = new QDAccount().mac.eq(macs).findCount();
         if (macCount < properties.getAccountLimit()) {
-            DAccount account = new DAccount();
-            account.name = login;
-            account.password = LoginCrypto.hexSha1(pwd);
-            account.email = DEFAULT_EMAIL_ADDRESS;
-            account.birthday = LocalDate.now();
-            account.mac = macs;
-            account.loggedIn = 0;
-            account.banned = 0;
-            account.gm = 0;
-            account.aCash = 0;
-            account.point = 0;
-            account.money = 0;
-            account.moneyB = 0;
-            account.mPoint = 0;
-            account.vPoint = 0;
-            account.lastGainHM = 0L;
-            account.paypalNX = 0;
-            account.gender = 10;
-            account.tempBan = LocalDateTime.now().minusDays(1);
-            account.sessionIP = String.format(SESSION_IP_FORMAT, eip.substring(1, eip.lastIndexOf(':')));
+            DAccount account = new DAccount(login, LoginCrypto.hexSha1(pwd));
+            account.setEmail(DEFAULT_EMAIL_ADDRESS);
+            account.setBirthday(LocalDate.now());
+            account.setMac(macs);
+            account.setState(LoginState.NOT_LOGIN);
+            account.setBanned(false);
+            account.setGm(0);
+            account.setCash(0L);
+            account.setPoints(0L);
+            account.setMoney(0L);
+            account.setMoneyB(0L);
+            account.setmPoints(0L);
+            account.setvPoints(0L);
+            account.setLastGainHm(0L);
+            account.setPaypalNx(0);
+            account.setGender(Gender.UNKNOWN);
+            account.setTempBan(LocalDateTime.now().minusDays(1));
+            account.setSessionIp(String.format(SESSION_IP_FORMAT, eip.substring(1, eip.lastIndexOf(':'))));
             account.save();
             success = true;
         }

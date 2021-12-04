@@ -1,7 +1,8 @@
 package com.github.mrzhqiang.maplestory.wz;
 
-import com.github.mrzhqiang.helper.Environments;
 import com.google.common.base.Splitter;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -21,19 +22,13 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
 /**
- * wz 文件管理工具。
- * <p>
- * 注意：未使用的目录，可能是跟客户端相关，与服务端关系不大，因此找不到任何地方使用。
+ * wz 资源。
  */
-public final class WzManage {
-    private WzManage() {
-        // no instance
-    }
+public enum WzResource {
+    ; // no instances
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WzManage.class);
-
-    private static final String WZ_KEY = "wz.path";
-    private static final String DEFAULT_WZ_PATH = "wz";
+    public static final String WZ_KEY = "wz.path";
+    public static final String DEFAULT_WZ_PATH = "wz";
 
     /**
      * wz 目录。
@@ -65,6 +60,22 @@ public final class WzManage {
     public static final File UI_DIR = new File(WZ_DIR, "UI.wz");
 
     /**
+     * 加载所有的 wz 文件。
+     * <p>
+     * 注意：被删除的 wz 文件需要重启才能从内存中清除，之所以不立即清除的原因是，我们需要保证线程安全。
+     *
+     * @return 基于 RxJava 的流。
+     */
+    public static Flowable<WzDirectory> load() {
+        return Flowable.fromArray(WzData.values())
+                .subscribeOn(Schedulers.io())
+                .map(WzData::directory)
+                .doOnNext(WzDirectory::parse);
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WzResource.class);
+
+    /**
      * 作为解析 wz 目录和 xml 文件的例子。
      */
     public static void main(String[] args) {
@@ -73,7 +84,7 @@ public final class WzManage {
             return;
         }
 
-        Path out = Paths.get(Environments.USER_DIR, "out");
+        Path out = Paths.get(System.getProperty("user.dir"), "out");
         try {
             Files.deleteIfExists(out);
             Files.createDirectories(out);

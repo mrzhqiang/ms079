@@ -13,8 +13,16 @@ import server.CashItemFactory;
 import server.CashItemInfo.CashModInfo;
 import server.MapleItemInformationProvider;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Flower
@@ -80,25 +88,25 @@ public class CashShopDumper {
                     }
 
                     DCashShopModifiedItem item = new DCashShopModifiedItem();
-                    item.id = sn;
-                    item.showup = true;
-                    item.itemid = 0;
-                    item.priority = priority;
-                    item.period = period;
-                    item.gender = gender;
-                    item.count = count > 1 ? count : 0;
-                    item.meso = meso;
+                    item.setId(sn);
+                    item.setShowUp(true);
+                    item.setItemId(0);
+                    item.setPriority(priority);
+                    item.setPeriod(period);
+                    item.setGender(gender);
+                    item.setCount(count > 1 ? count : 0);
+                    item.setMeso(meso);
                     qq.add(itemId);
                     if ((1000000 <= itemId || itemId <= 1003091) && sn >= 20000000) {
-                        item.discountPrice = price;
+                        item.setDiscountPrice(price);
                     } else {
-                        item.discountPrice = 0;
+                        item.setDiscountPrice(0);
                     }
-                    item.mark = 0;
-                    item.unk1 = 0;
-                    item.unk2 = 0;
-                    item.unk3 = 0;
-                    item.name = MapleItemInformationProvider.getInstance().getName(itemId);
+                    item.setMark(0);
+                    item.setUnk1(0);
+                    item.setUnk2(0);
+                    item.setUnk3(0);
+                    item.setName(MapleItemInformationProvider.getInstance().getName(itemId));
                     dics.get(cat).add("-- " + MapleItemInformationProvider.getInstance().getName(itemId) + "\n");
                 }));
 

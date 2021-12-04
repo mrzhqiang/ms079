@@ -3,7 +3,7 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.annotation.Max;
 import io.ebean.annotation.View;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 
 @SuppressWarnings("EntityIdMissingInspection")
 @Entity
@@ -11,5 +11,13 @@ import javax.persistence.*;
 public class VInventoryItemAggregate {
 
     @Max
-    public Integer uniqueid;
+    Integer uniqueId;
+
+    public Integer getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(Integer uniqueId) {
+        this.uniqueId = uniqueId;
+    }
 }

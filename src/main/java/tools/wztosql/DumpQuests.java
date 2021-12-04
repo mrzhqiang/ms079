@@ -1,6 +1,5 @@
 package tools.wztosql;
 
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.DWzQuestActData;
 import com.github.mrzhqiang.maplestory.domain.DWzQuestActItemData;
 import com.github.mrzhqiang.maplestory.domain.DWzQuestActQuestData;
@@ -15,6 +14,7 @@ import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActSkillData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestPartyData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestReqData;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -71,18 +71,18 @@ public class DumpQuests {
                         if (reqData != null) {
                             reqData.childrenStream().forEach(req -> {
                                 DWzQuestReqData reqdata = new DWzQuestReqData();
-                                reqdata.questData = new QDWzQuestData().id.eq(id).findOne();
-                                reqdata.type = finalI;
+                                reqdata.setQuestData(new QDWzQuestData().id.eq(id).findOne());
+                                reqdata.setType(finalI);
                                 if (MapleQuestRequirementType.getByWZName(req.name()) == MapleQuestRequirementType.UNDEFINED) {
                                     return; //un-needed
                                 }
-                                reqdata.name = req.name();
+                                reqdata.setName(req.name());
                                 if (req.name().equals("fieldEnter")) { //diff
-                                    reqdata.stringStore = String.valueOf(Elements.findInt(req, "0"));
+                                    reqdata.setStringStore(String.valueOf(Elements.findInt(req, "0")));
                                 } else if (req.name().equals("end") || req.name().equals("startscript") || req.name().equals("endscript")) {
-                                    reqdata.stringStore = Elements.ofString(req);
+                                    reqdata.setStringStore(Elements.ofString(req));
                                 } else {
-                                    reqdata.stringStore = String.valueOf(Elements.ofInt(req));
+                                    reqdata.setStringStore(String.valueOf(Elements.ofInt(req)));
                                 }
                                 StringBuilder intStore1 = new StringBuilder();
                                 StringBuilder intStore2 = new StringBuilder();
@@ -136,8 +136,8 @@ public class DumpQuests {
                                     intStore1.append(data.getLeft());
                                     intStore2.append(data.getRight());
                                 }
-                                reqdata.intStoresFirst = intStore1.toString();
-                                reqdata.intStoresSecond = intStore2.toString();
+                                reqdata.setIntStoresFirst(intStore1.toString());
+                                reqdata.setIntStoresSecond(intStore2.toString());
                                 reqdata.save();
                             });
                         }
@@ -149,13 +149,13 @@ public class DumpQuests {
                                         return; //un-needed
                                     }
                                     DWzQuestActData actdata = new DWzQuestActData();
-                                    actdata.questData = new QDWzQuestData().id.eq(id).findOne();
-                                    actdata.type = finalI;
-                                    actdata.name = act.name();
+                                    actdata.setQuestData(new QDWzQuestData().id.eq(id).findOne());
+                                    actdata.setType(finalI);
+                                    actdata.setName(act.name());
                                     if (act.name().equals("sp")) {
-                                        actdata.intStore = Elements.findInt(act, "0/sp_value");
+                                        actdata.setIntStore(Elements.findInt(act, "0/sp_value"));
                                     } else {
-                                        actdata.intStore = Elements.ofInt(act);
+                                        actdata.setIntStore(Elements.ofInt(act));
                                     }
                                     StringBuilder applicableJobs = new StringBuilder();
                                     if (act.name().equals("sp") || act.name().equals("skill")) {
@@ -183,46 +183,46 @@ public class DumpQuests {
                                                     applicableJobs.append(Elements.ofInt(d));
                                                 }));
                                     }
-                                    actdata.applicableJobs = applicableJobs.toString();
-                                    actdata.uniqueid = -1;
+                                    actdata.setApplicableJobs(applicableJobs.toString());
+                                    actdata.setUniqueId(-1);
                                     if (act.name().equals("item")) { //prop, job, gender, id, count
                                         uniqueid.getAndIncrement();
-                                        actdata.uniqueid = uniqueid.get();
+                                        actdata.setUniqueId(uniqueid.get());
                                         act.childrenStream().forEach(iEntry -> {
                                             DWzQuestActItemData itemData = new DWzQuestActItemData();
-                                            itemData.uniqueid = uniqueid.get();
-                                            itemData.itemid = Elements.findInt(iEntry, "id");
-                                            itemData.count = Elements.findInt(iEntry, "count");
-                                            itemData.period = Elements.findInt(iEntry, "period");
-                                            itemData.gender = Elements.findInt(iEntry, "gender");
-                                            itemData.job = Elements.findInt(iEntry, "job", -1);
-                                            itemData.jobEx = Elements.findInt(iEntry, "jobEx", -1);
+                                            itemData.setUniqueId(uniqueid.get());
+                                            itemData.setItemId(Elements.findInt(iEntry, "id"));
+                                            itemData.setCount(Elements.findInt(iEntry, "count"));
+                                            itemData.setPeriod(Elements.findInt(iEntry, "period"));
+                                            itemData.setGender(Elements.findInt(iEntry, "gender"));
+                                            itemData.setJob(Elements.findInt(iEntry, "job", -1));
+                                            itemData.setJobEx(Elements.findInt(iEntry, "jobEx", -1));
                                             if (iEntry.find("prop") == null) {
-                                                itemData.prop = -2;
+                                                itemData.setProp(-2);
                                             } else {
-                                                itemData.prop = Elements.findInt(iEntry, "prop", -1);
+                                                itemData.setProp(Elements.findInt(iEntry, "prop", -1));
                                             }
                                             itemData.save();
                                         });
                                     } else if (act.name().equals("skill")) {
                                         uniqueid.getAndIncrement();
-                                        actdata.uniqueid = uniqueid.get();
+                                        actdata.setUniqueId(uniqueid.get());
                                         act.childrenStream().forEach(sEntry -> {
                                             DWzQuestActSkillData skillData = new DWzQuestActSkillData();
-                                            skillData.uniqueid = uniqueid.get();
-                                            skillData.id = Elements.findInt(sEntry, "id");
-                                            skillData.skillLevel = Elements.findInt(sEntry, "skillLevel");
-                                            skillData.masterLevel = Elements.findInt(sEntry, "masterLevel");
+                                            skillData.setUniqueId(uniqueid.get());
+                                            skillData.setId(Elements.findInt(sEntry, "id"));
+                                            skillData.setSkillLevel(Elements.findInt(sEntry, "skillLevel"));
+                                            skillData.setMasterLevel(Elements.findInt(sEntry, "masterLevel"));
                                             skillData.save();
                                         });
                                     } else if (act.name().equals("quest")) {
                                         uniqueid.getAndIncrement();
-                                        actdata.uniqueid = uniqueid.get();
+                                        actdata.setUniqueId(uniqueid.get());
                                         act.childrenStream().forEach(sEntry -> {
                                             DWzQuestActQuestData questData = new DWzQuestActQuestData();
-                                            questData.uniqueid = uniqueid.get();
-                                            questData.id = Elements.findInt(sEntry, "id");
-                                            questData.state = Elements.findInt(sEntry, "state");
+                                            questData.setUniqueId(uniqueid.get());
+                                            questData.setId(Elements.findInt(sEntry, "id"));
+                                            questData.setState(Elements.findInt(sEntry, "state"));
                                             questData.save();
                                         });
                                     }
@@ -234,15 +234,15 @@ public class DumpQuests {
                             .map(WzFile::content)
                             .ifPresent(infoData -> {
                                 DWzQuestData data = new DWzQuestData();
-                                data.id = id;
-                                data.name = Elements.findString(infoData, "name");
-                                data.autoStart = Elements.findInt(infoData, "autoStart") > 0;
-                                data.autoPreComplete = Elements.findInt(infoData, "autoPreComplete") > 0;
-                                data.viewMedalItem = Elements.findInt(infoData, "viewMedalItem");
-                                data.selectedSkillID = Elements.findInt(infoData, "selectedSkillID");
-                                data.blocked = Elements.findInt(infoData, "blocked") > 0;
-                                data.autoAccept = Elements.findInt(infoData, "autoAccept") > 0;
-                                data.autoComplete = Elements.findInt(infoData, "autoComplete") > 0;
+                                data.setId(id);
+                                data.setName(Elements.findString(infoData, "name"));
+                                data.setAutoStart(Elements.findInt(infoData, "autoStart") > 0);
+                                data.setAutoPreComplete(Elements.findInt(infoData, "autoPreComplete") > 0);
+                                data.setViewMedalItem(Elements.findInt(infoData, "viewMedalItem"));
+                                data.setSelectedSkillId(Elements.findInt(infoData, "selectedSkillID"));
+                                data.setBlocked(Elements.findInt(infoData, "blocked") > 0);
+                                data.setAutoAccept(Elements.findInt(infoData, "autoAccept") > 0);
+                                data.setAutoComplete(Elements.findInt(infoData, "autoComplete") > 0);
                                 data.save();
                             });
 
@@ -256,11 +256,11 @@ public class DumpQuests {
                                                     d.childrenStream().forEach(c ->
                                                             c.childrenStream().forEach(b -> {
                                                                 DWzQuestPartyData partyData = new DWzQuestPartyData();
-                                                                partyData.questData = new QDWzQuestData().id.eq(id).findOne();
-                                                                partyData.rank = d.name();
-                                                                partyData.mode = c.name();
-                                                                partyData.property = b.name();
-                                                                partyData.value = Elements.ofInt(b);
+                                                                partyData.setQuestData(new QDWzQuestData().id.eq(id).findOne());
+                                                                partyData.setRank(d.name());
+                                                                partyData.setMode(c.name());
+                                                                partyData.setProperty(b.name());
+                                                                partyData.setValue(Elements.ofInt(b));
                                                                 partyData.save();
                                                             }))));
                                 }

@@ -3,36 +3,77 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "cheatlog")
 public class DCheatLog extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "characterid")
-    public DCharacter character;
+    @JoinColumn(name = "character_id")
+    DCharacter character;
     @NotNull
-    @Column(name = "offense")
-    public String offense;
+    String offense;
     @NotNull
-    @Column(name = "count")
-    public Integer count;
+    Integer count;
     @NotNull
-    @Column(name = "lastoffensetime")
-    public LocalDateTime lastoffensetime;
+    LocalDateTime lastOffenseTime;
     @NotNull
-    @Column(name = "param")
-    public String param;
+    String param;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public String getOffense() {
+        return offense;
+    }
+
+    public void setOffense(String offense) {
+        this.offense = offense;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
+    }
+
+    public LocalDateTime getLastOffenseTime() {
+        return lastOffenseTime;
+    }
+
+    public void setLastOffenseTime(LocalDateTime lastOffenseTime) {
+        this.lastOffenseTime = lastOffenseTime;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
+    public void setParam(String param) {
+        this.param = param;
+    }
 }

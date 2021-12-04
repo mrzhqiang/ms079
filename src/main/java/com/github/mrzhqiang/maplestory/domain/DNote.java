@@ -13,21 +13,65 @@ import javax.persistence.Table;
 public class DNote extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
     @Column(name = "to_")
-    public String to;
+    String to;
     @NotNull
     @Column(name = "from_")
-    public String from;
+    String from;
     @NotNull
-    @Column(name = "message")
-    public String message;
+    String message;
     @NotNull
-    @Column(name = "timestamp")
-    public Long timestamp;
+    Long timestamp;
     @NotNull
-    @Column(name = "gift")
-    public Integer gift;
+    Integer gift;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Integer getGift() {
+        return gift;
+    }
+
+    public void setGift(Integer gift) {
+        this.gift = gift;
+    }
 }

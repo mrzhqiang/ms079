@@ -40,7 +40,7 @@ public final class MapleOxQuizFactory {
         }
 
         new QDWzOxData().findEach(it ->
-                questionCache.put(new Pair<>(it.pkQuestion.questionset, it.pkQuestion.questionid), get(it)));
+                questionCache.put(new Pair<>(it.getPkQuestion().getQuestionSet(), it.getPkQuestion().getQuestionId()), get(it)));
         initialized = true;
     }
 
@@ -60,8 +60,8 @@ public final class MapleOxQuizFactory {
             }
 
             DWzOxData one = new QDWzOxData()
-                    .pkQuestion.questionset.eq(pair.left)
-                    .pkQuestion.questionid.eq(pair.right)
+                    .pkQuestion.questionSet.eq(pair.left)
+                    .pkQuestion.questionId.eq(pair.right)
                     .findOne();
             if (one != null) {
                 mooe = get(one);
@@ -72,7 +72,7 @@ public final class MapleOxQuizFactory {
     }
 
     private MapleOxQuizEntry get(DWzOxData data) {
-        return new MapleOxQuizEntry(data.question, data.display, getAnswerByText(data.answer), data.pkQuestion.questionset, data.pkQuestion.questionid);
+        return new MapleOxQuizEntry(data.getQuestion(), data.getDisplay(), getAnswerByText(data.getAnswer()), data.getPkQuestion().getQuestionSet(), data.getPkQuestion().getQuestionId());
     }
 
     private int getAnswerByText(String text) {

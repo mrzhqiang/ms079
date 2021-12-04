@@ -13,10 +13,23 @@ import javax.persistence.Table;
 public class DMacBans extends Model {
 
     @Id
-    @Column(name = "macbanid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "mac")
-    public String mac;
+    String mac;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public void setMac(String mac) {
+        this.mac = mac;
+    }
 }

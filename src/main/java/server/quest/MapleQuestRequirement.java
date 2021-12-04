@@ -43,10 +43,10 @@ public class MapleQuestRequirement implements Serializable {
             case SKILL:
             case JOB:
                 this.dataStore = new LinkedList<>();
-                String[] first = data.intStoresFirst.split(", ");
-                String[] second = data.intStoresSecond.split(", ");
-                if ((first.length <= 0) && (data.intStoresFirst.length() > 0)) {
-                    this.dataStore.add(new Pair<>(Integer.parseInt(data.intStoresFirst), Integer.parseInt(data.intStoresSecond)));
+                String[] first = data.getIntStoresFirst().split(", ");
+                String[] second = data.getIntStoresSecond().split(", ");
+                if ((first.length <= 0) && (data.getIntStoresFirst().length() > 0)) {
+                    this.dataStore.add(new Pair<>(Integer.parseInt(data.getIntStoresFirst()), Integer.parseInt(data.getIntStoresSecond())));
                 }
                 for (int i = 0; i < first.length; i++) {
                     if ((first[i].length() > 0) && (second[i].length() > 0)) {
@@ -67,10 +67,10 @@ public class MapleQuestRequirement implements Serializable {
             case MB_MIN:
             case LV_MAX:
             case LV_MIN:
-                this.intStore = Integer.parseInt(data.stringStore);
+                this.intStore = Integer.parseInt(data.getStringStore());
                 break;
             case END:
-                this.stringStore = data.stringStore;
+                this.stringStore = data.getStringStore();
         }
     }
 

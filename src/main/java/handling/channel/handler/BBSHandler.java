@@ -23,10 +23,10 @@ package handling.channel.handler;
 import client.MapleClient;
 import handling.world.World;
 import handling.world.guild.MapleBBSThread;
-import java.rmi.RemoteException;
-import java.util.List;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.util.List;
 
 public class BBSHandler {
 
@@ -144,7 +144,7 @@ public class BBSHandler {
         final List<MapleBBSThread> bbsList = World.Guild.getBBS(c.getPlayer().getGuildId());
         if (bbsList != null) {
             for (MapleBBSThread t : bbsList) {
-                if (t != null && t.entity.localthreadid == localthreadid) {
+                if (t != null && t.entity.getLocalThreadId() == localthreadid) {
                     c.getSession().write(MaplePacketCreator.showThread(t));
                 }
             }

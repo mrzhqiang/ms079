@@ -1,7 +1,7 @@
 package server.life;
 
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzNPCNameData;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzDirectory;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
@@ -13,7 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.Pair;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class MapleLifeFactory {
@@ -66,7 +69,7 @@ public final class MapleLifeFactory {
                         }))
                 );
 
-        new QDWzNPCNameData().orderBy().npc.asc().findEach(it -> npcNames.put(it.npc, it.name));
+        new QDWzNPCNameData().orderBy().npc.asc().findEach(it -> npcNames.put(it.getNpc(), it.getName()));
         LOGGER.info("共加载 {} 个NPC.", npcNames.size());
     }
 

@@ -20,8 +20,9 @@
  */
 package client;
 
-import java.io.Serializable;
 import server.Randomizer;
+
+import java.io.Serializable;
 
 public enum MapleDisease implements Serializable {
    //这里是怪给人物的buff

@@ -7,10 +7,10 @@ import client.inventory.IItem;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import constants.ServerConstants;
 import handling.channel.ChannelServer;
 import handling.login.LoginInformationProvider;
@@ -24,6 +24,8 @@ import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.LoginPacket;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -154,7 +156,7 @@ public final class CharLoginHandler {
         String username = slea.readMapleAsciiString();
         // String password = slea.readMapleAsciiString();
         if (c.getAccountName().equals(username)) {
-            c.setGender(gender);
+            c.setGender(Gender.of(gender));
             //  c.setSecondPassword(password);
             c.updateSecondPassword();
             c.getSession().write(LoginPacket.getGenderChanged(c));
@@ -191,7 +193,7 @@ public final class CharLoginHandler {
     public void LicenseRequest(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         if (slea.readByte() == 1) {
             c.getSession().write(MaplePacketCreator.licenseResult());
-            c.updateLoginState(0);
+            c.updateLoginState(LoginState.NOT_LOGIN);
         } else {
             c.getSession().close();
         }
@@ -251,9 +253,9 @@ public final class CharLoginHandler {
         int bottom = slea.readInt();//裤子
         int shoes = slea.readInt();//鞋子
         int weapon = slea.readInt();//武器
-        int gender = c.getGender();//性别
+        Gender gender = c.getGender();//性别
         switch (gender) {
-            case 0:
+            case MALE:
                 //如果是男的
                 //20100 - 男脸1 - (无描述)
                 //20401 - 男脸2 - (无描述)
@@ -282,7 +284,7 @@ public final class CharLoginHandler {
                     return;//如果创建的角色不是如上上衣，那么返回.即创建无效
                 }
                 break;
-            case 1:
+            case FEMALE:
                 //如果是女的
                 //21002
                 //21700
@@ -488,7 +490,7 @@ public final class CharLoginHandler {
             if (c.getIdleTask() != null) {
                 c.getIdleTask().cancel(true);
             }
-            c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, c.getSessionIPAddress());
+            c.updateLoginState(LoginState.SERVER_TRANSITION, c.getSessionIPAddress());
             c.getSession().write(MaplePacketCreator.getServerIP(Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getIP().split(":")[1]), charId));
         } else {
             c.getSession().write(LoginPacket.secondPwError((byte) 0x14));

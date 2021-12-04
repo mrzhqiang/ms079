@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,12 +12,33 @@ import javax.persistence.Table;
 public class DWzNPCNameData extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "npc")
-    public Integer npc;
+    Integer npc;
     @NotNull
-    @Column(name = "name")
-    public String name;
+    String name;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getNpc() {
+        return npc;
+    }
+
+    public void setNpc(Integer npc) {
+        this.npc = npc;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

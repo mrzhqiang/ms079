@@ -8,7 +8,6 @@ import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import handling.MaplePacket;
 import handling.world.World;
-import io.ebean.DB;
 import tools.MaplePacketCreator;
 
 import javax.annotation.Nullable;
@@ -39,7 +38,7 @@ public class MapleGuildAlliance {
     @Nullable
     public static MapleGuildAlliance findById(int id) {
         DAlliance alliance = new QDAlliance().id.eq(id).findOne();
-        if (alliance != null && alliance.id > 0) {
+        if (alliance != null) {
             return new MapleGuildAlliance(alliance);
         }
         return null;
@@ -47,7 +46,7 @@ public class MapleGuildAlliance {
 
     @Nullable
     public static MapleGuildAlliance createAndSave(int leaderId, String name, int guild1, int guild2) {
-        if (name.length() > 12) {
+        if (name == null || name.length() > 12) {
             return null;
         }
 
@@ -57,29 +56,29 @@ public class MapleGuildAlliance {
         }
 
         DAlliance alliance = new DAlliance();
-        alliance.name = name;
-        alliance.leader = new QDCharacter().id.eq(leaderId).findOne();
-        alliance.guild1 = new QDGuild().id.eq(guild1).findOne();
-        alliance.guild2 = new QDGuild().id.eq(guild2).findOne();
+        alliance.setName(name);
+        alliance.setLeader(new QDCharacter().id.eq(leaderId).findOne());
+        alliance.setGuild1(new QDGuild().id.eq(guild1).findOne());
+        alliance.setGuild2(new QDGuild().id.eq(guild2).findOne());
         alliance.save();
         return new MapleGuildAlliance(alliance);
     }
 
     public int getNoGuilds() {
         int ret = 0;
-        if (entity.guild1 != null && entity.guild1.id > 0) {
+        if (entity.getGuild1() != null) {
             ret += 1;
         }
-        if (entity.guild2 != null && entity.guild2.id > 0) {
+        if (entity.getGuild2() != null) {
             ret += 1;
         }
-        if (entity.guild3 != null && entity.guild3.id > 0) {
+        if (entity.getGuild3() != null) {
             ret += 1;
         }
-        if (entity.guild4 != null && entity.guild4.id > 0) {
+        if (entity.getGuild4() != null) {
             ret += 1;
         }
-        if (entity.guild5 != null && entity.guild5.id > 0) {
+        if (entity.getGuild5() != null) {
             ret += 1;
         }
         return ret;
@@ -87,11 +86,11 @@ public class MapleGuildAlliance {
 
     public boolean deleteAlliance() {
         // todo 级联操作
-        resetCharacters(entity.guild1);
-        resetCharacters(entity.guild2);
-        resetCharacters(entity.guild3);
-        resetCharacters(entity.guild4);
-        resetCharacters(entity.guild5);
+        resetCharacters(entity.getGuild1());
+        resetCharacters(entity.getGuild2());
+        resetCharacters(entity.getGuild3());
+        resetCharacters(entity.getGuild4());
+        resetCharacters(entity.getGuild5());
         return entity.delete();
     }
 
@@ -113,7 +112,7 @@ public class MapleGuildAlliance {
     }
 
     public void broadcast(MaplePacket packet, int exceptionId, GAOp op, boolean expelled) {
-        int allianceId = entity.id;
+        int allianceId = entity.getId();
         if (op == GAOp.DISBAND) {
             World.Alliance.setOldAlliance(exceptionId, expelled, allianceId); //-1 = alliance gone, exceptionId = guild left/expelled
         } else if (op == GAOp.NEW_GUILD) {
@@ -138,19 +137,19 @@ public class MapleGuildAlliance {
     public void setRank(String[] ranks) {
         if (ranks != null) {
             if (ranks.length > 0) {
-                entity.rank1 = ranks[0];
+                entity.setRank1(ranks[0]);
             }
             if (ranks.length > 1) {
-                entity.rank2 = ranks[1];
+                entity.setRank2(ranks[1]);
             }
             if (ranks.length > 2) {
-                entity.rank3 = ranks[2];
+                entity.setRank3(ranks[2]);
             }
             if (ranks.length > 3) {
-                entity.rank4 = ranks[3];
+                entity.setRank4(ranks[3]);
             }
             if (ranks.length > 4) {
-                entity.rank5 = ranks[4];
+                entity.setRank5(ranks[4]);
             }
         }
         broadcast(MaplePacketCreator.getAllianceUpdate(this));
@@ -166,19 +165,19 @@ public class MapleGuildAlliance {
     }
 
     public String[] getRanks() {
-        return new String[]{entity.rank1, entity.rank2, entity.rank3, entity.rank4, entity.rank5};
+        return new String[]{entity.getRank1(), entity.getRank2(), entity.getRank3(), entity.getRank4(), entity.getRank5()};
     }
 
     public int[] getGuilds() {
-        return new int[]{entity.guild1.id, entity.guild2.id, entity.guild3.id, entity.guild4.id, entity.guild5.id};
+        return new int[]{entity.getGuild1().getId(), entity.getGuild2().getId(), entity.getGuild3().getId(), entity.getGuild4().getId(), entity.getGuild5().getId()};
     }
 
     public String getNotice() {
-        return entity.notice;
+        return entity.getNotice();
     }
 
     public void setNotice(String newNotice) {
-        entity.notice = newNotice;
+        entity.setNotice(newNotice);
         broadcast(MaplePacketCreator.getAllianceUpdate(this));
         broadcast(MaplePacketCreator.serverNotice(5, "联盟公告事项: " + newNotice));
         saveToDb();
@@ -193,22 +192,22 @@ public class MapleGuildAlliance {
     }
 
     public int getId() {
-        return entity.id;
+        return entity.getId();
     }
 
     public String getName() {
-        return entity.name;
+        return entity.getName();
     }
 
     public int getCapacity() {
-        return entity.capacity;
+        return entity.getCapacity();
     }
 
     public boolean setCapacity() {
-        if (entity.capacity >= 5) {
+        if (entity.getCapacity() >= 5) {
             return false;
         }
-        entity.capacity += 1;
+        entity.setCapacity(entity.getCapacity() + 1);
         broadcast(MaplePacketCreator.getAllianceUpdate(this));
         saveToDb();
         return true;
@@ -222,19 +221,19 @@ public class MapleGuildAlliance {
         DGuild one = new QDGuild().id.eq(guildid).findOne();
         switch (guilds) {
             case 1:
-                entity.guild1 = one;
+                entity.setGuild1(one);
                 break;
             case 2:
-                entity.guild2 = one;
+                entity.setGuild2(one);
                 break;
             case 3:
-                entity.guild3 = one;
+                entity.setGuild3(one);
                 break;
             case 4:
-                entity.guild4 = one;
+                entity.setGuild4(one);
                 break;
             case 5:
-                entity.guild5 = one;
+                entity.setGuild5(one);
                 break;
         }
         saveToDb();
@@ -249,26 +248,26 @@ public class MapleGuildAlliance {
             if (guilds[i] == guildid) {
                 broadcast(null, guildid, GAOp.DISBAND, expelled);
                 if (i == 0) {
-                    entity.guild1 = null;
+                    entity.setGuild1(null);
                     return disband();
                 }
                 if (i == 1) {
-                    entity.guild1 = entity.guild2;
-                    entity.guild2 = null;
+                    entity.setGuild1(entity.getGuild2());
+                    entity.setGuild2(null);
                 }
                 if (i == 2) {
-                    entity.guild1 = entity.guild2;
-                    entity.guild2 = entity.guild3;
-                    entity.guild3 = null;
+                    entity.setGuild1(entity.getGuild2());
+                    entity.setGuild2(entity.getGuild3());
+                    entity.setGuild3(null);
                 }
                 if (i == 3) {
-                    entity.guild1 = entity.guild2;
-                    entity.guild2 = entity.guild3;
-                    entity.guild3 = entity.guild4;
-                    entity.guild4 = null;
+                    entity.setGuild1(entity.getGuild2());
+                    entity.setGuild2(entity.getGuild3());
+                    entity.setGuild3(entity.getGuild4());
+                    entity.setGuild4(null);
                 }
                 if (i == 4) {
-                    entity.guild5 = null;
+                    entity.setGuild5(null);
                 }
                 broadcast(MaplePacketCreator.getAllianceUpdate(this));
                 broadcast(MaplePacketCreator.getGuildAlliance(this));
@@ -280,12 +279,12 @@ public class MapleGuildAlliance {
     }
 
     public int getLeaderId() {
-        return entity.leader.id;
+        return entity.getLeader().getId();
     }
 
     public boolean setLeaderId(int c) {
         DCharacter one = new QDCharacter().id.eq(c).findOne();
-        if (one== null || one.equals(entity.leader)) {
+        if (one == null || one.equals(entity.getLeader())) {
             return false;
         }
 
@@ -299,16 +298,16 @@ public class MapleGuildAlliance {
         for (int i = 0; i < noGuilds; i++) {
             MapleGuild guild = World.Guild.getGuild(guilds[i]);
             if (guild != null) {
-                MapleGuildCharacter newLead = guild.getMGC(one.id);
-                MapleGuildCharacter oldLead = guild.getMGC(entity.leader.id);
+                MapleGuildCharacter newLead = guild.getMGC(one.getId());
+                MapleGuildCharacter oldLead = guild.getMGC(entity.getLeader().getId());
                 if (newLead != null && oldLead != null) { //same guild
                     return false;
-                } else if (newLead != null && newLead.character.guildRank == 1 && newLead.character.allianceRank == 2) { //guild1 should always be leader so no worries about g being -1
+                } else if (newLead != null && newLead.character.getGuildRank() == 1 && newLead.character.getAllianceRank() == 2) { //guild1 should always be leader so no worries about g being -1
                     guild.changeARank(c, 1);
                     g = i;
-                    leaderName = newLead.character.name;
-                } else if (oldLead != null && oldLead.character.guildRank == 1 && oldLead.character.allianceRank == 1) {
-                    guild.changeARank(entity.leader.id, 2);
+                    leaderName = newLead.character.getName();
+                } else if (oldLead != null && oldLead.character.getGuildRank() == 1 && oldLead.character.getAllianceRank() == 1) {
+                    guild.changeARank(entity.getLeader().getId(), 2);
                 } else if (oldLead != null || newLead != null) {
                     return false;
                 }
@@ -327,14 +326,14 @@ public class MapleGuildAlliance {
         broadcast(MaplePacketCreator.updateAllianceLeader(getId(), getLeaderId(), c));
         broadcast(MaplePacketCreator.getAllianceUpdate(this));
         broadcast(MaplePacketCreator.getGuildAlliance(this));
-        entity.leader = one;
+        entity.setLeader(one);
         saveToDb();
         return true;
     }
 
     public boolean changeAllianceRank(int cid, int change) {
         DCharacter one = new QDCharacter().id.eq(cid).findOne();
-        if (one== null || one.equals(entity.leader) || change < 0 || change > 1) {
+        if (one == null || one.equals(entity.getLeader()) || change < 0 || change > 1) {
             return false;
         }
         int[] guilds = getGuilds();
@@ -342,11 +341,11 @@ public class MapleGuildAlliance {
             MapleGuild guild = World.Guild.getGuild(guilds[i]);
             if (guild != null) {
                 MapleGuildCharacter chr = guild.getMGC(cid);
-                if (chr != null && chr.character.allianceRank > 2) {
-                    if ((change == 0 && chr.character.allianceRank >= 5) || (change == 1 && chr.character.allianceRank <= 3)) {
+                if (chr != null && chr.character.getAllianceRank() > 2) {
+                    if ((change == 0 && chr.character.getAllianceRank() >= 5) || (change == 1 && chr.character.getAllianceRank() <= 3)) {
                         return false;
                     }
-                    guild.changeARank(cid, chr.character.allianceRank + (change == 0 ? 1 : -1));
+                    guild.changeARank(cid, chr.character.getAllianceRank() + (change == 0 ? 1 : -1));
                     return true;
                 }
             }

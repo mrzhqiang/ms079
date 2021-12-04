@@ -4,10 +4,16 @@ import com.github.mrzhqiang.maplestory.domain.DBuddy;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.google.common.collect.Lists;
 import tools.MaplePacketCreator;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class BuddyList implements Serializable {
 
@@ -197,16 +203,16 @@ public class BuddyList implements Serializable {
         if (character != null) {
             List<DBuddy> buddies = new QDBuddy().owner.eq(character).findList();
             for (DBuddy buddy : buddies) {
-                if (buddy.pending == 1) {
-                    pendingReqs.push(new BuddyEntry(buddy.owner, buddy.groupName, -1, false));
+                if (buddy.isPending()) {
+                    pendingReqs.push(new BuddyEntry(buddy.getOwner(), buddy.getGroupName(), -1, false));
                 } else {
-                    put(new BuddyEntry(buddy.owner, buddy.groupName, -1, true));
+                    put(new BuddyEntry(buddy.getOwner(), buddy.getGroupName(), -1, true));
                 }
             }
         }
 
         // todo what is the means?
-        new QDBuddy().pending.eq(1).and().owner.eq(character).delete();
+        new QDBuddy().pending.eq(true).and().owner.eq(character).delete();
     }
 
     /**
@@ -242,27 +248,29 @@ public class BuddyList implements Serializable {
     }
 
     public static int getBuddyCount(int chrId, int pending) {
-        return new QDBuddy().owner.id.eq(chrId).pending.eq(pending).findCount();
+        return new QDBuddy().owner.id.eq(chrId).pending.eq(pending==1).findCount();
     }
 
     public static int getBuddyCapacity(int charId) {
         return new QDCharacter().id.eq(charId).findOneOrEmpty()
-                .map(it -> it.buddyCapacity)
+                .map(DCharacter::getBuddyCapacity)
                 .orElse(-1);
     }
 
-    public static int getBuddyPending(int chrId, int buddyId) {
-        return new QDBuddy().owner.id.eq(chrId).buddies.eq(buddyId).findOneOrEmpty()
-                .map(it -> it.pending)
-                .orElse(-1);
+    public static boolean getBuddyPending(int chrId, int buddyId) {
+        return new QDBuddy().owner.id.eq(chrId)
+                .buddies.id.eq(buddyId)
+                .findOneOrEmpty()
+                .map(DBuddy::isPending)
+                .orElse(false);
     }
 
     public static void addBuddyToDB(MapleCharacter player, BuddyEntry buddy) {
         DBuddy dBuddy = new DBuddy();
-        dBuddy.owner = new QDCharacter().id.eq(buddy.getCharacterId()).findOne();
-        dBuddy.buddies = player.getId();
-        dBuddy.groupName = buddy.getGroup();
-        dBuddy.pending = 1;
+        dBuddy.setOwner(new QDCharacter().id.eq(buddy.getCharacterId()).findOne());
+        dBuddy.setBuddies(Lists.newArrayList(new QDCharacter().id.eq(player.getId()).findOne()));
+        dBuddy.setGroupName(buddy.getGroup());
+        dBuddy.setPending(true);
         dBuddy.save();
     }
 }

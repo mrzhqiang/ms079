@@ -2,7 +2,6 @@ package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -11,22 +10,58 @@ import javax.persistence.Table;
 @Table(name = "loginlog")
 public class DLoginLog extends Model {
 
-    @Column(name = "account")
-    public String account;
+    String account;
+    String password;
+    String loginType;
+    String ip;
+    String time;
+    String active;
 
-    @Column(name = "password")
-    public String password;
+    public String getAccount() {
+        return account;
+    }
 
-    @Column(name = "logintype")
-    public String logintype;
+    public void setAccount(String account) {
+        this.account = account;
+    }
 
-    @Column(name = "ip")
-    public String ip;
+    public String getPassword() {
+        return password;
+    }
 
-    @Column(name = "time")
-    public String time;
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    @Column(name = "active")
-    public String active;
+    public String getLoginType() {
+        return loginType;
+    }
 
+    public void setLoginType(String loginType) {
+        this.loginType = loginType;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public String getActive() {
+        return active;
+    }
+
+    public void setActive(String active) {
+        this.active = active;
+    }
 }

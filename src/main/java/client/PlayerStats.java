@@ -20,24 +20,12 @@
  */
 package client;
 
-import constants.GameConstants;
-import client.inventory.MapleInventoryType;
-import client.inventory.IItem;
 import client.inventory.Equip;
 import client.inventory.IEquip;
+import client.inventory.IItem;
+import client.inventory.MapleInventoryType;
 import client.inventory.MapleWeaponType;
-import java.lang.ref.WeakReference;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.Serializable;
-import java.util.Calendar;
-import java.util.HashMap;
-
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.concurrent.locks.ReentrantLock;
-
+import constants.GameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
@@ -48,6 +36,17 @@ import server.StructSetItem;
 import server.StructSetItem.SetItem;
 import tools.MaplePacketCreator;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class PlayerStats implements Serializable {
 

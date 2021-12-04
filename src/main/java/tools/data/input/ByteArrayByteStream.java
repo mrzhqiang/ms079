@@ -1,8 +1,8 @@
 package tools.data.input;
 
-import java.io.IOException;
-
 import tools.HexTool;
+
+import java.io.IOException;
 
 /**
  * Provides for an abstraction layer for an array of bytes.

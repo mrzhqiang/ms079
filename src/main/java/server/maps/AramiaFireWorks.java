@@ -20,14 +20,11 @@
  */
 package server.maps;
 
-import java.awt.Point;
-
 import client.MapleCharacter;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.world.World;
-import server.MapleItemInformationProvider;
 import server.Randomizer;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.life.MapleLifeFactory;
 import tools.MaplePacketCreator;
 
@@ -71,7 +68,7 @@ public class AramiaFireWorks {
     private final void broadcastEvent(final MapleCharacter c) {
 //        broadcastServer(c, KEG_ID);
         // Henesys Park
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public final void run() {
@@ -83,7 +80,7 @@ public class AramiaFireWorks {
     private final void startEvent(final MapleMap map) {
         map.startMapEffect("雪人大大出現啦", 5120000);
 
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public final void run() {
@@ -139,7 +136,7 @@ public class AramiaFireWorks {
     private final void broadcastSun(final MapleCharacter c) {
         broadcastServer(c, SUN_ID);
         // Henesys Park
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public final void run() {
@@ -151,7 +148,7 @@ public class AramiaFireWorks {
     private final void startSun(final MapleMap map) {
         map.startMapEffect("The tree is bursting with sunshine!", 5121010);
         for (int i = 0; i < 3; i++) {
-            EventTimer.getInstance().schedule(new Runnable() {
+            Timer.EVENT.schedule(new Runnable() {
 
                 @Override
                 public final void run() {
@@ -207,7 +204,7 @@ public class AramiaFireWorks {
 
     private final void broadcastDec(final MapleCharacter c) {
         broadcastServer(c, DEC_ID);
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public final void run() {
@@ -219,7 +216,7 @@ public class AramiaFireWorks {
     private final void startDec(final MapleMap map) {
         map.startMapEffect("The tree is bursting with snow!", 5120000);
         for (int i = 0; i < 3; i++) {
-            EventTimer.getInstance().schedule(new Runnable() {
+            Timer.EVENT.schedule(new Runnable() {
 
                 @Override
                 public final void run() {

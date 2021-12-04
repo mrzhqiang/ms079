@@ -2,31 +2,29 @@ package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import java.util.Objects;
 
 @Embeddable
 public class PKQuestion {
 
     @NotNull
-    @Column(name = "questionset")
-    public Integer questionset;
+    Integer questionSet;
     @NotNull
-    @Column(name = "questionid")
-    public Integer questionid;
+    Integer questionId;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PKQuestion that = (PKQuestion) o;
-        return Objects.equals(questionset, that.questionset)
-                && Objects.equals(questionid, that.questionid);
+    public Integer getQuestionSet() {
+        return questionSet;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(questionset, questionid);
+    public void setQuestionSet(Integer questionSet) {
+        this.questionSet = questionSet;
+    }
+
+    public Integer getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Integer questionId) {
+        this.questionId = questionId;
     }
 }

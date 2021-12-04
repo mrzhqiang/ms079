@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,19 +12,53 @@ import javax.persistence.Table;
 public class DReactorDrop extends Model {
 
     @Id
-    @Column(name = "reactordropid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "reactorid")
-    public Integer reactorid;
+    Integer reactorId;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer itemId;
     @NotNull
-    @Column(name = "chance")
-    public Integer chance;
+    Integer chance;
     @NotNull
-    @Column(name = "questid")
-    public Integer questid;
+    Integer questId;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getReactorId() {
+        return reactorId;
+    }
+
+    public void setReactorId(Integer reactorId) {
+        this.reactorId = reactorId;
+    }
+
+    public Integer getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
+
+    public Integer getChance() {
+        return chance;
+    }
+
+    public void setChance(Integer chance) {
+        this.chance = chance;
+    }
+
+    public Integer getQuestId() {
+        return questId;
+    }
+
+    public void setQuestId(Integer questId) {
+        this.questId = questId;
+    }
 }

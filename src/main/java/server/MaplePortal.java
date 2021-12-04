@@ -1,7 +1,5 @@
 package server;
 
-import java.awt.Point;
-
 import client.MapleClient;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 

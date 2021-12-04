@@ -4,18 +4,6 @@ import client.ISkill;
 import client.LoginCrypto;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
-import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import com.github.mrzhqiang.maplestory.di.Injectors;
-import com.github.mrzhqiang.maplestory.domain.DAccount;
-import com.github.mrzhqiang.maplestory.domain.DCharacter;
-import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
-import com.github.mrzhqiang.maplestory.domain.DWzCustomLife;
-import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
-import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItem;
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import constants.ServerConstants.PlayerGMRank;
 import client.MapleClient;
 import client.MapleDisease;
 import client.MapleStat;
@@ -28,43 +16,44 @@ import client.inventory.MapleInventoryIdentifier;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.MapleRing;
-
 import client.messages.CommandProcessorUtil;
+import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.di.Injectors;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
+import com.github.mrzhqiang.maplestory.domain.DWzCustomLife;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItem;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import constants.ServerConstants;
+import constants.ServerConstants.PlayerGMRank;
 import handling.RecvPacketOpcode;
 import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
 import handling.login.handler.AutoRegister;
-import handling.world.World;
 import handling.world.CheaterData;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
-
+import handling.world.World;
+import handling.world.family.MapleFamily;
+import handling.world.guild.MapleGuild;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.EventManager;
+import scripting.NPCScriptManager;
 import scripting.PortalScriptManager;
 import scripting.ReactorScriptManager;
+import server.CashItemFactory;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.MaplePortal;
 import server.MapleShopFactory;
 import server.ShutdownServer;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.events.MapleEvent;
 import server.events.MapleEventType;
+import server.events.MapleOxQuizFactory;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
 import server.life.MapleMonsterInformationProvider;
@@ -81,23 +70,31 @@ import server.maps.MapleReactorStats;
 import server.quest.MapleQuest;
 import tools.ArrayMap;
 import tools.CPUSampler;
+import tools.FileoutputUtil;
+import tools.HexTool;
 import tools.MaplePacketCreator;
 import tools.MockIOSession;
 import tools.StringUtil;
-import tools.packet.MobPacket;
-import java.util.concurrent.ScheduledFuture;
-import scripting.NPCScriptManager;
-import handling.world.family.MapleFamily;
-import handling.world.guild.MapleGuild;
-
-import java.util.LinkedHashSet;
-import server.CashItemFactory;
-import server.events.MapleOxQuizFactory;
-import tools.*;
 import tools.data.output.MaplePacketLittleEndianWriter;
+import tools.packet.MobPacket;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
 
 /**
- *
  * @author Emilyx3
  */
 public class AdminCommand {
@@ -225,12 +222,13 @@ public class AdminCommand {
             String reason = null;
 
             DCharacter one = new QDCharacter().name.eq(name).findOne();
-            if (one != null && one.account!=null) {
-                Systemban = one.account.banned == 2;
-                ACbanned = one.account.banned == 1 || one.account.banned == 2;
-                reason = one.account.banReason;
-                mac = one.account.mac;
-                ip = one.account.sessionIP;
+            if (one != null && one.getAccount() != null) {
+                DAccount account = one.getAccount();
+                Systemban = account.getBanned();
+                ACbanned = account.getBanned();
+                reason = account.getBanReason();
+                mac = account.getMac();
+                ip = account.getSessionIp();
             }
 
             if (reason == null || "".equals(reason)) {
@@ -329,7 +327,7 @@ public class AdminCommand {
             c.getPlayer().dropMessage(6, "服务器将在 " + minutesLeft + "分钟后关闭. 请尽速关闭精灵商人 并下线.");
             if (ts == null && (t == null || !t.isAlive())) {
                 t = new Thread(server);
-                ts = EventTimer.getInstance().register(() -> {
+                ts = Timer.EVENT.register(() -> {
                     if (minutesLeft == 0) {
                         server.run();
                         t.start();
@@ -440,7 +438,7 @@ public class AdminCommand {
 
     public static class TempBan extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             MapleCharacter victim;
             String name = splitted[1];
             int ch = World.Find.findChannel(name);
@@ -712,7 +710,7 @@ public class AdminCommand {
                 return 0;
             }
             if (minutesLeft > 0) {
-                ts = EventTimer.getInstance().schedule(new Runnable() {
+                ts = Timer.EVENT.schedule(new Runnable() {
 
                     public void run() {
                         for (ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -829,7 +827,7 @@ public class AdminCommand {
         }
 
         public String getMessage() {
-            return new StringBuilder().append("!gainpoint <數量> <玩家> - 取得Point").toString();
+            return "!gainpoint <數量> <玩家> - 取得Point";
         }
     }
 
@@ -838,14 +836,14 @@ public class AdminCommand {
 
     public static class LevelUp extends CommandExecute {
 
-        public int execute(MapleClient c, String splitted[]) {
+        public int execute(MapleClient c, String[] splitted) {
             if (splitted.length < 2) {
                 c.getPlayer().levelUp();
             } else {
                 int up = 0;
                 try {
                     up = Integer.parseInt(splitted[1]);
-                } catch (Exception ex) {
+                } catch (Exception ignored) {
                 }
                 for (int i = 0; i < up; i++) {
                     c.getPlayer().levelUp();
@@ -860,7 +858,7 @@ public class AdminCommand {
         }
 
         public String getMessage() {
-            return new StringBuilder().append("!levelup - 等級上升").toString();
+            return "!levelup - 等級上升";
         }
     }
 
@@ -1316,7 +1314,7 @@ public class AdminCommand {
                 c.getPlayer().dropMessage(5, "已经关闭活动入口，可以使用 !活动开始 來启动。");
                 World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "頻道:" + c.getChannel() + "活动目前已经关闭大门口。").getBytes());
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getClock(60));
-                ts = EventTimer.getInstance().register(new Runnable() {
+                ts = Timer.EVENT.register(new Runnable() {
 
                     public void run() {
                         if (min == 0) {
@@ -1350,7 +1348,7 @@ public class AdminCommand {
                 c.getPlayer().dropMessage(5, "已经关闭活动入口，可以使用 !活动开始 來启动。");
                 World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "頻道:" + c.getChannel() + "活动目前已经关闭大门口。").getBytes());
                 c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getClock(60));
-                EventTimer.getInstance().register(new Runnable() {
+                Timer.EVENT.register(new Runnable() {
 
                     public void run() {
                         关闭活动入口.tt = true;
@@ -1452,7 +1450,7 @@ public class AdminCommand {
         }
     }
 
-//    public static class LockItem extends CommandExecute {
+    //    public static class LockItem extends CommandExecute {
 //
 //        public int execute(MapleClient c, String splitted[]) {
 //            if (splitted.length < 3) {
@@ -2786,14 +2784,14 @@ public class AdminCommand {
                     }
 
                     DPlayerNPC playerNPC = new DPlayerNPC();
-                    playerNPC.name = chhr.getName();
-                    playerNPC.charid = chhr.getId();
-                    playerNPC.map = player.getMap().getId();
-                    playerNPC.scriptid = npcId;
-                    playerNPC.x = player.getPosition().x;
-                    playerNPC.y = player.getPosition().y;
-                    playerNPC.dir = 0;
-                    playerNPC.foothold = player.getFH();
+                    playerNPC.setName(chhr.getName());
+                    playerNPC.setCharId(chhr.getId());
+                    playerNPC.setMap(player.getMap().getId());
+                    playerNPC.setScriptId(npcId);
+                    playerNPC.setX(player.getPosition().x);
+                    playerNPC.setY(player.getPosition().y);
+                    playerNPC.setDir(0);
+                    playerNPC.setFoothold(player.getFH());
 
                     PlayerNPC npc = new PlayerNPC(playerNPC, chhr);
                     npc.addToServer();
@@ -2825,14 +2823,14 @@ public class AdminCommand {
                     MapleMap map = player.getMap();
                     int scriptId = Integer.parseInt(splitted[2]);
                     DPlayerNPC playerNPC = new DPlayerNPC();
-                    playerNPC.name = chhr.getName();
-                    playerNPC.charid = chhr.getId();
-                    playerNPC.map = map.getId();
-                    playerNPC.scriptid = scriptId;
-                    playerNPC.x = player.getPosition().x;
-                    playerNPC.y = player.getPosition().y;
-                    playerNPC.dir = 0;
-                    playerNPC.foothold = player.getFH();
+                    playerNPC.setName(chhr.getName());
+                    playerNPC.setCharId(chhr.getId());
+                    playerNPC.setMap(map.getId());
+                    playerNPC.setScriptId(scriptId);
+                    playerNPC.setX(player.getPosition().x);
+                    playerNPC.setY(player.getPosition().y);
+                    playerNPC.setDir(0);
+                    playerNPC.setFoothold(player.getFH());
 
                     PlayerNPC npc = new PlayerNPC(playerNPC, chhr);
                     npc.addToServer();
@@ -3271,17 +3269,17 @@ public class AdminCommand {
                 npc.setCustom(true);
 
                 DWzCustomLife life = new DWzCustomLife();
-                life.dataid = npcId;
-                life.f = 0;
-                life.hide = 0;
-                life.fh = fh;
-                life.cy = ypos;
-                life.rx0 = xpos;
-                life.rx1 = xpos;
-                life.type = "n";
-                life.x = xpos;
-                life.y = ypos;
-                life.mid = c.getPlayer().getMapId();
+                life.setDataId(npcId);
+                life.setF(0);
+                life.setHide(0);
+                life.setFh(fh);
+                life.setCy(ypos);
+                life.setRx0(xpos);
+                life.setRx1(xpos);
+                life.setType("n");
+                life.setX(xpos);
+                life.setY(ypos);
+                life.setMid(c.getPlayer().getMapId());
                 life.save();
 
                 for (ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -3384,13 +3382,13 @@ public class AdminCommand {
             int id = 0, quantity = 0;
             DCharacter one = new QDCharacter().name.eq(splitted[2]).findOne();
             if (one != null) {
-                if (one.id == 0) {
+                if (one.getId() == 0) {
                     c.getPlayer().dropMessage(5, "角色不存在资料库。");
                     return 0;
                 }
 
-                new QDInventoryItem().itemid.eq(Integer.parseInt(splitted[1])).character.id.eq(id).delete();
-                c.getPlayer().dropMessage(6, "所有ID为 " + splitted[1] + " 的道具" + quantity + "已经从 " + one.name + " 身上被移除了");
+                new QDInventoryItem().itemId.eq(Integer.parseInt(splitted[1])).character.id.eq(id).delete();
+                c.getPlayer().dropMessage(6, "所有ID为 " + splitted[1] + " 的道具" + quantity + "已经从 " + one.getName() + " 身上被移除了");
                 return 1;
             }
             return 0;
@@ -3764,9 +3762,7 @@ public class AdminCommand {
                 return 0;
             }
 
-            DAccount account = new DAccount();
-            account.name = acc;
-            account.password = LoginCrypto.hexSha1(password);
+            DAccount account = new DAccount(acc, LoginCrypto.hexSha1(password));
             account.save();
             c.getPlayer().dropMessage("[注册完成]账号: " + acc + " 密码: " + password);
             return 1;

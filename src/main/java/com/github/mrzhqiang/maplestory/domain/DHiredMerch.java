@@ -16,22 +16,72 @@ import java.time.LocalDateTime;
 public class DHiredMerch extends Model {
 
     @Id
-    @Column(name = "PackageId")
-    public Integer id;
+    Integer id;
     @ManyToOne
-    @JoinColumn(name = "characterid")
-    public DCharacter character;
+    @JoinColumn(name = "character_id")
+    DCharacter character;
     @ManyToOne
-    @JoinColumn(name = "accountid")
-    public DAccount account;
+    @JoinColumn(name = "account_id")
+    DAccount account;
     @NotNull
-    @Column(name = "map")
-    public Integer map;
-    @Column(name = "channel")
-    public Integer channel;
-    @Column(name = "Mesos")
-    public Integer mesos;
-    @Column(name = "time")
-    public LocalDateTime time;
+    Integer map;
+    Integer channel;
+    Integer mesos;
+    LocalDateTime time;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public DAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(DAccount account) {
+        this.account = account;
+    }
+
+    public Integer getMap() {
+        return map;
+    }
+
+    public void setMap(Integer map) {
+        this.map = map;
+    }
+
+    public Integer getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Integer channel) {
+        this.channel = channel;
+    }
+
+    public Integer getMesos() {
+        return mesos;
+    }
+
+    public void setMesos(Integer mesos) {
+        this.mesos = mesos;
+    }
+
+    public LocalDateTime getTime() {
+        return time;
+    }
+
+    public void setTime(LocalDateTime time) {
+        this.time = time;
+    }
 }

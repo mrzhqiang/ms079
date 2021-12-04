@@ -120,6 +120,9 @@ public final class WzDirectory {
     }
 
     private void attemptParse(Path path) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("尝试解析 wz 文件或目录：{}", path);
+        }
         try {
             String fileName = path.getFileName().toString();
             if (Files.isDirectory(path)) {
@@ -128,7 +131,8 @@ public final class WzDirectory {
                 dirs.put(fileName, directory);
             } else {
                 Elements data = Jsoup.parse(path.toFile(), "UTF-8").body().children();
-                files.put(fileName, new WzFile(fileName, data));
+                WzFile file = new WzFile(fileName, data);
+                files.put(fileName, file);
             }
         } catch (IOException e) {
             LOGGER.error("解析 {} 出现问题：{}", path, e);

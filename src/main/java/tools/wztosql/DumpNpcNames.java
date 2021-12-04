@@ -1,8 +1,8 @@
 package tools.wztosql;
 
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.DWzNPCNameData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzNPCNameData;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -55,8 +55,8 @@ public class DumpNpcNames {
         for (int key : npcNames.keySet()) {
             try {
                 DWzNPCNameData nameData = new DWzNPCNameData();
-                nameData.npc = key;
-                nameData.name = npcNames.get(key);
+                nameData.setNpc(key);
+                nameData.setName(npcNames.get(key));
                 nameData.save();
                 LOGGER.debug("key: " + key + " name: " + npcNames.get(key));
             } catch (Exception ex) {

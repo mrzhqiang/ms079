@@ -1,12 +1,12 @@
 package handling.channel.handler;
 
-import client.MapleClient;
 import client.MapleCharacterUtil;
+import client.MapleClient;
 import constants.ServerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scripting.NPCScriptManager;
 import scripting.EventManager;
+import scripting.NPCScriptManager;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 

@@ -45,12 +45,12 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
 
     public AbstractPlayerStore(MapleCharacter owner, int itemId, String desc, String pass, int slots) {
         this.merch = new DHiredMerch();
-        merch.character = owner.character;
-        merch.account = owner.character.account;
-        merch.mesos = 0;
-        merch.map = owner.getMapId();
-        merch.channel = owner.getClient().getChannel();
-        merch.time = LocalDateTime.now();
+        merch.setCharacter(owner.character);
+        merch.setAccount(owner.character.getAccount());
+        merch.setMesos(0);
+        merch.setMap(owner.getMapId());
+        merch.setChannel(owner.getClient().getChannel());
+        merch.setTime(LocalDateTime.now());
         this.setPosition(owner.getPosition());
         this.itemId = itemId;
         this.des = desc;
@@ -125,8 +125,8 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
 
         new QDHiredMerch().account.id.eq(owneraccount).or().character.id.eq(ownerId).delete();
 
-        merch.mesos = meso.get();
-        merch.time = LocalDateTime.now();
+        merch.setMesos(meso.get());
+        merch.setTime(LocalDateTime.now());
         merch.save();
 
         List<Pair<IItem, MapleInventoryType>> iters = new ArrayList<>();

@@ -1,16 +1,15 @@
 package server;
 
 import com.github.mrzhqiang.maplestory.domain.query.QDSpeedRun;
+import server.maps.SpeedRunType;
+import tools.Pair;
+import tools.StringUtil;
 
 import java.sql.SQLException;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import server.maps.SpeedRunType;
-import tools.Pair;
-import tools.StringUtil;
 
 public class SpeedRunner {
 
@@ -52,7 +51,7 @@ public class SpeedRunner {
         Map<Integer, String> rett = new LinkedHashMap<>();
         new QDSpeedRun().type.eq(type.name()).orderBy().type.asc().setMaxRows(25)
                 .findEach(it -> {
-                    addSpeedRunData(ret, rett, it.members, it.leader, rank.get(), it.timestring);
+                    addSpeedRunData(ret, rett, it.getMembers(), it.getLeader(), rank.get(), it.getTimeString());
                     rank.set(rank.get() + 1);
                 });
 

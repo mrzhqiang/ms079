@@ -2,31 +2,29 @@ package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import java.util.Objects;
 
 @Embeddable
 public class PKAchievement {
-    @NotNull
-    @Column(name = "achievementid")
-    public Integer achievementid;
 
     @NotNull
-    @Column(name = "charid")
-    public Integer charid;
+    Integer achievementId;
+    @NotNull
+    Integer charId;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PKAchievement that = (PKAchievement) o;
-        return Objects.equals(achievementid, that.achievementid)
-                && Objects.equals(charid, that.charid);
+    public Integer getAchievementId() {
+        return achievementId;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(achievementid, charid);
+    public void setAchievementId(Integer achievementId) {
+        this.achievementId = achievementId;
+    }
+
+    public Integer getCharId() {
+        return charId;
+    }
+
+    public void setCharId(Integer charId) {
+        this.charId = charId;
     }
 }

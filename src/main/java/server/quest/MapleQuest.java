@@ -48,15 +48,15 @@ public class MapleQuest implements Serializable {
 
     private static MapleQuest loadQuest(DWzQuestData data) {
         MapleQuest ret = new MapleQuest(data);
-        if (data.reqDataList != null) {
-            for (DWzQuestReqData it : data.reqDataList) {
-                MapleQuestRequirementType type = MapleQuestRequirementType.getByWZName(it.name);
+        if (data.getReqDataList() != null) {
+            for (DWzQuestReqData it : data.getReqDataList()) {
+                MapleQuestRequirementType type = MapleQuestRequirementType.getByWZName(it.getName());
                 MapleQuestRequirement req = new MapleQuestRequirement(ret, type, it);
                 if (type.equals(MapleQuestRequirementType.INTERVAL)) {
                     ret.repeatable = true;
                 } else if (type.equals(MapleQuestRequirementType.NORMAL_AUTO_START)) {
                     ret.repeatable = true;
-                    ret.data.autoStart = true;
+                    ret.data.setAutoStart(true);
                 } else if (type.equals(MapleQuestRequirementType.START_SCRIPT)) {
                     ret.scriptedStart = true;
                 } else if (type.equals(MapleQuestRequirementType.END_SCRIPT)) {
@@ -66,7 +66,7 @@ public class MapleQuest implements Serializable {
                         ret.relevantMobs.put(mob.left, mob.right);
                     }
                 }
-                if (it.type == 0) {
+                if (it.getType() == 0) {
                     ret.startReqs.add(req);
                 } else {
                     ret.completeReqs.add(req);
@@ -74,16 +74,16 @@ public class MapleQuest implements Serializable {
             }
         }
 
-        if (data.actDataList != null) {
-            for (DWzQuestActData it : data.actDataList) {
-                MapleQuestActionType ty = MapleQuestActionType.getByWZName(it.name);
-                if (it.type == 0) {
-                    if ((ty == MapleQuestActionType.item) && (ret.data.id == 7103)) {
+        if (data.getActDataList() != null) {
+            for (DWzQuestActData it : data.getActDataList()) {
+                MapleQuestActionType ty = MapleQuestActionType.getByWZName(it.getName());
+                if (it.getType() == 0) {
+                    if ((ty == MapleQuestActionType.item) && (ret.data.getId() == 7103)) {
                         continue;
                     }
                     ret.startActs.add(new MapleQuestAction(ty, it, ret));
                 } else {
-                    if ((ty == MapleQuestActionType.item) && (ret.data.id == 7102)) {
+                    if ((ty == MapleQuestActionType.item) && (ret.data.getId() == 7102)) {
                         continue;
                     }
                     ret.completeActs.add(new MapleQuestAction(ty, it, ret));
@@ -91,15 +91,15 @@ public class MapleQuest implements Serializable {
             }
         }
 
-        if (data.partyDataList != null) {
-            for (DWzQuestPartyData it : data.partyDataList) {
-                if (!ret.partyQuestInfo.containsKey(it.rank)) {
-                    ret.partyQuestInfo.put(it.rank, new ArrayList<>());
+        if (data.getPartyDataList() != null) {
+            for (DWzQuestPartyData it : data.getPartyDataList()) {
+                if (!ret.partyQuestInfo.containsKey(it.getRank())) {
+                    ret.partyQuestInfo.put(it.getRank(), new ArrayList<>());
                 }
-                String mode = it.mode;
-                String property = it.property;
-                int value = it.value;
-                List<Pair<String, Pair<String, Integer>>> list = ret.partyQuestInfo.get(it.rank);
+                String mode = it.getMode();
+                String property = it.getProperty();
+                int value = it.getValue();
+                List<Pair<String, Pair<String, Integer>>> list = ret.partyQuestInfo.get(it.getRank());
                 list.add(new Pair<>(mode, new Pair<>(property, value)));
             }
         }
@@ -206,15 +206,15 @@ public class MapleQuest implements Serializable {
     }
 
     public final int getSkillID() {
-        return data.selectedSkillID;
+        return data.getSelectedSkillId();
     }
 
     public final String getName() {
-        return data.name;
+        return data.getName();
     }
 
     public static void initQuests() {
-        new QDWzQuestData().findEach(data -> quests.put(data.id, loadQuest(data)));
+        new QDWzQuestData().findEach(data -> quests.put(data.getId(), loadQuest(data)));
         LOGGER.info("共加载 {} 个任务信息.", quests.size());
     }
 
@@ -291,7 +291,7 @@ public class MapleQuest implements Serializable {
     }
 
     public void start(MapleCharacter c, int npc) {
-        if ((data.autoStart || checkNPCOnMap(c, npc)) && canStart(c, npc)) {
+        if ((data.getAutoStart() || checkNPCOnMap(c, npc)) && canStart(c, npc)) {
             for (MapleQuestAction a : startActs) {
                 if (!a.checkEnd(c, null)) { //just in case
                     return;
@@ -313,7 +313,7 @@ public class MapleQuest implements Serializable {
     }
 
     public void complete(MapleCharacter c, int npc, Integer selection) {
-        if ((data.autoPreComplete || checkNPCOnMap(c, npc)) && canComplete(c, npc)) {
+        if ((data.getAutoPreComplete() || checkNPCOnMap(c, npc)) && canComplete(c, npc)) {
             if (npc != 9010000) {
                 for (MapleQuestAction a : completeActs) {
                     if (!a.checkEnd(c, selection)) {
@@ -378,7 +378,7 @@ public class MapleQuest implements Serializable {
     }
 
     public int getId() {
-        return data.id;
+        return data.getId();
     }
 
     public Map<Integer, Integer> getRelevantMobs() {
@@ -391,7 +391,7 @@ public class MapleQuest implements Serializable {
     }
 
     public int getMedalItem() {
-        return data.viewMedalItem;
+        return data.getViewMedalItem();
     }
 
     public enum MedalQuest {

@@ -25,13 +25,13 @@ import client.MapleQuestStatus;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
-import java.awt.Point;
-import java.util.concurrent.ScheduledFuture;
 import server.Randomizer;
-import server.Timer.MapTimer;
-import server.quest.MapleQuest;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.life.MapleLifeFactory;
+import server.quest.MapleQuest;
 import tools.MaplePacketCreator;
+
+import java.util.concurrent.ScheduledFuture;
 
 public class Event_PyramidSubway {
 
@@ -49,7 +49,7 @@ public class Event_PyramidSubway {
         }
         if (c.getParty() == null || c.getParty().getLeader().equals(new MaplePartyCharacter(c))) {
             commenceTimerNextMap(c, 1);
-            energyBarDecrease = MapTimer.getInstance().register(new Runnable() {
+            energyBarDecrease = Timer.MAP.register(new Runnable() {
 
                 public void run() {
                     energybar -= (c.getParty() != null && c.getParty().getMembers().size() > 1 ? 10 : 5);
@@ -109,7 +109,7 @@ public class Event_PyramidSubway {
         if (type != -1 && (stage == 4 || stage == 5)) { //yetis. temporary
             final Vector pos = c.getPosition();
             final MapleMap map = c.getMap();
-            yetiSchedule = MapTimer.getInstance().register(new Runnable() {
+            yetiSchedule = Timer.MAP.register(new Runnable() {
 
                 public void run() {
                     if (map.countMonsterById(9300021) <= (stage == 4 ? 1 : 2)) {
@@ -118,7 +118,7 @@ public class Event_PyramidSubway {
                 }
             }, 10000L);
         }
-        timerSchedule = MapTimer.getInstance().schedule(new Runnable() {
+        timerSchedule = Timer.MAP.schedule(new Runnable() {
 
             public void run() {
                 boolean ret = false;

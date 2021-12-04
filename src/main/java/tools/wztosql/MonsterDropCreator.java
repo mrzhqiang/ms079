@@ -1,6 +1,6 @@
 package tools.wztosql;
 
-import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;

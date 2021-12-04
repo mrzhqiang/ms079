@@ -6,13 +6,17 @@ import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import handling.world.World;
 import server.AutobanManager;
-import server.Timer.CheatTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.StringUtil;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -51,7 +55,7 @@ public class CheatTracker {
 
     public CheatTracker(MapleCharacter chr) {
         this.chr = new WeakReference<>(chr);
-        invalidationTask = CheatTimer.getInstance().register(new InvalidationTask(), 60000);
+        invalidationTask = Timer.CHEAT.register(new InvalidationTask(), 60000);
         takingDamageSince = System.currentTimeMillis();
     }
 

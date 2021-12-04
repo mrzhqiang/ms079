@@ -15,16 +15,45 @@ import javax.persistence.Table;
 public class DCharacterSlot extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "accid")
-    public DAccount account;
+    @JoinColumn(name = "acc_id")
+    DAccount account;
     @NotNull
-    @Column(name = "worldid")
-    public Integer worldid;
+    Integer worldId;
     @NotNull
-    @Column(name = "charslots")
-    public Integer charslots;
+    Integer charSlots;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(DAccount account) {
+        this.account = account;
+    }
+
+    public Integer getWorldId() {
+        return worldId;
+    }
+
+    public void setWorldId(Integer worldId) {
+        this.worldId = worldId;
+    }
+
+    public Integer getCharSlots() {
+        return charSlots;
+    }
+
+    public void setCharSlots(Integer charSlots) {
+        this.charSlots = charSlots;
+    }
 }

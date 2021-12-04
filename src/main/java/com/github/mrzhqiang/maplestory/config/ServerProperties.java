@@ -1,11 +1,10 @@
 package com.github.mrzhqiang.maplestory.config;
 
-import com.github.mrzhqiang.helper.math.Numbers;
-import com.google.common.base.Preconditions;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.google.inject.name.Named;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -58,7 +57,6 @@ public final class ServerProperties {
 
     @Inject
     public ServerProperties(@Named("config") Properties properties) {
-        Preconditions.checkNotNull(properties, "properties == null");
         this.name = properties.getProperty("server.name", "");
         this.flag = Numbers.ofInt(properties.getProperty("server.flag", "3"));
         this.onlineLimit = Numbers.ofInt(properties.getProperty("server.limit.online", "100"));

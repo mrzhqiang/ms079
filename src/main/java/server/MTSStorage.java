@@ -170,11 +170,11 @@ public class MTSStorage {
                     items.put(m.getId(), null); //从 mtsitems 销毁。
                 } else {
                     DMtsItemOther item = new DMtsItemOther();
-                    item.id = m.id;
-                    item.tab = 1;
-                    item.price = m.price;
-                    item.character = new QDCharacter().id.eq(m.getCharacterId()).findOne();
-                    item.expiration = m.getEndingDate();
+                    item.setId(m.id);
+                    item.setTab(1);
+                    item.setPrice(m.price);
+                    item.setCharacter(new QDCharacter().id.eq(m.getCharacterId()).findOne());
+                    item.setExpiration(m.getEndingDate());
                     item.save();
 
                     if (!items.containsKey(m.getId())) {

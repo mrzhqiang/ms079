@@ -21,13 +21,12 @@
  */
 package server.events;
 
-import java.util.concurrent.ScheduledFuture;
 import client.MapleCharacter;
 import server.Randomizer;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import tools.MaplePacketCreator;
-import server.maps.MapleMap;
-import server.maps.SavedLocationType;
+
+import java.util.concurrent.ScheduledFuture;
 
 public class MapleOla extends MapleEvent {
 
@@ -64,7 +63,7 @@ public class MapleOla extends MapleEvent {
         broadcast(MaplePacketCreator.getClock((int) (time / 1000)));
         this.timeStarted = System.currentTimeMillis();
 
-        olaSchedule = EventTimer.getInstance().schedule(new Runnable() {
+        olaSchedule = Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {

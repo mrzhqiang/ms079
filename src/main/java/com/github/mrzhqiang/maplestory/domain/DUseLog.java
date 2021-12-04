@@ -2,7 +2,6 @@ package com.github.mrzhqiang.maplestory.domain;
 
 import io.ebean.Model;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -11,25 +10,67 @@ import javax.persistence.Table;
 @Table(name = "uselog")
 public class DUseLog extends Model {
 
-    @Column(name = "account")
-    public String account;
+    String account;
+    String ip;
+    String time;
+    String useType;
+    String active;
+    String newPassword;
+    String oldPassword;
 
-    @Column(name = "ip")
-    public String ip;
+    public String getAccount() {
+        return account;
+    }
 
-    @Column(name = "time")
-    public String time;
+    public void setAccount(String account) {
+        this.account = account;
+    }
 
-    @Column(name = "usetype")
-    public String usetype;
+    public String getIp() {
+        return ip;
+    }
 
-    @Column(name = "active")
-    public String active;
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
 
-    @Column(name = "newpassword")
-    public String newpassword;
+    public String getTime() {
+        return time;
+    }
 
-    @Column(name = "oldpassword")
-    public String oldpassword;
+    public void setTime(String time) {
+        this.time = time;
+    }
 
+    public String getUseType() {
+        return useType;
+    }
+
+    public void setUseType(String useType) {
+        this.useType = useType;
+    }
+
+    public String getActive() {
+        return active;
+    }
+
+    public void setActive(String active) {
+        this.active = active;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
+    }
 }

@@ -13,11 +13,11 @@ public class CharacterNameAndId {
     }
 
     public int getId() {
-        return character.id;
+        return character.getId();
     }
 
     public String getName() {
-        return character.name;
+        return character.getName();
     }
 
     public String getGroup() {
@@ -25,10 +25,10 @@ public class CharacterNameAndId {
     }
 
     public int getLevel() {
-        return character.level;
+        return character.getLevel();
     }
 
     public int getJob() {
-        return character.job;
+        return character.getJob();
     }
 }

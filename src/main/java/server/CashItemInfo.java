@@ -71,7 +71,7 @@ public class CashItemInfo {
     }
 
     public boolean onSale() {
-        return onSale || (CashItemFactory.getInstance().getModInfo(sn) != null && CashItemFactory.getInstance().getModInfo(sn).item.showup);
+        return onSale || (CashItemFactory.getInstance().getModInfo(sn) != null && CashItemFactory.getInstance().getModInfo(sn).item.isShowUp());
     }
 
     public boolean genderEquals(int g) {
@@ -90,45 +90,45 @@ public class CashItemInfo {
             // unk_1: 0 = doesn't have, 1 = has, but false, 2 = has and true
             this.item = item;
 
-            if (item.id > 0) {
+            if (item.getId() > 0) {
                 flags |= 0x1;
             }
-            if (item.count > 0) {
+            if (item.getCount() > 0) {
                 flags |= 0x2;
             }
-            if (item.discountPrice > 0) {
+            if (item.getDiscountPrice() > 0) {
                 flags |= 0x4;
             }
-            if (item.unk1 > 0) {
+            if (item.getUnk1() > 0) {
                 flags |= 0x8;
             }
-            if (item.priority >= 0) {
+            if (item.getPriority() >= 0) {
                 flags |= 0x10;
             }
-            if (item.period > 0) {
+            if (item.getPeriod() > 0) {
                 flags |= 0x20;
             }
             //0x40 = ?
-            if (item.meso > 0) {
+            if (item.getMeso() > 0) {
                 flags |= 0x80;
             }
-            if (item.unk2 > 0) {
+            if (item.getUnk2() > 0) {
                 flags |= 0x100;
             }
-            if (item.gender >= 0) {
+            if (item.getGender() >= 0) {
                 flags |= 0x200;
             }
-            if (item.showup) {
+            if (item.isShowUp()) {
                 flags |= 0x400;
             }
-            if (item.mark >= -1 || item.mark <= 3) {
+            if (item.getMark() >= -1 || item.getMark() <= 3) {
                 flags |= 0x800;
             }
-            if (item.unk3 > 0) {
+            if (item.getUnk3() > 0) {
                 flags |= 0x1000;
             }
             //0x2000, 0x4000, 0x8000 - ?
-            if (item.packageField) {
+            if (item.isPackageField()) {
                 flags |= 0x10000;
             }
         }
@@ -139,39 +139,39 @@ public class CashItemInfo {
             }
             final int item, c, price, expire, gen;
             final boolean onSale;
-            if (this.item.id <= 0) {
+            if (this.item.getId() <= 0) {
                 item = (backup == null ? 0 : backup.getId());
             } else {
-                item = this.item.id;
+                item = this.item.getId();
             }
-            if (this.item.count <= 0) {
+            if (this.item.getCount() <= 0) {
                 c = (backup == null ? 0 : backup.getCount());
             } else {
-                c = this.item.count;
+                c = this.item.getCount();
             }
-            if (this.item.meso <= 0) {
-                if (this.item.discountPrice <= 0) {
+            if (this.item.getMeso() <= 0) {
+                if (this.item.getDiscountPrice() <= 0) {
                     price = (backup == null ? 0 : backup.getPrice());
                 } else {
-                    price = this.item.discountPrice;
+                    price = this.item.getDiscountPrice();
                 }
             } else {
-                price = this.item.meso;
+                price = this.item.getMeso();
             }
-            if (this.item.period <= 0) {
+            if (this.item.getPeriod() <= 0) {
                 expire = (backup == null ? 0 : backup.getPeriod());
             } else {
-                expire = this.item.period;
+                expire = this.item.getPeriod();
             }
-            if (this.item.gender < 0) {
+            if (this.item.getGender() < 0) {
                 gen = (backup == null ? 0 : backup.getGender());
             } else {
-                gen = this.item.gender;
+                gen = this.item.getGender();
             }
-            if (!this.item.showup) {
+            if (!this.item.isShowUp()) {
                 onSale = (backup != null && backup.onSale());
             } else {
-                onSale = this.item.showup;
+                onSale = this.item.isShowUp();
             }
 
             cii = new CashItemInfo(item, c, price, sn, expire, gen, onSale);

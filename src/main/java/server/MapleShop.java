@@ -239,7 +239,7 @@ public class MapleShop {
         if (isShopId) {
             one = new QDShop().id.eq(id).findOne();
         } else {
-            one = new QDShop().npcid.eq(id).findOne();
+            one = new QDShop().npcId.eq(id).findOne();
         }
 
         if (one == null) {
@@ -248,18 +248,18 @@ public class MapleShop {
 
         List<Integer> recharges = new ArrayList<>(rechargeableItems);
 
-        MapleShop ret = new MapleShop(one.id, one.npcid);
+        MapleShop ret = new MapleShop(one.getId(), one.getNpcId());
 
-        new QDShopItem().shopid.eq(one.id).order().position.asc().findStream()
+        new QDShopItem().shopId.eq(one.getId()).order().position.asc().findStream()
                 .map(it -> {
                     MapleShopItem starItem;
-                    if (GameConstants.isThrowingStar(it.itemid) || GameConstants.isBullet(it.itemid)) {
-                        if (rechargeableItems.contains(it.itemid)) {
-                            recharges.remove(it.itemid);
+                    if (GameConstants.isThrowingStar(it.getItemId()) || GameConstants.isBullet(it.getItemId())) {
+                        if (rechargeableItems.contains(it.getItemId())) {
+                            recharges.remove(it.getItemId());
                         }
-                        starItem = new MapleShopItem((short) 1, it.itemid, it.price);
+                        starItem = new MapleShopItem((short) 1, it.getItemId(), it.getPrice());
                     } else {
-                        starItem = new MapleShopItem((short) 1000, it.itemid, it.price);
+                        starItem = new MapleShopItem((short) 1000, it.getItemId(), it.getPrice());
                     }
                     return starItem;
                 })

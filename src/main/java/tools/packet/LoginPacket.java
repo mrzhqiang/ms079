@@ -1,21 +1,19 @@
 package tools.packet;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import client.MapleClient;
 import client.MapleCharacter;
-import constants.GameConstants;
+import client.MapleClient;
 import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
-import handling.login.Balloon;
 import handling.login.LoginServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.data.output.MaplePacketLittleEndianWriter;
 import tools.HexTool;
+import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class LoginPacket {
 
@@ -160,7 +158,7 @@ public class LoginPacket {
         mplew.writeShort(SendPacketOpcode.LOGIN_STATUS.getValue());
         mplew.write(0);
         mplew.writeInt(client.getAccID());
-        mplew.write(client.getGender());
+        mplew.write(client.getGender().getCodeByte());
         mplew.writeShort(client.isGm() ? 1 : 0); // Admin byte
         //mplew.writeInt(0);
         mplew.writeMapleAsciiString(client.getAccountName());

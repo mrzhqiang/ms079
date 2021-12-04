@@ -20,24 +20,22 @@
  */
 package handling.channel.handler;
 
-import constants.GameConstants;
-import java.util.ArrayList;
-import java.util.List;
-
 import client.ISkill;
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
 import client.MapleStat;
 import client.PlayerStats;
 import client.SkillFactory;
+import constants.GameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.AutobanManager;
 import server.Randomizer;
-import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StatsHandling {
 

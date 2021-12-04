@@ -20,19 +20,18 @@
  */
 package server.life;
 
+import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.query.QDDropData;
 import com.github.mrzhqiang.maplestory.domain.query.QDDropDataGlobal;
 import constants.GameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-
-import client.inventory.MapleInventoryType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MapleMonsterInformationProvider {
 
@@ -66,9 +65,9 @@ public class MapleMonsterInformationProvider {
 
         List<MonsterDropEntry> ret = new LinkedList<>();
 
-        new QDDropData().dropperid.eq(monsterId).findEach(it -> {
-            if (GameConstants.getInventoryType(it.itemid) == MapleInventoryType.EQUIP) {
-                it.chance = it.chance / 3; //in GMS/SEA it was raised
+        new QDDropData().dropperId.eq(monsterId).findEach(it -> {
+            if (GameConstants.getInventoryType(it.getItemId()) == MapleInventoryType.EQUIP) {
+                it.setChance(it.getChance() / 3); //in GMS/SEA it was raised
             }
             ret.add(new MonsterDropEntry(it));
         });

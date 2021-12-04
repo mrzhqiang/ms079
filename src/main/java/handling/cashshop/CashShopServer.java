@@ -1,8 +1,6 @@
 package handling.cashshop;
 
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import handling.MapleServerHandler;
 import handling.channel.PlayerStorage;
 import handling.mina.MapleCodecFactory;
@@ -15,6 +13,8 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.net.InetSocketAddress;
 
 @Singleton

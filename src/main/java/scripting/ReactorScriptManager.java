@@ -73,8 +73,8 @@ public class ReactorScriptManager extends AbstractScriptManager {
         if (ret != null) {
             return ret;
         }
-        ret = new QDReactorDrop().reactorid.eq(rid).findStream()
-                .map(it -> new ReactorDropEntry(it.itemid, it.chance, it.questid))
+        ret = new QDReactorDrop().reactorId.eq(rid).findStream()
+                .map(it -> new ReactorDropEntry(it.getItemId(), it.getChance(), it.getQuestId()))
                 .collect(Collectors.toList());
 
         drops.put(rid, ret);

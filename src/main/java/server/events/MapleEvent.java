@@ -27,8 +27,7 @@ import handling.channel.ChannelServer;
 import handling.world.World;
 import server.MapleInventoryManipulator;
 import server.RandomRewards;
-import server.Randomizer;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.maps.MapleMap;
 import server.maps.SavedLocationType;
 import tools.MaplePacketCreator;
@@ -156,7 +155,7 @@ public abstract class MapleEvent {
                         if (cserv.getEvent() == i) {
                             e.broadcast(MaplePacketCreator.serverNotice(0, "距离活动开始只剩下一分钟!"));
                             e.broadcast(MaplePacketCreator.getClock(60));
-                            EventTimer.getInstance().schedule(new Runnable() {
+                            Timer.EVENT.schedule(new Runnable() {
 
                                 public void run() {
                                     e.startEvent();

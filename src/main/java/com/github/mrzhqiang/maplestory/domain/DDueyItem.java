@@ -17,51 +17,167 @@ import java.time.LocalDateTime;
 public class DDueyItem extends Model {
 
     @Id
-    @Column(name = "inventoryitemid")
-    public Integer id;
+    Integer id;
     @ManyToOne
-    @JoinColumn(name = "characterid")
-    public DCharacter character;
+    @JoinColumn(name = "character_id")
+    DCharacter character;
     @ManyToOne
-    @JoinColumn(name = "accountid")
-    public DAccount account;
+    @JoinColumn(name = "account_id")
+    DAccount account;
     @OneToOne
-    @JoinColumn(name = "packageid")
-    public DDueyPackage pack;
+    @JoinColumn(name = "package_id")
+    DDueyPackage pack;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer itemId;
     @NotNull
-    @Column(name = "inventorytype")
-    public Integer inventorytype;
+    Integer inventoryType;
     @NotNull
-    @Column(name = "position")
-    public Integer position;
+    Integer position;
     @NotNull
-    @Column(name = "quantity")
-    public Integer quantity;
+    Integer quantity;
 
-    @Column(name = "owner")
-    public String owner;
+    String owner;
 
-    @Column(name = "GM_Log")
-    public String gmLog;
+    String gmLog;
     @NotNull
-    @Column(name = "uniqueid")
-    public Integer uniqueid;
+    Integer uniqueId;
     @NotNull
-    @Column(name = "flag")
-    public Integer flag;
+    Integer flag;
     @NotNull
-    @Column(name = "expiredate")
-    public LocalDateTime expiredate;
+    LocalDateTime expireDate;
     @NotNull
-    @Column(name = "type")
-    public Integer type;
+    Integer type;
     @NotNull
-    @Column(name = "sender")
-    public String sender;
+    String sender;
 
     @OneToOne(mappedBy = "item")
-    public DDueyEquipment equipment;
+    DDueyEquipment equipment;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public DAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(DAccount account) {
+        this.account = account;
+    }
+
+    public DDueyPackage getPack() {
+        return pack;
+    }
+
+    public void setPack(DDueyPackage pack) {
+        this.pack = pack;
+    }
+
+    public Integer getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
+
+    public Integer getInventoryType() {
+        return inventoryType;
+    }
+
+    public void setInventoryType(Integer inventoryType) {
+        this.inventoryType = inventoryType;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getGmLog() {
+        return gmLog;
+    }
+
+    public void setGmLog(String gmLog) {
+        this.gmLog = gmLog;
+    }
+
+    public Integer getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(Integer uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
+    public Integer getFlag() {
+        return flag;
+    }
+
+    public void setFlag(Integer flag) {
+        this.flag = flag;
+    }
+
+    public LocalDateTime getExpireDate() {
+        return expireDate;
+    }
+
+    public void setExpireDate(LocalDateTime expireDate) {
+        this.expireDate = expireDate;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public DDueyEquipment getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(DDueyEquipment equipment) {
+        this.equipment = equipment;
+    }
 }

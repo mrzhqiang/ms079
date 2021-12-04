@@ -2,8 +2,9 @@ package KinMS.db;
 
 import client.MapleCharacter;
 import handling.channel.ChannelServer;
-import java.util.Collection;
 import server.maps.MapleMapFactory;
+
+import java.util.Collection;
 
 public abstract interface CherryMSLottery {
 

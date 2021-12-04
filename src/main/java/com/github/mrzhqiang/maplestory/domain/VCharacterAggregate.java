@@ -11,5 +11,13 @@ import javax.persistence.Entity;
 public class VCharacterAggregate {
 
     @Max
-    public Integer party;
+    Integer party;
+
+    public Integer getParty() {
+        return party;
+    }
+
+    public void setParty(Integer party) {
+        this.party = party;
+    }
 }

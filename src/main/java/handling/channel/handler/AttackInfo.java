@@ -20,17 +20,16 @@
  */
 package handling.channel.handler;
 
-import java.util.List;
-import java.awt.Point;
-
 import client.ISkill;
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import constants.GameConstants;
 import client.MapleCharacter;
 import client.SkillFactory;
-import server.MapleStatEffect;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import server.AutobanManager;
+import server.MapleStatEffect;
 import tools.AttackPair;
+
+import java.util.List;
 
 public class AttackInfo {
 

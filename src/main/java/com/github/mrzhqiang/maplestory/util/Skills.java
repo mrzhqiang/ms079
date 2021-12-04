@@ -1,7 +1,6 @@
 package com.github.mrzhqiang.maplestory.util;
 
 import client.Skill;
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -18,10 +17,8 @@ import java.util.stream.Collectors;
 /**
  * 技能工具类。
  */
-public final class Skills {
-    private Skills() {
-        // no instance
-    }
+public enum Skills {
+    ; // no instances
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Skills.class);
 

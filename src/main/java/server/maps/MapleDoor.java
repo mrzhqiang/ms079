@@ -20,18 +20,17 @@
  */
 package server.maps;
 
-import java.awt.Point;
+import client.MapleCharacter;
+import client.MapleClient;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import server.MaplePortal;
+import tools.MaplePacketCreator;
+
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import client.MapleCharacter;
-import client.MapleClient;
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import handling.world.MaplePartyCharacter;
-import java.lang.ref.WeakReference;
-import server.MaplePortal;
-import tools.MaplePacketCreator;
 
 public class MapleDoor extends AbstractMapleMapObject {
 

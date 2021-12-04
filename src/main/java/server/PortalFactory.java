@@ -1,6 +1,6 @@
 package server;
 
-import com.github.mrzhqiang.helper.math.Numbers;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;

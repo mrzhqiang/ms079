@@ -1,64 +1,65 @@
 package handling.channel.handler;
 
-import java.util.Map;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ArrayList;
-
+import client.ISkill;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.MapleStat;
+import client.PlayerStats;
+import client.SkillFactory;
+import client.anticheat.CheatingOffense;
 import client.inventory.Equip;
 import client.inventory.IEquip;
 import client.inventory.IEquip.ScrollResult;
 import client.inventory.IItem;
-import client.ISkill;
 import client.inventory.ItemFlag;
+import client.inventory.MapleInventory;
+import client.inventory.MapleInventoryType;
+import client.inventory.MapleMount;
 import client.inventory.MaplePet;
 import client.inventory.MaplePet.PetFlag;
-import client.inventory.MapleMount;
-import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.MapleInventoryType;
-import client.inventory.MapleInventory;
-import client.MapleStat;
-import client.PlayerStats;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
-import client.SkillFactory;
-import client.anticheat.CheatingOffense;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
-import java.awt.Rectangle;
-import java.util.Collections;
-import java.util.concurrent.locks.Lock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripting.NPCScriptManager;
 import server.AutobanManager;
-import server.Randomizer;
-import server.RandomRewards;
-import server.MapleShopFactory;
-import server.MapleItemInformationProvider;
 import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MapleShopFactory;
+import server.PredictCardFactory;
+import server.RandomRewards;
+import server.Randomizer;
+import server.StructPotentialItem;
 import server.StructRewardItem;
-import server.quest.MapleQuest;
-import server.maps.SavedLocationType;
+import server.life.MapleLifeFactory;
+import server.life.MapleMonster;
 import server.maps.FieldLimitType;
+import server.maps.MapleLove;
 import server.maps.MapleMap;
 import server.maps.MapleMapItem;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
-import server.life.MapleMonster;
-import server.life.MapleLifeFactory;
-import scripting.NPCScriptManager;
-import server.*;
-import server.maps.*;
+import server.maps.MapleMist;
+import server.maps.SavedLocationType;
+import server.quest.MapleQuest;
 import server.shops.HiredMerchant;
 import server.shops.IMaplePlayerShop;
+import tools.MaplePacketCreator;
 import tools.Pair;
+import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.MTSCSPacket;
 import tools.packet.PetPacket;
-import tools.data.input.SeekableLittleEndianAccessor;
-import tools.MaplePacketCreator;
 import tools.packet.PlayerShopPacket;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 public class InventoryHandler {
 
@@ -197,15 +198,15 @@ public class InventoryHandler {
                     boolean rewarded = false;
                     while (!rewarded) {
                         for (StructRewardItem reward : rewards.getRight()) {
-                            if (reward.data.prob > 0 && Randomizer.nextInt(rewards.getLeft()) < reward.data.prob) { // Total prob
-                                if (GameConstants.getInventoryType(reward.data.id) == MapleInventoryType.EQUIP) {
-                                    final IItem item = ii.getEquipById(reward.data.id);
-                                    if (reward.data.period > 0) {
-                                        item.setExpiration(System.currentTimeMillis() + (reward.data.period * 60 * 60 * 10));
+                            if (reward.data.getProb() > 0 && Randomizer.nextInt(rewards.getLeft()) < reward.data.getProb()) { // Total prob
+                                if (GameConstants.getInventoryType(reward.data.getId()) == MapleInventoryType.EQUIP) {
+                                    final IItem item = ii.getEquipById(reward.data.getId());
+                                    if (reward.data.getPeriod() > 0) {
+                                        item.setExpiration(System.currentTimeMillis() + (reward.data.getPeriod() * 60 * 60 * 10));
                                     }
                                     MapleInventoryManipulator.addbyItem(c, item);
                                 } else {
-                                    MapleInventoryManipulator.addById(c, reward.data.id, reward.data.quantity, (byte) 0);
+                                    MapleInventoryManipulator.addById(c, reward.data.getId(), reward.data.getQuantity(), (byte) 0);
                                 }
                                 MapleInventoryManipulator.removeById(c, GameConstants.getInventoryType(itemId), itemId, 1, false, false);
 

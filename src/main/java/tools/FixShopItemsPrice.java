@@ -1,13 +1,13 @@
 package tools;
 
+import com.github.mrzhqiang.maplestory.domain.DShopItem;
 import com.github.mrzhqiang.maplestory.domain.query.QDShopItem;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MapleItemInformationProvider;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -18,9 +18,9 @@ public class FixShopItemsPrice {
     private static final Logger LOGGER = LoggerFactory.getLogger(FixShopItemsPrice.class);
 
     private List<Integer> loadFromDB() {
-        return new QDShopItem().orderBy().itemid.asc()
+        return new QDShopItem().orderBy().itemId.asc()
                 .findStream()
-                .map(it -> it.itemid)
+                .map(DShopItem::getItemId)
                 // 去重
                 .distinct()
                 .collect(Collectors.toList());
@@ -28,11 +28,11 @@ public class FixShopItemsPrice {
 
     private void changePrice(int itemId) {
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        new QDShopItem().itemid.eq(itemId).orderBy().price.asc().findEach(it -> {
-            if (ii.getPrice(itemId) > it.price) {
+        new QDShopItem().itemId.eq(itemId).orderBy().price.asc().findEach(it -> {
+            if (ii.getPrice(itemId) > it.getPrice()) {
                 String name = ii.getName(itemId);
-                LOGGER.debug("道具: " + name + "道具ID: " + itemId + " 商店: " + it.shopid + " 价格: " + it.price + " 新价格:" + (long) ii.getPrice(itemId));
-                it.price = (int)ii.getPrice(itemId);
+                LOGGER.debug("道具: " + name + "道具ID: " + itemId + " 商店: " + it.getShopId() + " 价格: " + it.getPrice() + " 新价格:" + (long) ii.getPrice(itemId));
+                it.setPrice((int) ii.getPrice(itemId));
                 it.save();
             }
         });

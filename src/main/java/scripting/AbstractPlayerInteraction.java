@@ -22,47 +22,46 @@ package scripting;
 
 import KinMS.db.CherryMSLottery;
 import KinMS.db.CherryMScustomEventFactory;
-
-import java.util.List;
-
-import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
-import server.Timer.*;
-import client.inventory.Equip;
-import client.SkillFactory;
-import constants.GameConstants;
 import client.ISkill;
 import client.MapleCharacter;
 import client.MapleClient;
+import client.MapleQuestStatus;
+import client.SkillFactory;
+import client.inventory.Equip;
+import client.inventory.ItemFlag;
+import client.inventory.MapleInventoryIdentifier;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
-import client.MapleQuestStatus;
-import client.inventory.*;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
+import constants.GameConstants;
 import handling.channel.ChannelServer;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
+import handling.world.World;
 import handling.world.guild.MapleGuild;
-import server.Randomizer;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
-import server.maps.MapleMap;
-import server.maps.MapleReactor;
-import server.maps.MapleMapObject;
-import server.maps.SavedLocationType;
-import server.maps.Event_DojoAgent;
-import server.life.MapleMonster;
+import server.MaplePortal;
+import server.Randomizer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import server.events.MapleEvent;
+import server.events.MapleEventType;
 import server.life.MapleLifeFactory;
+import server.life.MapleMonster;
+import server.life.OverrideMonsterStats;
+import server.maps.Event_DojoAgent;
+import server.maps.MapleMap;
+import server.maps.MapleMapObject;
+import server.maps.MapleReactor;
+import server.maps.SavedLocationType;
 import server.quest.MapleQuest;
 import tools.MaplePacketCreator;
 import tools.packet.PetPacket;
 import tools.packet.UIPacket;
-import handling.world.World;
 
 import java.util.LinkedHashSet;
-
-import server.*;
-import server.events.MapleEvent;
-import server.events.MapleEventType;
-import server.life.OverrideMonsterStats;
+import java.util.List;
 
 public abstract class AbstractPlayerInteraction {
 
@@ -319,7 +318,7 @@ public abstract class AbstractPlayerInteraction {
         } else if (type.equals("ARANK")) {
             c.getPlayer().setAllianceRank((byte) x);
         } else if (type.equals("GENDER")) {
-            c.getPlayer().setGender((byte) x);
+            c.getPlayer().setGender(Gender.of((byte) x));
         } else if (type.equals("FACE")) {
             c.getPlayer().setFace(x);
         } else if (type.equals("HAIR")) {
@@ -361,7 +360,7 @@ public abstract class AbstractPlayerInteraction {
         } else if (type.equals("ADMIN")) {
             return c.getPlayer().isAdmin() ? 1 : 0;
         } else if (type.equals("GENDER")) {
-            return c.getPlayer().getGender();
+            return c.getPlayer().getGender().getCodeInt();
         } else if (type.equals("FACE")) {
             return c.getPlayer().getFace();
         } else if (type.equals("HAIR")) {
@@ -506,7 +505,7 @@ public abstract class AbstractPlayerInteraction {
         return c.getPlayer().getJob();
     }
 
-    public final int getNX(int 类型) {
+    public final long getNX(int 类型) {
         return c.getPlayer().getCSPoints(类型);
     }
 
@@ -1434,19 +1433,19 @@ public abstract class AbstractPlayerInteraction {
             c.getPlayer().getMap().resetAriantPQ(c.getPlayer().getAverageMapLevel());
             chr.getClient().getSession().write(MaplePacketCreator.getClock(8 * 60));
             chr.dropMessage(5, "建议把你的小地图忘下移动，来查看排名.");
-            MapTimer.getInstance().schedule(new Runnable() {
+            Timer.MAP.schedule(new Runnable() {
 
                 @Override
                 public void run() {
                     chr.updateAriantScore();
                 }
             }, 800);
-            EtcTimer.getInstance().schedule(new Runnable() {
+            Timer.ETC.schedule(new Runnable() {
 
                 @Override
                 public void run() {
                     chr.getClient().getSession().write(MaplePacketCreator.showAriantScoreBoard());
-                    MapTimer.getInstance().schedule(new Runnable() {
+                    Timer.MAP.schedule(new Runnable() {
 
                         @Override
                         public void run() {

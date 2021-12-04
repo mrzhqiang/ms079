@@ -1,34 +1,38 @@
 package tools.packet;
 
-import client.*;
-
-import java.time.ZoneOffset;
-import java.util.List;
+import client.ISkill;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.SkillEntry;
 import client.inventory.IItem;
 import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DNote;
 import com.github.mrzhqiang.maplestory.domain.query.QDWishList;
+import constants.ServerConstants;
+import handling.MaplePacket;
+import handling.SendPacketOpcode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.CashShop;
 import server.CashItemFactory;
 import server.CashItemInfo;
 import server.CashItemInfo.CashModInfo;
-import handling.MaplePacket;
-import handling.SendPacketOpcode;
-import constants.ServerConstants;
-
-import java.util.*;
-import tools.Pair;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import server.CashShop;
 import server.MTSStorage.MTSItemInfo;
 import tools.HexTool;
 import tools.KoreanDateUtil;
+import tools.Pair;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MTSCSPacket {
 
@@ -3711,11 +3715,11 @@ public class MTSCSPacket {
         mplew.write(count);
         for (int i = 0; i < count; i++) {
             DNote note = notes.get(i);
-            mplew.writeInt(note.id);
-            mplew.writeMapleAsciiString(note.from);
-            mplew.writeMapleAsciiString(note.message);
-            mplew.writeLong(PacketHelper.getKoreanTimestamp(note.timestamp));
-            mplew.write(note.gift);
+            mplew.writeInt(note.getId());
+            mplew.writeMapleAsciiString(note.getFrom());
+            mplew.writeMapleAsciiString(note.getMessage());
+            mplew.writeLong(PacketHelper.getKoreanTimestamp(note.getTimestamp()));
+            mplew.write(note.getGift());
         }
 
         return mplew.getPacket();
@@ -3774,7 +3778,7 @@ public class MTSCSPacket {
 
         AtomicInteger count = new AtomicInteger(10);
         new QDWishList().character.eq(chr.character).setMaxRows(10).findEach(it -> {
-            mplew.writeInt(it.sn);
+            mplew.writeInt(it.getSn());
             count.decrementAndGet();
         });
         while (count.get() > 0) {
@@ -3812,8 +3816,8 @@ public class MTSCSPacket {
             LOGGER.debug("showNXMapleTokens--------------------");
         }
         mplew.writeShort(SendPacketOpcode.CS_UPDATE.getValue());
-        mplew.writeInt(chr.getCSPoints(1)); // A-cash
-        mplew.writeInt(chr.getCSPoints(2)); // MPoint
+        mplew.writeInt((int) chr.getCSPoints(1)); // A-cash
+        mplew.writeInt((int) chr.getCSPoints(2)); // MPoint
 
         return mplew.getPacket();
     }
@@ -3933,43 +3937,43 @@ public class MTSCSPacket {
         mplew.writeInt(item.sn);
         mplew.writeInt(flags);
         if ((flags & 0x1) != 0) {
-            mplew.writeInt(item.item.itemid);
+            mplew.writeInt(item.item.getItemId());
         }
         if ((flags & 0x2) != 0) {
-            mplew.writeShort(item.item.count);
+            mplew.writeShort(item.item.getCount());
         }
         if ((flags & 0x4) != 0) {
-            mplew.writeInt(item.item.discountPrice);
+            mplew.writeInt(item.item.getDiscountPrice());
         }
         if ((flags & 0x8) != 0) {
-            mplew.write(item.item.unk1 - 1);
+            mplew.write(item.item.getUnk1() - 1);
         }
         if ((flags & 0x10) != 0) {
-            mplew.write(item.item.priority);
+            mplew.write(item.item.getPriority());
         }
         if ((flags & 0x20) != 0) {
-            mplew.writeShort(item.item.period);
+            mplew.writeShort(item.item.getPeriod());
         }
         if ((flags & 0x40) != 0) {
             mplew.writeInt(0);
         }
         if ((flags & 0x80) != 0) {
-            mplew.writeInt(item.item.meso);
+            mplew.writeInt(item.item.getMeso());
         }
         if ((flags & 0x100) != 0) {
-            mplew.write(item.item.unk2 - 1);
+            mplew.write(item.item.getUnk2() - 1);
         }
         if ((flags & 0x200) != 0) {
-            mplew.write(item.item.gender);
+            mplew.write(item.item.getGender());
         }
         if ((flags & 0x400) != 0) {
-            mplew.write(item.item.showup ? 1 : 0);
+            mplew.write(item.item.isShowUp() ? 1 : 0);
         }
         if ((flags & 0x800) != 0) {
-            mplew.write(item.item.mark);
+            mplew.write(item.item.getMark());
         }
         if ((flags & 0x1000) != 0) {
-            mplew.write(item.item.unk3 - 1);
+            mplew.write(item.item.getUnk3() - 1);
         }
         if ((flags & 0x2000) != 0) {
             mplew.writeShort(0);
@@ -4318,7 +4322,7 @@ public class MTSCSPacket {
         }
         mplew.writeShort(SendPacketOpcode.GET_MTS_TOKENS.getValue());
 //        mplew.writeInt(p.getCSPoints(1));
-        mplew.writeInt(p.getCSPoints(2));
+        mplew.writeInt((int) p.getCSPoints(2));
         return mplew.getPacket();
     }
 

@@ -1,27 +1,29 @@
 package handling.channel.handler;
 
-import static client.BuddyList.BuddyOperation.ADDED;
-import static client.BuddyList.BuddyOperation.DELETED;
-
-import java.util.Optional;
-
-import client.BuddyList;
 import client.BuddyEntry;
+import client.BuddyList;
+import client.BuddyList.BuddyAddResult;
+import client.BuddyList.BuddyOperation;
 import client.CharacterNameAndId;
 import client.MapleCharacter;
 import client.MapleClient;
-import client.BuddyList.BuddyAddResult;
-import client.BuddyList.BuddyOperation;
 import com.github.mrzhqiang.maplestory.domain.DBuddy;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.google.common.collect.Lists;
 import handling.channel.ChannelServer;
 import handling.world.World;
+import io.ebean.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.util.Optional;
+
+import static client.BuddyList.BuddyOperation.ADDED;
+import static client.BuddyList.BuddyOperation.DELETED;
 
 public class BuddyListHandler {
 
@@ -34,7 +36,7 @@ public class BuddyListHandler {
         }
 
         public int getBuddyCapacity() {
-            return character.buddyCapacity;
+            return character.getBuddyCapacity();
         }
     }
 
@@ -49,7 +51,7 @@ public class BuddyListHandler {
         DCharacter one = new QDCharacter().name.like(name).findOne();
         CharacterIdNameBuddyCapacity ret = null;
         if (one != null) {
-            if (one.gm == 0) {
+            if (one.getGm() == 0) {
                 ret = new CharacterIdNameBuddyCapacity(one, group);
             }
         }
@@ -99,13 +101,13 @@ public class BuddyListHandler {
                     if (channel > 0) {
                         buddyAddResult = World.Buddy.requestBuddyAdd(addName, c.getChannel(), c.getPlayer().character);
                     } else {
-                        int count = new QDBuddy().owner.eq(charWithId.character).pending.eq(0).findCount();
+                        int count = new QDBuddy().owner.eq(charWithId.character).pending.eq(false).findCount();
                         if (count >= charWithId.getBuddyCapacity()) {
                             buddyAddResult = BuddyAddResult.BUDDYLIST_FULL;
                         }
 
                         // SELECT pending FROM buddies WHERE characterid = ? AND buddyid = ?
-                        Optional<DBuddy> optional = new QDBuddy().owner.eq(charWithId.character).buddies.eq(c.getPlayer().getId()).findOneOrEmpty();
+                        Optional<DBuddy> optional = new QDBuddy().owner.eq(charWithId.character).buddies.id.eq(c.getPlayer().getId()).findOneOrEmpty();
                         if (optional.isPresent()) {
                             buddyAddResult = BuddyAddResult.ALREADY_ON_LIST;
                         }
@@ -120,10 +122,10 @@ public class BuddyListHandler {
                             notifyRemoteChannel(c, channel, otherCid, groupName, ADDED);
                         } else if (buddyAddResult != BuddyAddResult.ALREADY_ON_LIST && channel > 0) {
                             DBuddy buddy = new DBuddy();
-                            buddy.owner = charWithId.character;
-                            buddy.buddies = c.getPlayer().getId();
-                            buddy.groupName = groupName;
-                            buddy.pending = 1;
+                            buddy.setOwner(charWithId.character);
+                            buddy.setBuddies(Lists.newArrayList(DB.reference(DCharacter.class, c.getPlayer().getId())));
+                            buddy.setGroupName(groupName);
+                            buddy.setPending(true);
                             buddy.save();
                         }
                         buddylist.put(new BuddyEntry(charWithId.character, groupName, displayChannel, true));

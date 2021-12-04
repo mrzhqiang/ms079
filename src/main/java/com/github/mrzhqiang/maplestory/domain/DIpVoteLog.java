@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,19 +12,53 @@ import javax.persistence.Table;
 public class DIpVoteLog extends Model {
 
     @Id
-    @Column(name = "vid")
-    public Integer vid;
+    Integer id;
     @NotNull
-    @Column(name = "accid")
-    public String accid;
+    String accId;
     @NotNull
-    @Column(name = "ipaddress")
-    public String ipaddress;
+    String ipAddress;
     @NotNull
-    @Column(name = "votetime")
-    public String votetime;
+    String voteTime;
     @NotNull
-    @Column(name = "votetype")
-    public Integer votetype;
+    Integer voteType;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getAccId() {
+        return accId;
+    }
+
+    public void setAccId(String accId) {
+        this.accId = accId;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public String getVoteTime() {
+        return voteTime;
+    }
+
+    public void setVoteTime(String voteTime) {
+        this.voteTime = voteTime;
+    }
+
+    public Integer getVoteType() {
+        return voteType;
+    }
+
+    public void setVoteType(Integer voteType) {
+        this.voteType = voteType;
+    }
 }

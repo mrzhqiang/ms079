@@ -1,25 +1,26 @@
 package client.messages;
 
-import java.util.ArrayList;
 import client.MapleCharacter;
 import client.MapleClient;
-import client.messages.commands.*;
-import client.messages.commands.PlayerCommand;
+import client.messages.commands.AdminCommand;
+import client.messages.commands.CommandExecute;
+import client.messages.commands.CommandObject;
 import client.messages.commands.GMCommand;
 import client.messages.commands.InternCommand;
+import client.messages.commands.PlayerCommand;
 import com.github.mrzhqiang.maplestory.domain.DGmLog;
 import constants.ServerConstants;
 import constants.ServerConstants.CommandType;
 import constants.ServerConstants.PlayerGMRank;
-
-import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.HashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
+
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 public class CommandProcessor {
 
@@ -109,11 +110,11 @@ public class CommandProcessor {
 
     private static void logGMCommandToDB(MapleCharacter player, String command) {
         DGmLog log = new DGmLog();
-        log.cid = player.getId();
-        log.name = player.getName();
-        log.command = command;
-        log.mapid = player.getMap().getId();
-        log.ip = player.getClient().getSessionIPAddress();
+        log.setCid(player.getId());
+        log.setName(player.getName());
+        log.setCommand(command);
+        log.setMapId(player.getMap().getId());
+        log.setIp(player.getClient().getSessionIPAddress());
         log.save();
     }
 

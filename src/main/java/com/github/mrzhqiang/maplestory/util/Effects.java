@@ -10,13 +10,12 @@ import com.google.common.collect.Maps;
 import server.MapleStatEffect;
 import tools.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public final class Effects {
-    private Effects() {
-        // no instance
-    }
+public enum Effects {
+    ; // no instances
 
     public static MapleStatEffect ofItem(int id, WzElement<?> level) {
         MapleStatEffect effect = ofSkill(id, false, level);

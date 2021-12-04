@@ -7,7 +7,12 @@ import server.MapleItemInformationProvider;
 import tools.MaplePacketCreator;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapleInventory implements Iterable<IItem>, Serializable {

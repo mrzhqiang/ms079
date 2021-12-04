@@ -1,21 +1,18 @@
 package constants;
 
 import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import client.inventory.MapleWeaponType;
 import client.status.MonsterStatus;
 import handling.channel.handler.AttackInfo;
-
-import java.util.List;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-
 import server.MapleStatEffect;
 import server.Randomizer;
 import server.maps.MapleMapObjectType;
+
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 public class GameConstants {
 

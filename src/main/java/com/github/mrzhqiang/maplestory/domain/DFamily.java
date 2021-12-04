@@ -3,7 +3,13 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import java.util.List;
 
 @Entity
@@ -11,16 +17,46 @@ import java.util.List;
 public class DFamily extends Model {
 
     @Id
-    @Column(name = "familyid")
-    public Integer id;
+    Integer id;
     @NotNull
     @OneToOne
-    @JoinColumn(name = "leaderid")
-    public DCharacter leader;
+    @JoinColumn(name = "leader_id")
+    DCharacter leader;
     @NotNull
-    @Column(name = "notice")
-    public String notice;
-    @OneToMany(mappedBy = "family")
-    public List<DCharacter> members;
+    String notice;
 
+    @OneToMany(mappedBy = "family")
+    List<DCharacter> members;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getLeader() {
+        return leader;
+    }
+
+    public void setLeader(DCharacter leader) {
+        this.leader = leader;
+    }
+
+    public String getNotice() {
+        return notice;
+    }
+
+    public void setNotice(String notice) {
+        this.notice = notice;
+    }
+
+    public List<DCharacter> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<DCharacter> members) {
+        this.members = members;
+    }
 }

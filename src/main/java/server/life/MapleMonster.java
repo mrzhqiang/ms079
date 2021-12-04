@@ -1,6 +1,38 @@
 package server.life;
 
+import client.ISkill;
+import client.MapleBuffStat;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.MapleDisease;
+import client.SkillFactory;
 import client.inventory.Equip;
+import client.inventory.IItem;
+import client.inventory.Item;
+import client.inventory.MapleInventoryType;
+import client.status.MonsterStatus;
+import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import constants.GameConstants;
+import constants.ServerConstants;
+import handling.MaplePacket;
+import handling.channel.ChannelServer;
+import handling.world.MapleParty;
+import handling.world.MaplePartyCharacter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scripting.EventInstanceManager;
+import server.MapleItemInformationProvider;
+import server.MapleStatEffect;
+import server.Randomizer;
+import server.maps.MapleMap;
+import server.maps.MapleMapObject;
+import server.maps.MapleMapObjectType;
+import tools.ConcurrentEnumMap;
+import tools.MaplePacketCreator;
+import tools.Pair;
+import tools.packet.MobPacket;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,41 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
-
-import constants.GameConstants;
-import client.inventory.IItem;
-import client.ISkill;
-import client.inventory.Item;
-import client.MapleDisease;
-import client.MapleBuffStat;
-import client.MapleCharacter;
-import client.inventory.MapleInventoryType;
-import client.MapleClient;
-import handling.channel.ChannelServer;
-import client.SkillFactory;
-import client.status.MonsterStatus;
-import client.status.MonsterStatusEffect;
-import constants.ServerConstants;
-import handling.MaplePacket;
-import handling.world.MapleParty;
-import handling.world.MaplePartyCharacter;
-
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scripting.EventInstanceManager;
-import server.MapleItemInformationProvider;
-import server.MapleStatEffect;
-import server.Randomizer;
-import server.Timer.MobTimer;
-import server.maps.MapleMap;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
-import tools.ConcurrentEnumMap;
-import tools.Pair;
-import tools.MaplePacketCreator;
-import tools.packet.MobPacket;
 
 public class MapleMonster extends AbstractLoadedMapleLife {
 
@@ -831,21 +829,14 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                 oldEffect.cancelPoisonSchedule();
             }
         }
-        final MobTimer timerManager = MobTimer.getInstance();
-        final Runnable cancelTask = new Runnable() {
-
-            @Override
-            public final void run() {
-                cancelStatus(stat);
-            }
-        };
+        final Runnable cancelTask = () -> cancelStatus(stat);
 
         if (poison && getHp() > 1) {
             if (poison) {
                 int poisonLevel = from.getSkillLevel(status.getSkill());
                 int poisonDamage = Math.min(Short.MAX_VALUE, (int) (getMobMaxHp() / (70.0 - poisonLevel) + 0.999));
-                status.setValue(MonsterStatus.中毒, Integer.valueOf(poisonDamage));
-                status.setPoisonSchedule(timerManager.register(new PoisonTask(poisonDamage, from, status, cancelTask, false), 1000, 1000));
+                status.setValue(MonsterStatus.中毒, poisonDamage);
+                status.setPoisonSchedule(Timer.MOB.register(new PoisonTask(poisonDamage, from, status, cancelTask, false), 1000, 1000));
                 // final int poisonDamage = (int) Math.min(Short.MAX_VALUE, (long) (getMobMaxHp() / (70.0 - from.getSkillLevel(status.getSkill())) + 0.999));
                 // status.setValue(MonsterStatus.中毒, poisonDamage);
                 // status.setPoisonSchedule(timerManager.register(new PoisonTask(poisonDamage, from, status, cancelTask, false), 1000, 1000));
@@ -899,14 +890,14 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                 }
                 poisonDamage = Math.min(Short.MAX_VALUE, poisonDamage);
                 status.setValue(MonsterStatus.中毒, poisonDamage);
-                status.setPoisonSchedule(timerManager.register(new PoisonTask(poisonDamage, from, status, cancelTask, false), 1000, 1000));
+                status.setPoisonSchedule(Timer.MOB.register(new PoisonTask(poisonDamage, from, status, cancelTask, false), 1000, 1000));
 
             } else if (statusSkill == 4111003 || statusSkill == 14111001) { // shadow web
-                status.setPoisonSchedule(timerManager.schedule(new PoisonTask((int) (getMobMaxHp() / 50.0 + 0.999), from, status, cancelTask, true), 3500));
+                status.setPoisonSchedule(Timer.MOB.schedule(new PoisonTask((int) (getMobMaxHp() / 50.0 + 0.999), from, status, cancelTask, true), 3500));
 
             } else if (statusSkill == 4121004 || statusSkill == 4221004) {
                 final int damage = (from.getStat().getStr() + from.getStat().getLuk()) * 2 * (60 / 100);
-                status.setPoisonSchedule(timerManager.register(new PoisonTask(damage, from, status, cancelTask, false), 1000, 1000));
+                status.setPoisonSchedule(Timer.MOB.register(new PoisonTask(damage, from, status, cancelTask, false), 1000, 1000));
             }
 
             stati.put(stat, status);
@@ -918,7 +909,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             if (skilz != null) {
                 aniTime = skilz.getAnimationTime();
             }
-            ScheduledFuture<?> schedule = timerManager.schedule(cancelTask, duration + aniTime);
+            ScheduledFuture<?> schedule = Timer.MOB.schedule(cancelTask, duration + aniTime);
             status.setCancelTask(schedule);
         }
     }
@@ -1133,18 +1124,13 @@ public class MapleMonster extends AbstractLoadedMapleLife {
     }
 
     public final void applyMonsterBuff(final Map<MonsterStatus, Integer> effect, final int skillId, final long duration, final MobSkill skill, final List<Integer> reflection) {
-        MobTimer timerManager = MobTimer.getInstance();
-        final Runnable cancelTask = new Runnable() {
-
-            @Override
-            public final void run() {
-                if (reflection.size() > 0) {
-                    MapleMonster.this.reflectpack = null;
-                }
-                if (isAlive()) {
-                    for (MonsterStatus z : effect.keySet()) {
-                        cancelStatus(z);
-                    }
+        final Runnable cancelTask = () -> {
+            if (reflection.size() > 0) {
+                MapleMonster.this.reflectpack = null;
+            }
+            if (isAlive()) {
+                for (MonsterStatus z : effect.keySet()) {
+                    cancelStatus(z);
                 }
             }
         };
@@ -1166,17 +1152,12 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                 }
             }
         }
-        timerManager.schedule(cancelTask, duration);
+        Timer.MOB.schedule(cancelTask, duration);
     }
 
     public final void setTempEffectiveness(final Element e, final long milli) {
         stats.setEffectiveness(e, ElementalEffectiveness.虚弱);
-        MobTimer.getInstance().schedule(new Runnable() {
-
-            public void run() {
-                stats.removeEffectiveness(e);
-            }
-        }, milli);
+        Timer.MOB.schedule(() -> stats.removeEffectiveness(e), milli);
     }
 
     public final boolean isBuffed(final MonsterStatus status) {
@@ -1657,20 +1638,20 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             Collections.shuffle(dropEntry);
             IItem idrop;
             for (MonsterDropEntry d : dropEntry) {
-                if (d.data.itemid > 0
-                        && d.data.questid == 0
-                        && d.data.itemid / 10000 != 238
-                        && Randomizer.nextInt(999999) < (int) (10 * d.data.chance * chServerrate * chr.getDropMod()
+                if (d.data.getItemId() > 0
+                        && d.data.getQuestId() == 0
+                        && d.data.getItemId() / 10000 != 238
+                        && Randomizer.nextInt(999999) < (int) (10 * d.data.getChance() * chServerrate * chr.getDropMod()
                         * (chr.getStat().dropBuff / 100.0) * (showdown / 100.0))) { //kinda op
-                    if (GameConstants.getInventoryType(d.data.itemid) == MapleInventoryType.EQUIP) {
-                        Equip eq = (Equip) MapleItemInformationProvider.getInstance().getEquipById(d.data.itemid);
+                    if (GameConstants.getInventoryType(d.data.getItemId()) == MapleInventoryType.EQUIP) {
+                        Equip eq = (Equip) MapleItemInformationProvider.getInstance().getEquipById(d.data.getItemId());
                         idrop = MapleItemInformationProvider.getInstance().randomizeStats(eq);
                     } else {
-                        idrop = new Item(d.data.itemid, (byte) 0, (short) (d.data.maxQuantity != 1
-                                ? Randomizer.nextInt(d.data.maxQuantity - d.data.minQuantity) + d.data.minQuantity
+                        idrop = new Item(d.data.getItemId(), (byte) 0, (short) (d.data.getMaxQuantity() != 1
+                                ? Randomizer.nextInt(d.data.getMaxQuantity() - d.data.getMinQuantity()) + d.data.getMinQuantity()
                                 : 1), (byte) 0);
                     }
-                    stolen = d.data.itemid;
+                    stolen = d.data.getItemId();
                     map.spawnMobDrop(idrop, map.calcDropPos(getPosition(), getTruePosition()), this, chr, (byte) 0, (short) 0);
                     break;
                 }
@@ -1734,7 +1715,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
                 return;
         }
         shouldDropItem = false;
-        dropItemSchedule = MobTimer.getInstance().register(new Runnable() {
+        dropItemSchedule = Timer.MOB.register(new Runnable() {
 
             public void run() {
                 if (isAlive() && map != null) {

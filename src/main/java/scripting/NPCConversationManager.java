@@ -1,6 +1,6 @@
 /*
  This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
+ Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc>
  Matthias Butz <matze@odinms.de>
  Jan Christian Meyer <vimes@odinms.de>
 
@@ -20,60 +20,72 @@
  */
 package scripting;
 
-import client.*;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import client.ISkill;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.MapleQuestStatus;
+import client.MapleStat;
+import client.SkillEntry;
+import client.SkillFactory;
 import client.inventory.Equip;
 import client.inventory.IItem;
+import client.inventory.ItemFlag;
+import client.inventory.ItemLoader;
+import client.inventory.MapleInventory;
+import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DHiredMerch;
 import com.github.mrzhqiang.maplestory.domain.query.QDHiredMerch;
 import constants.GameConstants;
-import client.inventory.ItemFlag;
-import client.inventory.MapleInventory;
-import client.inventory.MapleInventoryType;
-import client.inventory.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import server.MapleCarnivalParty;
-import server.Randomizer;
-import server.MapleInventoryManipulator;
-import server.MapleShopFactory;
-import server.MapleSquad;
-import server.maps.MapleMap;
-import server.maps.Event_DojoAgent;
-import server.maps.AramiaFireWorks;
-import server.quest.MapleQuest;
-import tools.MaplePacketCreator;
-import tools.Pair;
-import tools.packet.PlayerShopPacket;
-import server.MapleItemInformationProvider;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
 import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
-import server.MapleCarnivalChallenge;
-
-import java.util.HashMap;
-
 import handling.world.guild.MapleGuildAlliance;
-
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import javax.script.Invocable;
-
-import server.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import server.MapleCarnivalChallenge;
+import server.MapleCarnivalParty;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MaplePortal;
+import server.MapleShopFactory;
+import server.MapleSquad;
+import server.MapleStatEffect;
+import server.MerchItemPackage;
+import server.Randomizer;
+import server.SpeedRunner;
+import server.StructPotentialItem;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import server.life.MapleLifeFactory;
+import server.life.MapleMonster;
+import server.life.MapleMonsterInformationProvider;
+import server.life.MonsterDropEntry;
+import server.life.MonsterGlobalDropEntry;
+import server.maps.AramiaFireWorks;
+import server.maps.Event_DojoAgent;
+import server.maps.Event_PyramidSubway;
+import server.maps.MapleMap;
+import server.maps.MapleMapFactory;
+import server.maps.MapleMapObject;
+import server.maps.MapleMapObjectType;
 import server.maps.SpeedRunType;
-import server.Timer.CloneTimer;
-import server.life.*;
-import server.maps.*;
+import server.quest.MapleQuest;
+import tools.MaplePacketCreator;
+import tools.Pair;
 import tools.StringUtil;
+import tools.packet.PlayerShopPacket;
+
+import javax.script.Invocable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class NPCConversationManager extends AbstractPlayerInteraction {
 
@@ -962,9 +974,9 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         }
 
         final MerchItemPackage pack = new MerchItemPackage();
-        pack.setPackageid(one.id);
-        pack.setMesos(one.mesos);
-        pack.setSentTime(one.time);
+        pack.setPackageid(one.getId());
+        pack.setMesos(one.getMesos());
+        pack.setSentTime(one.getTime());
 
         Map<Integer, Pair<IItem, MapleInventoryType>> items = ItemLoader.loadItems(5, false, -1, -1, charid);
         if (items != null) {
@@ -1341,7 +1353,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
     public final void doWeddingEffect(final Object ch) {
         final MapleCharacter chr = (MapleCharacter) ch;
         // getMap().broadcastMessage(MaplePacketCreator.yellowChat(getPlayer().getName() + ", do you take " + chr.getName() + " as your wife and promise to stay beside her through all downtimes, crashes, and lags?"));
-        CloneTimer.getInstance().schedule(new Runnable() {
+        Timer.CLONE.schedule(new Runnable() {
 
             public void run() {
                 if (chr == null || getPlayer() == null) {
@@ -1351,7 +1363,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                 }
             }
         }, 10000);
-        CloneTimer.getInstance().schedule(new Runnable() {
+        Timer.CLONE.schedule(new Runnable() {
 
             public void run() {
                 if (chr == null || getPlayer() == null) {
@@ -1469,8 +1481,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
             MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             StringBuilder name = new StringBuilder();
             for (MonsterDropEntry de : ranks) {
-                if (de.data.chance > 0 && (de.data.questid <= 0 || MapleQuest.getInstance(de.data.questid).getName().length() > 0)) {
-                    itemId = de.data.itemid;
+                if (de.data.getChance() > 0 && (de.data.getQuestId() <= 0 || MapleQuest.getInstance(de.data.getQuestId()).getName().length() > 0)) {
+                    itemId = de.data.getItemId();
                     if (!ii.itemExists(itemId)) {
                         continue;
                     }
@@ -1483,12 +1495,12 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                     String namez = "#z" + itemId + "#";
                     if (itemId == 0) {
                         itemId = 4031041;
-                        namez = de.data.minQuantity * getClient().getChannelServer().getMesoRate() +
+                        namez = de.data.getMinQuantity() * getClient().getChannelServer().getMesoRate() +
                                 " - " +
-                                de.data.maxQuantity * getClient().getChannelServer().getMesoRate()
+                                de.data.getMaxQuantity() * getClient().getChannelServer().getMesoRate()
                                 + " 的金币";
                     }
-                    ch = de.data.chance * rate;
+                    ch = de.data.getChance() * rate;
                     //  if (getPlayer().isAdmin()) {
                     name.append(num + 1)
                             .append(") #v")
@@ -1498,8 +1510,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                             .append(" - ")
                             .append(Integer.valueOf(ch >= 999999 ? 1000000 : ch).doubleValue() / 10000.0D)
                             .append("%的爆率. ")
-                            .append((de.data.questid > 0) && (MapleQuest.getInstance(de.data.questid).getName().length() > 0)
-                                    ? "需要接受任务: " + MapleQuest.getInstance(de.data.questid).getName()
+                            .append((de.data.getQuestId() > 0) && (MapleQuest.getInstance(de.data.getQuestId()).getName().length() > 0)
+                                    ? "需要接受任务: " + MapleQuest.getInstance(de.data.getQuestId()).getName()
                                     : "")
                             .append("\r\n");
                     // } else {
@@ -1525,11 +1537,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 
             StringBuilder name = new StringBuilder();
             for (MonsterGlobalDropEntry de : ranks) {
-                if ((de.global.continent < 0)
-                        || ((de.global.continent < 10) && (mapid / 100000000 == de.global.continent))
-                        || ((de.global.continent < 100) && (mapid / 10000000 == de.global.continent))
-                        || ((de.global.continent < 1000) && (mapid / 1000000 == de.global.continent))) {
-                    int itemId = de.global.itemid;
+                if ((de.global.getContinent() < 0)
+                        || ((de.global.getContinent() < 10) && (mapid / 100000000 == de.global.getContinent()))
+                        || ((de.global.getContinent() < 100) && (mapid / 10000000 == de.global.getContinent()))
+                        || ((de.global.getContinent() < 1000) && (mapid / 1000000 == de.global.getContinent()))) {
+                    int itemId = de.global.getItemId();
                     if (num == 0) {
                         name.append("当前地图 #r").append(mapid).append("#k - #m").append(mapid).append("# 的全局爆率为:");
                         name.append("\r\n--------------------------------------\r\n");
@@ -1537,9 +1549,9 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                     String names = "#z" + itemId + "#";
                     if ((itemId == 0) && (cashServerRate != 0)) {
                         itemId = 4031041;
-                        names = de.global.minQuantity * cashServerRate + " - " + de.global.maxQuantity * cashServerRate + " 的抵用卷";
+                        names = de.global.getMinQuantity() * cashServerRate + " - " + de.global.getMaxQuantity() * cashServerRate + " 的抵用卷";
                     }
-                    int chance = de.global.chance * globalServerRate;
+                    int chance = de.global.getChance() * globalServerRate;
                     if (getPlayer().isAdmin()) {
                         name.append(num + 1).append(") #v")
                                 .append(itemId)
@@ -1548,8 +1560,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                                 .append(" - ")
                                 .append(Integer.valueOf(chance >= 999999 ? 1000000 : chance).doubleValue() / 10000.0D)
                                 .append("%的爆率. ")
-                                .append((de.global.questid > 0) && (MapleQuest.getInstance(de.global.questid).getName().length() > 0)
-                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.questid).getName()
+                                .append((de.global.getQuestId() > 0) && (MapleQuest.getInstance(de.global.getQuestId()).getName().length() > 0)
+                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.getQuestId()).getName()
                                         : "")
                                 .append("\r\n");
                     } else {
@@ -1558,8 +1570,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
                                 .append(itemId)
                                 .append("#")
                                 .append(names)
-                                .append((de.global.questid > 0) && (MapleQuest.getInstance(de.global.questid).getName().length() > 0)
-                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.questid).getName()
+                                .append((de.global.getQuestId() > 0) && (MapleQuest.getInstance(de.global.getQuestId()).getName().length() > 0)
+                                        ? "需要接受任务: " + MapleQuest.getInstance(de.global.getQuestId()).getName()
                                         : "")
                                 .append("\r\n");
                     }
@@ -1582,7 +1594,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         MapleMap warpMap = c.getChannelServer().getMapFactory().getMap(mid);
         c.getPlayer().changeMap(warpMap, warpMap.getPortal(0));
         c.sendPacket(MaplePacketCreator.getClock(time));
-        Timer.EventTimer.getInstance().schedule(() -> {
+        Timer.EVENT.schedule(() -> {
             MapleMap warpMap1 = c.getChannelServer().getMapFactory().getMap(retmap);
             if (c.getPlayer() != null) {
                 c.sendPacket(MaplePacketCreator.stopClock());
@@ -1594,7 +1606,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 
     public void warpMapWithClock(final int mid, int seconds) {
         c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getClock(seconds));
-        Timer.MapTimer.getInstance().schedule(() -> {
+        Timer.MAP.schedule(() -> {
             if (c.getPlayer() != null) {
                 for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
                     chr.changeMap(mid);

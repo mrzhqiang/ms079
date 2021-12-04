@@ -21,12 +21,11 @@
  */
 package server.events;
 
-import java.util.concurrent.ScheduledFuture;
 import client.MapleCharacter;
-import server.Timer.EventTimer;
-import server.maps.MapleMap;
-import server.maps.SavedLocationType;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import tools.MaplePacketCreator;
+
+import java.util.concurrent.ScheduledFuture;
 
 public class MapleFitness extends MapleEvent {
 
@@ -60,7 +59,7 @@ public class MapleFitness extends MapleEvent {
         this.timeStarted = System.currentTimeMillis();
         checkAndMessage();
 
-        fitnessSchedule = EventTimer.getInstance().schedule(new Runnable() {
+        fitnessSchedule = Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {
@@ -115,7 +114,7 @@ public class MapleFitness extends MapleEvent {
     }
 
    public void checkAndMessage() {
-        msgSchedule = EventTimer.getInstance().register(new Runnable() {
+        msgSchedule = Timer.EVENT.register(new Runnable() {
 
             @Override
             public void run() {

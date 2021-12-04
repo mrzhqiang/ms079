@@ -1,26 +1,43 @@
 package server;
 
-import client.*;
+import client.ISkill;
+import client.MapleBuffStat;
+import client.MapleCharacter;
+import client.MapleCoolDownValueHolder;
+import client.MapleDisease;
+import client.MapleStat;
+import client.PlayerStats;
+import client.SkillFactory;
 import client.inventory.IItem;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import handling.channel.ChannelServer;
 import server.MapleCarnivalFactory.MCSkill;
-import server.Timer.BuffTimer;
 import server.life.MapleMonster;
-import server.maps.*;
+import server.maps.MapleDoor;
+import server.maps.MapleMap;
+import server.maps.MapleMapObject;
+import server.maps.MapleMapObjectType;
+import server.maps.MapleMist;
+import server.maps.MapleSummon;
+import server.maps.SummonMovementType;
 import tools.MaplePacketCreator;
 import tools.Pair;
 
 import java.awt.*;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
 public class MapleStatEffect implements Serializable {
@@ -470,7 +487,7 @@ public class MapleStatEffect implements Serializable {
 
     public final void silentApplyBuff(final MapleCharacter chr, final long starttime) {
         final int localDuration = alchemistModifyVal(chr, duration, false);
-        chr.registerEffect(this, starttime, BuffTimer.getInstance().schedule(new CancelEffectAction(chr, this, starttime),
+        chr.registerEffect(this, starttime, Timer.BUFF.schedule(new CancelEffectAction(chr, this, starttime),
                 ((starttime + localDuration) - System.currentTimeMillis())));
 
         final SummonMovementType summonMovementType = getSummonMovementType();
@@ -500,7 +517,7 @@ public class MapleStatEffect implements Serializable {
 
         final long starttime = System.currentTimeMillis();
         final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
-        final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, ((starttime + 29999) - System.currentTimeMillis()));
+        final ScheduledFuture<?> schedule = Timer.BUFF.schedule(cancelAction, ((starttime + 29999) - System.currentTimeMillis()));
         applyto.registerEffect(this, starttime, schedule);
     }
 
@@ -516,7 +533,7 @@ public class MapleStatEffect implements Serializable {
 
         final long starttime = System.currentTimeMillis();
         final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
-        final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, ((starttime + 29999) - System.currentTimeMillis()));
+        final ScheduledFuture<?> schedule = Timer.BUFF.schedule(cancelAction, ((starttime + 29999) - System.currentTimeMillis()));
         applyto.registerEffect(this, starttime, schedule);
     }
 
@@ -537,7 +554,7 @@ public class MapleStatEffect implements Serializable {
             //          applyto.getClient().getSession().write(MaplePacketCreator.能量条(applyto.getId(), duration / 1000)); //????????????????
             applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveEnergyChargeTest(applyto.getId(), 10000, duration / 1000), false);
             final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
-            final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, ((starttime + duration) - System.currentTimeMillis()));
+            final ScheduledFuture<?> schedule = Timer.BUFF.schedule(cancelAction, ((starttime + duration) - System.currentTimeMillis()));
             this.statups = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ENERGY_CHARGE, 10000));
             applyto.registerEffect(this, starttime, schedule);
             this.statups = stat;
@@ -732,7 +749,7 @@ public class MapleStatEffect implements Serializable {
         final long starttime = System.currentTimeMillis();
         final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
         //LOGGER.debug("Started effect " + sourceid + ". Duration: " + localDuration + ", Actual Duration: " + (((starttime + localDuration) - System.currentTimeMillis())));
-        final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, ((starttime + localDuration) - System.currentTimeMillis()));
+        final ScheduledFuture<?> schedule = Timer.BUFF.schedule(cancelAction, ((starttime + localDuration) - System.currentTimeMillis()));
         applyto.registerEffect(this, starttime, schedule, localstatups);
     }
 
@@ -1538,7 +1555,7 @@ public class MapleStatEffect implements Serializable {
             case 1000:
             case 1001:
             case 1003:
-                return morph + (chr.getGender() == 1 ? 100 : 0);
+                return morph + (chr.getGender() == Gender.FEMALE ? 100 : 0);
         }
         return morph;
     }

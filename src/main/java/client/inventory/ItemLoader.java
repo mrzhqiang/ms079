@@ -1,6 +1,5 @@
 package client.inventory;
 
-import com.github.mrzhqiang.maplestory.domain.DCsEquipment;
 import com.github.mrzhqiang.maplestory.domain.DCsItem;
 import com.github.mrzhqiang.maplestory.domain.DDueyItem;
 import com.github.mrzhqiang.maplestory.domain.DHiredMerchItem;
@@ -23,35 +22,35 @@ import java.util.Map;
 public enum ItemLoader {
     ; // no instance
 
-    // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "characterid")
+    // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id")
     // 1 STORAGE("inventoryitems", "inventoryequipment", 1, "accountid")
     // 2 CASHSHOP_EXPLORER("csitems", "csequipment", 2, "accountid")
     // 3 CASHSHOP_CYGNUS("csitems", "csequipment", 3, "accountid")
     // 4 CASHSHOP_ARAN("csitems", "csequipment", 4, "accountid")
-    // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "characterid")
+    // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "character_id")
     // 6 DUEY("dueyitems", "dueyequipment", 6, "packageid")
     // 7 CASHSHOP_EVAN("csitems", "csequipment", 7, "accountid")
     // 8 MTS("mtsitems", "mtsequipment", 8, "packageid")
-    // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "characterid")
+    // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "character_id")
     // 10 CASHSHOP_DB("csitems", "csequipment", 10, "accountid")
     // 11 CASHSHOP_RESIST("csitems", "csequipment", 11, "accountid")
     public static Map<Integer, Pair<IItem, MapleInventoryType>> loadItems_hm(int value, int packageid, int accountid) {
         Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
-        new QDHiredMerchItem().type.eq(value).packageid.eq(packageid).account.id.eq(accountid).findStream()
+        new QDHiredMerchItem().type.eq(value).packageId.eq(packageid).account.id.eq(accountid).findStream()
                 .forEach(it -> {
-                    MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+                    MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
                     if (MapleInventoryType.EQUIP.equals(mit) || MapleInventoryType.EQUIPPED.equals(mit)) {
                         MapleHiredMerchEquip equip = new MapleHiredMerchEquip(it);
                         equip.setQuantity(1);
                         if (equip.getUniqueId() > -1) {
-                            if (GameConstants.isEffectRing(it.itemid)) {
+                            if (GameConstants.isEffectRing(it.getItemId())) {
                                 MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals(MapleInventoryType.EQUIPPED));
                                 if (ring != null) {
                                     equip.setRing(ring);
                                 }
                             }
                         }
-                        items.put(it.id, new Pair<>(equip.copy(), mit));
+                        items.put(it.getId(), new Pair<>(equip.copy(), mit));
                     } else {
                         MapleHiredMerchItem item = new MapleHiredMerchItem(it);
                         if (GameConstants.isPet(item.getItemId())) {
@@ -67,7 +66,7 @@ public enum ItemLoader {
                                 item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                             }
                         }
-                        items.put(it.id, new Pair<>(item.copy(), mit));
+                        items.put(it.getId(), new Pair<>(item.copy(), mit));
                     }
                 });
         return items;
@@ -79,7 +78,7 @@ public enum ItemLoader {
         QDInventoryItem select = new QDInventoryItem().type.eq(value);
         switch (value) {
             case 0:
-                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "characterid")
+                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id")
                 return loadInventoryItemByCharacter(login, id[0]);
             case 1:
                 // 1 STORAGE("inventoryitems", "inventoryequipment", 1, "accountid")
@@ -98,7 +97,7 @@ public enum ItemLoader {
                 // 11 CASHSHOP_RESIST("csitems", "csequipment", 11, "accountid")
                 return loadCsItem(value, login, id[0]);
             case 5:
-                // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "characterid")
+                // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "character_id")
                 return loadHiredMerchItem(login, id[0], id[1], id[2]);
             case 6:
                 // 6 DUEY("dueyitems", "dueyequipment", 6, "packageid")
@@ -107,15 +106,15 @@ public enum ItemLoader {
                 // 8 MTS("mtsitems", "mtsequipment", 8, "packageid")
                 return loadMtsItem(login, id[0]);
             case 9:
-                // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "characterid")
+                // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "character_id")
                 return loadMtsTransfer(login, id[0]);
         }
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -126,7 +125,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -136,7 +135,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 Item item = new Item(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -152,7 +151,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -163,11 +162,11 @@ public enum ItemLoader {
 
         QDMtsTransfer select = new QDMtsTransfer().type.eq(9).character.id.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -178,7 +177,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -188,7 +187,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 MapleMtsTransferItem item = new MapleMtsTransferItem(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -204,7 +203,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -215,11 +214,11 @@ public enum ItemLoader {
 
         QDMtsItem select = new QDMtsItem().type.eq(8).packageId.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -230,7 +229,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -240,7 +239,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 MapleMtsItem item = new MapleMtsItem(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -256,7 +255,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -267,11 +266,11 @@ public enum ItemLoader {
 
         QDDueyItem select = new QDDueyItem().type.eq(6).pack.id.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -282,7 +281,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -292,7 +291,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 MapleDueyItem item = new MapleDueyItem(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -308,7 +307,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -321,7 +320,7 @@ public enum ItemLoader {
         Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
         QDHiredMerchItem select = new QDHiredMerchItem().type.eq(5);
         if (packageId > 0) {
-            select.packageid.eq(packageId);
+            select.packageId.eq(packageId);
         }
         if (accountId > 0) {
             select.account.id.eq(accountId);
@@ -330,11 +329,11 @@ public enum ItemLoader {
             select.character.id.eq(characterId);
         }
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -345,7 +344,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -355,7 +354,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 MapleHiredMerchItem item = new MapleHiredMerchItem(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -371,7 +370,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -382,11 +381,11 @@ public enum ItemLoader {
 
         QDCsItem select = new QDCsItem().type.eq(value).account.id.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -397,7 +396,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -407,7 +406,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 MapleCsItem item = new MapleCsItem(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -423,7 +422,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -433,11 +432,11 @@ public enum ItemLoader {
         Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
         QDInventoryItem select = new QDInventoryItem().type.eq(0).character.id.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -448,7 +447,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -458,7 +457,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 Item item = new Item(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -474,7 +473,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -484,11 +483,11 @@ public enum ItemLoader {
         Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
         QDInventoryItem select = new QDInventoryItem().type.eq(1).account.id.eq(id);
         if (login) {
-            select.inventorytype.eq(MapleInventoryType.EQUIPPED.getType());
+            select.inventoryType.eq(MapleInventoryType.EQUIPPED.getType());
         }
 
         select.findEach(it -> {
-            MapleInventoryType mit = MapleInventoryType.getByType(it.inventorytype);
+            MapleInventoryType mit = MapleInventoryType.getByType(it.getInventoryType());
             if (mit == null) {
                 return;
             }
@@ -499,7 +498,7 @@ public enum ItemLoader {
                     equip.setQuantity(1);
 
                     if (equip.getUniqueId() > -1) {
-                        if (GameConstants.isEffectRing(it.itemid)) {
+                        if (GameConstants.isEffectRing(it.getItemId())) {
                             MapleRing ring = MapleRing.loadFromDb(
                                     equip.getUniqueId(), MapleInventoryType.EQUIPPED.equals(mit));
                             if (ring != null) {
@@ -509,7 +508,7 @@ public enum ItemLoader {
                     }
                 }
                 // copy ? 人才
-                items.put(it.id, new Pair<>(equip.copy(), mit));
+                items.put(it.getId(), new Pair<>(equip.copy(), mit));
             } else {
                 Item item = new Item(it);
                 if (GameConstants.isPet(item.getItemId())) {
@@ -525,7 +524,7 @@ public enum ItemLoader {
                         item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
                     }
                 }
-                items.put(it.id, new Pair<>(item.copy(), mit));
+                items.put(it.getId(), new Pair<>(item.copy(), mit));
             }
         });
         return items;
@@ -534,7 +533,7 @@ public enum ItemLoader {
     public static void deleteItems(int value, int... id) {
         switch (value) {
             case 0:
-                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "characterid")
+                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id")
                 new QDInventoryItem().type.eq(value).character.id.eq(id[0]).delete();
                 break;
             case 1:
@@ -556,8 +555,8 @@ public enum ItemLoader {
                 new QDCsItem().type.eq(value).account.id.eq(id[0]).delete();
                 break;
             case 5:
-                // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "characterid")
-                new QDHiredMerchItem().type.eq(value).packageid.eq(id[0])
+                // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "character_id")
+                new QDHiredMerchItem().type.eq(value).packageId.eq(id[0])
                         .or().account.id.eq(id[1])
                         .or().character.id.eq(id[2]).delete();
                 break;
@@ -570,7 +569,7 @@ public enum ItemLoader {
                 new QDMtsItem().type.eq(value).packageId.eq(id[0]).delete();
                 break;
             case 9:
-                // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "characterid")
+                // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "character_id")
                 new QDMtsTransfer().type.eq(value).character.id.eq(id[0]).delete();
                 break;
         }
@@ -586,98 +585,98 @@ public enum ItemLoader {
             MapleInventoryType right = pair.right;
             if (left instanceof Equip) {
                 DInventoryItem item = ((Equip) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof Item) {
                 DInventoryItem item = ((Item) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleHiredMerchEquip) {
                 DHiredMerchItem item = ((MapleHiredMerchItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleHiredMerchItem) {
                 DHiredMerchItem item = ((MapleHiredMerchItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleCsEquip) {
                 DCsItem item = ((MapleCsEquip) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleCsItem) {
                 DCsItem item = ((MapleCsItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleDueyEquip) {
                 DDueyItem item = ((MapleDueyEquip) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleDueyItem) {
                 DDueyItem item = ((MapleDueyItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleMtsEquip) {
                 DMtsItem item = ((MapleMtsEquip) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleMtsItem) {
                 DMtsItem item = ((MapleMtsItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleMtsTransferEquip) {
                 DMtsTransfer item = ((MapleMtsTransferEquip) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             } else if (left instanceof MapleMtsTransferItem) {
                 DMtsTransfer item = ((MapleMtsTransferItem) left).item;
-                item.inventorytype = right.getType();
+                item.setInventoryType(right.getType());
                 // todo 级联操作
-                if (item.equipment != null) {
-                    item.equipment.save();
+                if (item.getEquipment() != null) {
+                    item.getEquipment().save();
                 }
                 item.save();
             }

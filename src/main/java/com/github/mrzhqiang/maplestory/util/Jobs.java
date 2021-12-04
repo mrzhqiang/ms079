@@ -2,10 +2,8 @@ package com.github.mrzhqiang.maplestory.util;
 
 import com.google.common.base.Strings;
 
-public final class Jobs {
-    private Jobs() {
-        // no instance
-    }
+public enum Jobs {
+    ; // no instances
 
     public static int computeId(int skillId) {
         return skillId / 10000;

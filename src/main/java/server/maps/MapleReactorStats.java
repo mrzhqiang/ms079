@@ -20,12 +20,11 @@
  */
 package server.maps;
 
-import java.awt.Point;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.Pair;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MapleReactorStats {
 

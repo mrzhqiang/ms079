@@ -20,18 +20,18 @@
  */
 package handling.channel.handler;
 
-import java.rmi.RemoteException;
-import java.util.Iterator;
-
 import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.MaplePet;
 import handling.MaplePacket;
 import handling.world.World;
-import handling.world.guild.*;
+import handling.world.guild.MapleGuild;
+import handling.world.guild.MapleGuildResponse;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.PetPacket;
+
+import java.util.Iterator;
 
 public class GuildHandler {
 
@@ -166,8 +166,8 @@ public class GuildHandler {
                         c.getPlayer().setGuildRank((byte) 5);
                         itr.remove();
 
-                        int s = World.Guild.addGuildMember(c.getPlayer().getMGC());
-                        if (s == 0) {
+                        boolean full = World.Guild.addGuildMember(c.getPlayer().getMGC());
+                        if (full) {
                             c.getPlayer().dropMessage(1, "你想要加入的家族已经满员了.");
                             c.getPlayer().setGuildId(0);
                             return;

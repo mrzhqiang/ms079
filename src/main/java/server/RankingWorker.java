@@ -50,7 +50,7 @@ public class RankingWorker {
         LOGGER.debug("加载 排名服务器 :::");
         loadJobCommands();
 
-        WorldTimer.getInstance().register(new Runnable() {
+        Timer.WORLD.register(new Runnable() {
 
             public void run() {
                 try {

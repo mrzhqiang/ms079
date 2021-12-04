@@ -20,38 +20,35 @@
  */
 package handling.channel.handler;
 
-import java.awt.Point;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import client.ISkill;
 import client.MapleBuffStat;
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
 import client.SkillFactory;
 import client.SummonSkillEntry;
-import client.status.MonsterStatusEffect;
 import client.anticheat.CheatingOffense;
 import client.status.MonsterStatus;
-import java.lang.ref.WeakReference;
-import java.util.Map;
-
+import client.status.MonsterStatusEffect;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.MapleStatEffect;
-import server.AutobanManager;
-import server.Timer.CloneTimer;
-import server.movement.LifeMovementFragment;
 import server.life.MapleMonster;
 import server.life.SummonAttackEntry;
 import server.maps.MapleMap;
-import server.maps.MapleSummon;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
+import server.maps.MapleSummon;
 import server.maps.SummonMovementType;
+import server.movement.LifeMovementFragment;
 import tools.MaplePacketCreator;
-import tools.packet.MobPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.MobPacket;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class SummonHandler {
 
@@ -71,22 +68,19 @@ public class SummonHandler {
                     final MapleMap map = chr.getMap();
                     final MapleCharacter clone = clones[i].get();
                     final List<LifeMovementFragment> res3 = new ArrayList<LifeMovementFragment>(res);
-                    CloneTimer.getInstance().schedule(new Runnable() {
+                    Timer.CLONE.schedule(() -> {
+                        try {
+                            if (clone.getMap() == map && clone.getDragon() != null) {
+                                final Vector startPos = clone.getDragon().getPosition();
+                                MovementParse.updatePosition(res3, clone.getDragon(), 0);
 
-                        public void run() {
-                            try {
-                                if (clone.getMap() == map && clone.getDragon() != null) {
-                                    final Vector startPos = clone.getDragon().getPosition();
-                                    MovementParse.updatePosition(res3, clone.getDragon(), 0);
-
-                                    if (!clone.isHidden()) {
-                                        map.broadcastMessage(clone, MaplePacketCreator.moveDragon(clone.getDragon(), startPos, res3), clone.getPosition());
-                                    }
-
+                                if (!clone.isHidden()) {
+                                    map.broadcastMessage(clone, MaplePacketCreator.moveDragon(clone.getDragon(), startPos, res3), clone.getPosition());
                                 }
-                            } catch (Exception e) {
-                                //very rarely swallowed
+
                             }
+                        } catch (Exception e) {
+                            //very rarely swallowed
                         }
                     }, 500 * i + 500);
                 }

@@ -14,22 +14,70 @@ import java.time.LocalDateTime;
 public class DDueyPackage extends Model {
 
     @Id
-    @Column(name = "PackageId")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "RecieverId")
-    public Integer recieverId;
+    Integer receiverId;
     @NotNull
-    @Column(name = "SenderName")
-    public String senderName;
-    @Column(name = "Mesos")
-    public Integer mesos;
-    @Column(name = "TimeStamp")
-    public LocalDateTime timeStamp;
-    @Column(name = "Checked")
-    public Integer checked;
+    String senderName;
+    Integer mesos;
+    LocalDateTime timestamp;
+    boolean checked;
     @NotNull
-    @Column(name = "Type")
-    public Integer type;
+    Integer type;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getReceiverId() {
+        return receiverId;
+    }
+
+    public void setReceiverId(Integer receiverId) {
+        this.receiverId = receiverId;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public Integer getMesos() {
+        return mesos;
+    }
+
+    public void setMesos(Integer mesos) {
+        this.mesos = mesos;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
 }

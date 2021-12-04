@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -15,37 +14,124 @@ import java.util.List;
 public class DWzQuestData extends Model {
 
     @Id
-    @Column(name = "questid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "name")
-    public String name;
+    String name;
     @NotNull
-    @Column(name = "autoStart")
-    public Boolean autoStart;
+    Boolean autoStart;
     @NotNull
-    @Column(name = "autoPreComplete")
-    public Boolean autoPreComplete;
+    Boolean autoPreComplete;
     @NotNull
-    @Column(name = "viewMedalItem")
-    public Integer viewMedalItem;
+    Integer viewMedalItem;
     @NotNull
-    @Column(name = "selectedSkillID")
-    public Integer selectedSkillID;
+    Integer selectedSkillId;
     @NotNull
-    @Column(name = "blocked")
-    public Boolean blocked;
+    Boolean blocked;
     @NotNull
-    @Column(name = "autoAccept")
-    public Boolean autoAccept;
+    Boolean autoAccept;
     @NotNull
-    @Column(name = "autoComplete")
-    public Boolean autoComplete;
+    Boolean autoComplete;
 
     @OneToMany(mappedBy = "questData")
-    public List<DWzQuestReqData> reqDataList;
+    List<DWzQuestReqData> reqDataList;
     @OneToMany(mappedBy = "questData")
-    public List<DWzQuestActData> actDataList;
+    List<DWzQuestActData> actDataList;
     @OneToMany(mappedBy = "questData")
-    public List<DWzQuestPartyData> partyDataList;
+    List<DWzQuestPartyData> partyDataList;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Boolean getAutoStart() {
+        return autoStart;
+    }
+
+    public void setAutoStart(Boolean autoStart) {
+        this.autoStart = autoStart;
+    }
+
+    public Boolean getAutoPreComplete() {
+        return autoPreComplete;
+    }
+
+    public void setAutoPreComplete(Boolean autoPreComplete) {
+        this.autoPreComplete = autoPreComplete;
+    }
+
+    public Integer getViewMedalItem() {
+        return viewMedalItem;
+    }
+
+    public void setViewMedalItem(Integer viewMedalItem) {
+        this.viewMedalItem = viewMedalItem;
+    }
+
+    public Integer getSelectedSkillId() {
+        return selectedSkillId;
+    }
+
+    public void setSelectedSkillId(Integer selectedSkillId) {
+        this.selectedSkillId = selectedSkillId;
+    }
+
+    public Boolean getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    public Boolean getAutoAccept() {
+        return autoAccept;
+    }
+
+    public void setAutoAccept(Boolean autoAccept) {
+        this.autoAccept = autoAccept;
+    }
+
+    public Boolean getAutoComplete() {
+        return autoComplete;
+    }
+
+    public void setAutoComplete(Boolean autoComplete) {
+        this.autoComplete = autoComplete;
+    }
+
+    public List<DWzQuestReqData> getReqDataList() {
+        return reqDataList;
+    }
+
+    public void setReqDataList(List<DWzQuestReqData> reqDataList) {
+        this.reqDataList = reqDataList;
+    }
+
+    public List<DWzQuestActData> getActDataList() {
+        return actDataList;
+    }
+
+    public void setActDataList(List<DWzQuestActData> actDataList) {
+        this.actDataList = actDataList;
+    }
+
+    public List<DWzQuestPartyData> getPartyDataList() {
+        return partyDataList;
+    }
+
+    public void setPartyDataList(List<DWzQuestPartyData> partyDataList) {
+        this.partyDataList = partyDataList;
+    }
 }

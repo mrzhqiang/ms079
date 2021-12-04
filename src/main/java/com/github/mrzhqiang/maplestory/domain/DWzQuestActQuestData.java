@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,15 +12,43 @@ import javax.persistence.Table;
 public class DWzQuestActQuestData extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "quest")
-    public Integer quest;
+    Integer quest;
     @NotNull
-    @Column(name = "state")
-    public Integer state;
+    Integer state;
     @NotNull
-    @Column(name = "uniqueid")
-    public Integer uniqueid;
+    Integer uniqueId;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getQuest() {
+        return quest;
+    }
+
+    public void setQuest(Integer quest) {
+        this.quest = quest;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public Integer getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(Integer uniqueId) {
+        this.uniqueId = uniqueId;
+    }
 }

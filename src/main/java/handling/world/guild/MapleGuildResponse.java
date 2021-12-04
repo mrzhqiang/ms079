@@ -20,8 +20,8 @@
  */
 package handling.world.guild;
 
-import tools.MaplePacketCreator;
 import handling.MaplePacket;
+import tools.MaplePacketCreator;
 
 public enum MapleGuildResponse {
 

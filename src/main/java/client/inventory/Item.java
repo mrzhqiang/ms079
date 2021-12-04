@@ -4,7 +4,6 @@ import com.github.mrzhqiang.maplestory.domain.DInventoryItem;
 import constants.GameConstants;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
@@ -23,26 +22,26 @@ public class Item implements IItem, Serializable {
 
     public Item(int id, int position, int quantity) {
         this.item = new DInventoryItem();
-        this.item.itemid = id;
-        this.item.position = position;
-        this.item.quantity = quantity;
+        this.item.setItemId(id);
+        this.item.setPosition(position);
+        this.item.setQuantity(quantity);
     }
 
     public Item(int id, int position, int quantity, int flag) {
         this.item = new DInventoryItem();
-        this.item.itemid = id;
-        this.item.position = position;
-        this.item.quantity = quantity;
-        this.item.flag = flag;
+        this.item.setItemId(id);
+        this.item.setPosition(position);
+        this.item.setQuantity(quantity);
+        this.item.setFlag(flag);
     }
 
     public Item(int id, int position, int quantity, int flag, int uniqueid) {
         this.item = new DInventoryItem();
-        this.item.itemid = id;
-        this.item.position = position;
-        this.item.quantity = quantity;
-        this.item.flag = flag;
-        this.item.uniqueid = uniqueid;
+        this.item.setItemId(id);
+        this.item.setPosition(position);
+        this.item.setQuantity(quantity);
+        this.item.setFlag(flag);
+        this.item.setUniqueId(uniqueid);
     }
 
     public IItem copy() {
@@ -52,7 +51,7 @@ public class Item implements IItem, Serializable {
     }
 
     public void setPosition(int position) {
-        this.item.position = position;
+        this.item.setPosition(position);
 
         if (pet != null) {
             pet.setInventoryPosition(position);
@@ -60,31 +59,31 @@ public class Item implements IItem, Serializable {
     }
 
     public void setQuantity(int quantity) {
-        this.item.quantity = quantity;
+        this.item.setQuantity(quantity);
     }
 
     @Override
     public int getItemId() {
-        return item.itemid;
+        return item.getItemId();
     }
 
     @Override
     public int getPosition() {
-        return item.position;
+        return item.getPosition();
     }
 
     @Override
     public int getFlag() {
-        return item.flag;
+        return item.getFlag();
     }
 
     public boolean getLocked() {
-        return item.flag == ItemFlag.LOCK.getValue();
+        return item.getFlag() == ItemFlag.LOCK.getValue();
     }
 
     @Override
     public int getQuantity() {
-        return item.quantity;
+        return item.getQuantity();
     }
 
     @Override
@@ -94,15 +93,15 @@ public class Item implements IItem, Serializable {
 
     @Override
     public String getOwner() {
-        return item.owner;
+        return item.getOwner();
     }
 
     public void setOwner(String owner) {
-        this.item.owner = owner;
+        this.item.setOwner(owner);
     }
 
     public void setFlag(int flag) {
-        this.item.flag = flag;
+        this.item.setFlag(flag);
     }
 
     public void setLocked(int flag) {
@@ -115,35 +114,35 @@ public class Item implements IItem, Serializable {
 
     @Override
     public long getExpiration() {
-        return item.expiredate;
+        return item.getExpireDate();
     }
 
     public void setExpiration(long expire) {
-        this.item.expiredate = expire;
+        this.item.setExpireDate(expire);
     }
 
     public void setExpiration(LocalDateTime expiration) {
-        this.item.expiredate = expiration != null ? expiration.toInstant(ZoneOffset.UTC).toEpochMilli() : -1;
+        this.item.setExpireDate(expiration != null ? expiration.toInstant(ZoneOffset.UTC).toEpochMilli() : -1);
     }
 
     @Override
     public String getGMLog() {
-        return item.gmLog;
+        return item.getGmLog();
     }
 
     @Override
     public void setGMLog(String message) {
-        this.item.gmLog = message;
+        this.item.setGmLog(message);
     }
 
     @Override
     public int getUniqueId() {
-        return item.uniqueid;
+        return item.getUniqueId();
     }
 
     @Override
     public void setUniqueId(int id) {
-        this.item.uniqueid = id;
+        this.item.setUniqueId(id);
     }
 
     public MaplePet getPet() {
@@ -156,12 +155,12 @@ public class Item implements IItem, Serializable {
 
     @Override
     public void setGiftFrom(String gf) {
-        this.item.sender = gf;
+        this.item.setSender(gf);
     }
 
     @Override
     public String getGiftFrom() {
-        return item.sender;
+        return item.getSender();
     }
 
     @Override
@@ -176,7 +175,7 @@ public class Item implements IItem, Serializable {
 
     @Override
     public int compareTo(IItem other) {
-        return Integer.compare(Math.abs(item.position), Math.abs(other.getPosition()));
+        return Integer.compare(Math.abs(item.getPosition()), Math.abs(other.getPosition()));
     }
 
     @Override
@@ -185,24 +184,24 @@ public class Item implements IItem, Serializable {
             return false;
         }
         IItem ite = (IItem) obj;
-        return item.uniqueid == ite.getUniqueId()
-                && item.itemid == ite.getItemId()
-                && item.quantity == ite.getQuantity()
-                && Math.abs(item.position) == Math.abs(ite.getPosition());
+        return item.getUniqueId() == ite.getUniqueId()
+                && item.getItemId() == ite.getItemId()
+                && item.getQuantity() == ite.getQuantity()
+                && Math.abs(item.getPosition()) == Math.abs(ite.getPosition());
     }
 
     @Override
     public String toString() {
-        return "Item: " + item.itemid + " quantity: " + item.quantity;
+        return "Item: " + item.getItemId() + " quantity: " + item.getQuantity();
     }
 
     @Override
     public MapleRing getRing() {
-        if (!GameConstants.isEffectRing(item.itemid) || getUniqueId() <= 0) {
+        if (!GameConstants.isEffectRing(item.getItemId()) || getUniqueId() <= 0) {
             return null;
         }
         if (ring == null) {
-            ring = MapleRing.loadFromDb(getUniqueId(), item.position < 0);
+            ring = MapleRing.loadFromDb(getUniqueId(), item.getPosition() < 0);
         }
         return ring;
     }

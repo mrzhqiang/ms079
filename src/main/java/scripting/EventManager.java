@@ -2,12 +2,13 @@ package scripting;
 
 import client.MapleCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
 import handling.channel.ChannelServer;
 import handling.world.MapleParty;
 import org.slf4j.LoggerFactory;
 import server.MapleSquad;
 import server.Randomizer;
-import server.Timer.EventTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.events.MapleEvent;
 import server.events.MapleEventType;
 import server.life.MapleLifeFactory;
@@ -21,7 +22,13 @@ import tools.MaplePacketCreator;
 
 import javax.script.Invocable;
 import javax.script.ScriptException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.WeakHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 public class EventManager {
@@ -51,7 +58,7 @@ public class EventManager {
     }
 
     public ScheduledFuture<?> schedule(final String methodName, long delay) {
-        return EventTimer.getInstance().schedule(new Runnable() {
+        return Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 try {
@@ -65,7 +72,7 @@ public class EventManager {
     }
 
     public ScheduledFuture<?> schedule(final String methodName, long delay, final EventInstanceManager eim) {
-        return EventTimer.getInstance().schedule(new Runnable() {
+        return Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 try {
@@ -79,7 +86,7 @@ public class EventManager {
     }
 
     public ScheduledFuture<?> schedule(final String methodName, final EventInstanceManager eim, long delay) {
-        return EventTimer.getInstance().schedule(new Runnable() {
+        return Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 try {
@@ -93,7 +100,7 @@ public class EventManager {
     }
 
     public ScheduledFuture<?> scheduleAtTimestamp(final String methodName, long timestamp) {
-        return EventTimer.getInstance().scheduleAtTimestamp(new Runnable() {
+        return Timer.EVENT.scheduleAtTimestamp(new Runnable() {
 
             public void run() {
                 try {
@@ -337,7 +344,7 @@ public class EventManager {
     }
 
     public int online() {
-        return new QDAccount().loggedIn.eq(2).findCount();
+        return new QDAccount().state.eq(LoginState.LOGGED_IN).findCount();
     }
 
     public MapleMapFactory getMapFactory() {
@@ -408,7 +415,7 @@ public class EventManager {
             broadcastYellowMsg(msg);
             return false;
         }
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             public void run() {
                 if (cs.getEvent() >= 0) {

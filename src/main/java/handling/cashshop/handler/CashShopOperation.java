@@ -3,7 +3,12 @@ package handling.cashshop.handler;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
 import client.MapleClient;
-import client.inventory.*;
+import client.inventory.IItem;
+import client.inventory.ItemFlag;
+import client.inventory.MapleInventoryIdentifier;
+import client.inventory.MapleInventoryType;
+import client.inventory.MapleRing;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
 import constants.GameConstants;
 import constants.OtherSettings;
 import constants.ServerConstants;
@@ -14,7 +19,11 @@ import handling.world.CharacterTransfer;
 import handling.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.*;
+import server.CashItemFactory;
+import server.CashItemInfo;
+import server.MTSStorage;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.Pair;
@@ -44,7 +53,7 @@ public class CashShopOperation {
         //开始处理
         World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), c.getChannel());
         CashShopServer.getPlayerStorage().deregisterPlayer(chr);
-        c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, c.getSessionIPAddress());
+        c.updateLoginState(LoginState.SERVER_TRANSITION, c.getSessionIPAddress());
         String s = c.getSessionIPAddress();
         LoginServer.addIPAuth(s.substring(s.indexOf('/') + 1, s.length()));
         c.getSession().write(MaplePacketCreator.getChannelChange(c, Integer.parseInt(toch.getIP().split(":")[1]))); //发送更换频道的封包信息
@@ -74,9 +83,9 @@ public class CashShopOperation {
             return;
         }
 
-        final int state = c.getLoginState();
+        final LoginState state = c.getLoginState();
         boolean allowLogin = false;
-        if (state == MapleClient.LOGIN_SERVER_TRANSITION || state == MapleClient.CHANGE_CHANNEL) {
+        if (state == LoginState.SERVER_TRANSITION || state == LoginState.CHANGE_CHANNEL) {
             if (!World.isCharacterListConnected(c.loadCharacterNames(c.getWorld()))) {
                 allowLogin = true;
             }
@@ -86,7 +95,7 @@ public class CashShopOperation {
             c.getSession().close();
             return;
         }
-        c.updateLoginState(MapleClient.LOGIN_LOGGEDIN, c.getSessionIPAddress());
+        c.updateLoginState(LoginState.LOGGED_IN, c.getSessionIPAddress());
         if (mts) {
             CashShopServer.getPlayerStorageMTS().registerPlayer(chr);
             c.getSession().write(MTSCSPacket.startMTS(chr, c));
@@ -504,7 +513,7 @@ public class CashShopOperation {
                     chr.dropMessage(1, "购买戒指错误：\r\n你没有足够的点卷或者该物品不存在。。");
                     doCSPackets(c);
                     return;
-                } else if (!item.genderEquals(c.getPlayer().getGender())) {
+                } else if (!item.genderEquals(c.getPlayer().getGender().getCodeInt())) {
                     chr.dropMessage(1, "购买戒指错误：B\r\n请联系GM！。");
                     doCSPackets(c);
                     return;
@@ -529,7 +538,7 @@ public class CashShopOperation {
                     doCSPackets(c);
                     return;
                 } else {
-                    if (info.getRight().getRight() == c.getPlayer().getGender() && action == 29) {
+                    if (info.getRight().getRight() == c.getPlayer().getGender().getCodeInt() && action == 29) {
                         chr.dropMessage(1, "购买戒指错误：F\r\n请联系GM！。");
                         doCSPackets(c);
                         return;
@@ -595,7 +604,7 @@ public class CashShopOperation {
                     doCSPackets(c);
                     return;
                 } else*/
-                    if (!item.genderEquals(c.getPlayer().getGender())) {
+                    if (!item.genderEquals(c.getPlayer().getGender().getCodeInt())) {
                         chr.dropMessage(1, "购买礼包错误：B\r\n请联系GM！。");
                         //c.getSession().write(MTSCSPacket.sendCSFail(0xA6));
                         doCSPackets(c);

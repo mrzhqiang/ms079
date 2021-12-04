@@ -6,7 +6,6 @@ import client.inventory.Equip;
 import client.inventory.IItem;
 import client.inventory.ItemFlag;
 import client.inventory.MapleInventoryType;
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.DWzItemAddData;
 import com.github.mrzhqiang.maplestory.domain.DWzItemData;
 import com.github.mrzhqiang.maplestory.domain.DWzItemEquipData;
@@ -16,6 +15,7 @@ import com.github.mrzhqiang.maplestory.domain.query.QDWzItemData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzItemEquipData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzItemRewardData;
 import com.github.mrzhqiang.maplestory.util.Effects;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -189,7 +189,7 @@ public class MapleItemInformationProvider {
     }
 
     public void finalizeEquipData(ItemInformation item) {
-        int itemId = item.data.id;
+        int itemId = item.data.getId();
 
         item.eq = new Equip(itemId, (byte) 0, -1, (byte) 0);
         short stats = GameConstants.getStat(itemId, 0);
@@ -295,7 +295,7 @@ public class MapleItemInformationProvider {
     }
 
     public void initItemRewardData(DWzItemRewardData data) {
-        int itemID = data.itemData.id;
+        int itemID = data.getItemData().getId();
         if (!dataCache.containsKey(itemID)) {
             LOGGER.debug("[initItemRewardData] 尝试加载不在缓存中的项目： " + itemID);
             return;
@@ -313,44 +313,44 @@ public class MapleItemInformationProvider {
     }
 
     public void initItemAddData(DWzItemAddData data) {
-        int itemID = data.itemData.id;
+        int itemID = data.getItemData().getId();
         if (!dataCache.containsKey(itemID)) {
             LOGGER.debug("[initItemAddData] 尝试加载不在缓存中的项目：" + itemID);
             return;
         }
         ItemInformation tmpInfo = dataCache.get(itemID);
-        tmpInfo.equipAdditions.add(new Triple<>(data.key, data.subKey, data.value));
+        tmpInfo.equipAdditions.add(new Triple<>(data.getKey(), data.getSubKey(), data.getValue()));
     }
 
     public void initItemEquipData(DWzItemEquipData data) {
-        int itemID = data.itemData.id;
+        int itemID = data.getItemData().getId();
         if (!dataCache.containsKey(itemID)) {
             LOGGER.debug("[initItemEquipData] 试图加载一个不在缓存中的项目: " + itemID);
             return;
         }
         ItemInformation tmpInfo = dataCache.get(itemID);
-        int itemLevel = data.itemLevel;
+        int itemLevel = data.getItemLevel();
         if (itemLevel == -1) {
-            tmpInfo.equipStats.put(data.key, data.value);
+            tmpInfo.equipStats.put(data.getKey(), data.getValue());
         } else {
             Map<String, Integer> toAdd = tmpInfo.equipIncs.computeIfAbsent(itemLevel, k -> new HashMap<>());
-            toAdd.put(data.key, data.value);
+            toAdd.put(data.getKey(), data.getValue());
         }
     }
 
     public void initItemInformation(DWzItemData data) {
         ItemInformation ret = new ItemInformation(data);
         ret.cardSet = 0;
-        if (data.monsterBook > 0 && data.id / 10000 == 238) {
-            mobIds.put(data.monsterBook, data.id);
+        if (data.getMonsterBook() > 0 && data.getId() / 10000 == 238) {
+            mobIds.put(data.getMonsterBook(), data.getId());
             for (Map.Entry<Integer, Triple<Integer, List<Integer>, List<Integer>>> set : monsterBookSets.entrySet()) {
-                if (set.getValue().mid.contains(data.id)) {
+                if (set.getValue().mid.contains(data.getId())) {
                     ret.cardSet = set.getKey();
                     break;
                 }
             }
         }
-        dataCache.put(data.id, ret);
+        dataCache.put(data.getId(), ret);
     }
 
     public List<StructPotentialItem> getPotentialInfo(final int potId) {
@@ -468,7 +468,6 @@ public class MapleItemInformationProvider {
             data = WzData.STRING.directory().findFile("Etc.img");
         } else if (itemId >= 3000000 && itemId < 4000000) {
             data = WzData.STRING.directory().findFile("Ins.img");
-            ;
         } else if (itemId >= 5000000/* && itemId < 5010000*/) {
             data = WzData.STRING.directory().findFile("Pet.img");
         } else {
@@ -1507,14 +1506,14 @@ public class MapleItemInformationProvider {
         List<StructRewardItem> all = data.findByName("reward").map(WzElement::childrenStream)
                 .map(stream -> stream.map(element -> {
                     DWzItemRewardData rewardData = new DWzItemRewardData();
-                    rewardData.id = Elements.findInt(element, "item");
-                    rewardData.prob = Elements.findInt(element, "prob");
-                    rewardData.quantity = Elements.findInt(element, "count");
-                    rewardData.effect = Elements.findString(element, "Effect");
-                    rewardData.worldMsg = Elements.findString(element, "worldMsg", null);
-                    rewardData.period = Elements.findInt(element, "period", -1);
+                    rewardData.setId(Elements.findInt(element, "item"));
+                    rewardData.setProb(Elements.findInt(element, "prob"));
+                    rewardData.setQuantity(Elements.findInt(element, "count"));
+                    rewardData.setEffect(Elements.findString(element, "Effect"));
+                    rewardData.setWorldMsg(Elements.findString(element, "worldMsg", null));
+                    rewardData.setPeriod(Elements.findInt(element, "period", -1));
                     StructRewardItem struct = new StructRewardItem(rewardData);
-                    totalprob.addAndGet(struct.data.prob);
+                    totalprob.addAndGet(struct.data.getProb());
                     return struct;
                 }).collect(Collectors.toList()))
                 .orElse(Collections.emptyList());

@@ -20,8 +20,6 @@
  */
 package server.movement;
 
-import java.awt.Point;
-
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import tools.data.output.LittleEndianWriter;
 

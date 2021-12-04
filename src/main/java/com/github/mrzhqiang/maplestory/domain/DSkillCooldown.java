@@ -3,26 +3,66 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "skills_cooldowns")
 public class DSkillCooldown extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "charid")
-    public DCharacter character;
+    @JoinColumn(name = "char_id")
+    DCharacter character;
     @NotNull
-    @Column(name = "SkillID")
-    public Integer skillID;
+    Integer skillId;
     @NotNull
-    @Column(name = "length")
-    public Long length;
+    Long length;
     @NotNull
-    @Column(name = "StartTime")
-    public Long startTime;
+    Long startTime;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public Integer getSkillId() {
+        return skillId;
+    }
+
+    public void setSkillId(Integer skillId) {
+        this.skillId = skillId;
+    }
+
+    public Long getLength() {
+        return length;
+    }
+
+    public void setLength(Long length) {
+        this.length = length;
+    }
+
+    public Long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Long startTime) {
+        this.startTime = startTime;
+    }
 }

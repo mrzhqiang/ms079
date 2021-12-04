@@ -13,18 +13,53 @@ import javax.persistence.Table;
 public class DFishingJf extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "accname")
-    public String accname;
+    String accname;
     @NotNull
-    @Column(name = "fishing")
-    public Integer fishing;
+    Integer fishing;
     @NotNull
-    @Column(name = "XX")
-    public Integer XX;
+    Integer xx;
     @NotNull
-    @Column(name = "XXX")
-    public Integer XXX;
+    Integer xxx;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getAccname() {
+        return accname;
+    }
+
+    public void setAccname(String accname) {
+        this.accname = accname;
+    }
+
+    public Integer getFishing() {
+        return fishing;
+    }
+
+    public void setFishing(Integer fishing) {
+        this.fishing = fishing;
+    }
+
+    public Integer getXx() {
+        return xx;
+    }
+
+    public void setXx(Integer xx) {
+        this.xx = xx;
+    }
+
+    public Integer getXxx() {
+        return xxx;
+    }
+
+    public void setXxx(Integer xxx) {
+        this.xxx = xxx;
+    }
 }

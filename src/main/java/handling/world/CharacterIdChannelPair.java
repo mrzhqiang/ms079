@@ -5,24 +5,21 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-public class CharacterIdChannelPair implements Externalizable, Comparable<CharacterIdChannelPair> {
+public final class CharacterIdChannelPair implements Externalizable, Comparable<CharacterIdChannelPair> {
 
-    private int charid = 0;
+    private int charId = 0;
     private int channel = 1;
 
-    /**
-     * only for externalisation
-     */
     public CharacterIdChannelPair() {
     }
 
-    public CharacterIdChannelPair(int charid, int channel) {
-        this.charid = charid;
+    public CharacterIdChannelPair(int charId, int channel) {
+        this.charId = charId;
         this.channel = channel;
     }
 
     public int getCharacterId() {
-        return charid;
+        return charId;
     }
 
     public int getChannel() {
@@ -31,13 +28,13 @@ public class CharacterIdChannelPair implements Externalizable, Comparable<Charac
 
     @Override
     public void readExternal(ObjectInput in) throws IOException {
-        charid = in.readInt();
+        charId = in.readInt();
         channel = in.readByte();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(charid);
+        out.writeInt(charId);
         out.writeByte(channel);
     }
 

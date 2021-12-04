@@ -20,13 +20,12 @@
  */
 package server.life;
 
-import java.awt.Point;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.Randomizer;
 import server.maps.MapleMap;
 import tools.MaplePacketCreator;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SpawnPointAreaBoss extends Spawns {
 

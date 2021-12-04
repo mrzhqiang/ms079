@@ -1,11 +1,11 @@
 package client.anticheat;
 
+import com.github.mrzhqiang.maplestory.timer.Timer;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import server.Timer.CheatTimer;
 
 public class CheatingOffensePersister {
 
@@ -15,7 +15,7 @@ public class CheatingOffensePersister {
     private final Lock mutex = new ReentrantLock();
 
     private CheatingOffensePersister() {
-        CheatTimer.getInstance().register(new PersistingTask(), 61000);
+        Timer.CHEAT.register(new PersistingTask(), 61000);
     }
 
     public static CheatingOffensePersister getInstance() {

@@ -17,7 +17,7 @@ public enum Injectors {
     SINGLETON;
 
     private final Injector injector = Guice.createInjector(
-            ServerModule.INSTANCE,
+            ConfigurationModule.INSTANCE,
             DatabaseModule.INSTANCE
     );
 

@@ -10,6 +10,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Entity
@@ -17,31 +21,106 @@ import java.util.List;
 public class DBbsThread extends Model {
 
     @Id
-    @Column(name = "threadid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "postercid")
-    public Integer postercid;
+    @ManyToOne
+    @JoinColumn(name = "poster_id")
+    DCharacter poster;
     @NotNull
-    @Column(name = "name")
-    public String name;
+    String name;
     @NotNull
-    @Column(name = "timestamp")
-    public Long timestamp;
+    LocalDateTime timestamp;
     @NotNull
-    @Column(name = "icon")
-    public Integer icon;
+    Integer icon;
     @NotNull
-    @Column(name = "startpost")
-    public String startpost;
+    String startPost;
 
     @ManyToOne
-    @JoinColumn(name = "guildid")
-    public DGuild guild;
+    @JoinColumn(name = "guild_id")
+    DGuild guild;
     @NotNull
-    @Column(name = "localthreadid")
-    public Integer localthreadid;
+    Integer localThreadId;
 
     @OneToMany(mappedBy = "thread")
-    public List<DBbsReply> replys;
+    List<DBbsReply> replyList;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getPoster() {
+        return poster;
+    }
+
+    public void setPoster(DCharacter poster) {
+        this.poster = poster;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public long getTimestampLong() {
+        return timestamp.toInstant(ZoneOffset.UTC).toEpochMilli();
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
+    }
+
+    public Integer getIcon() {
+        return icon;
+    }
+
+    public void setIcon(Integer icon) {
+        this.icon = icon;
+    }
+
+    public String getStartPost() {
+        return startPost;
+    }
+
+    public void setStartPost(String startPost) {
+        this.startPost = startPost;
+    }
+
+    public DGuild getGuild() {
+        return guild;
+    }
+
+    public void setGuild(DGuild guild) {
+        this.guild = guild;
+    }
+
+    public Integer getLocalThreadId() {
+        return localThreadId;
+    }
+
+    public void setLocalThreadId(Integer localThreadId) {
+        this.localThreadId = localThreadId;
+    }
+
+    public List<DBbsReply> getReplyList() {
+        return replyList;
+    }
+
+    public void setReplyList(List<DBbsReply> replyList) {
+        this.replyList = replyList;
+    }
 }

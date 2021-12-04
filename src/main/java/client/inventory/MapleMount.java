@@ -2,14 +2,14 @@ package client.inventory;
 
 import client.MapleBuffStat;
 import client.MapleCharacter;
-import java.lang.ref.WeakReference;
-import java.sql.SQLException;
-import java.io.Serializable;
-
 import com.github.mrzhqiang.maplestory.domain.DMountData;
 import com.github.mrzhqiang.maplestory.domain.query.QDMountData;
 import server.Randomizer;
 import tools.MaplePacketCreator;
+
+import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.sql.SQLException;
 
 public class MapleMount implements Serializable {
 
@@ -37,9 +37,9 @@ public class MapleMount implements Serializable {
         if (data == null) {
             return;
         }
-        data.level = (level);
-        data.exp = (exp);
-        data.fatigue = (fatigue);
+        data.setLevel(level);
+        data.setExp(exp);
+        data.setFatigue(fatigue);
         data.save();
     }
 

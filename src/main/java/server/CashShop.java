@@ -18,6 +18,7 @@ import tools.packet.MTSCSPacket;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -213,29 +214,29 @@ public class CashShop implements Serializable {
 
     public void gift(int recipient, String from, String message, int sn, int uniqueid) {
         DGift gift = new DGift();
-        gift.recipient = recipient;
-        gift.from = from;
-        gift.message = message;
-        gift.sn = sn;
-        gift.uniqueid = uniqueid;
+        gift.setRecipient(recipient);
+        gift.setFrom(from);
+        gift.setMessage(message);
+        gift.setSn(sn);
+        gift.setUniqueId(uniqueid);
         gift.save();
     }
 
     public List<Pair<IItem, String>> loadGifts() {
         List<Pair<IItem, String>> gifts = new QDGift().recipient.eq(characterId).findStream()
                 .map(it -> {
-                    CashItemInfo cItem = CashItemFactory.getInstance().getItem(it.sn);
-                    IItem item = toItem(cItem, it.uniqueid, it.from);
+                    CashItemInfo cItem = CashItemFactory.getInstance().getItem(it.getSn());
+                    IItem item = toItem(cItem, it.getUniqueId(), it.getFrom());
                     uniqueids.add(item.getUniqueId());
                     List<CashItemInfo> packages = CashItemFactory.getInstance().getPackageItems(cItem.getId());
                     if (packages != null && packages.size() > 0) {
                         for (CashItemInfo packageItem : packages) {
-                            addToInventory(toItem(packageItem, it.from));
+                            addToInventory(toItem(packageItem, it.getFrom()));
                         }
                     } else {
                         addToInventory(item);
                     }
-                    return new Pair<>(item, it.message);
+                    return new Pair<>(item, it.getMessage());
                 })
                 .collect(Collectors.toList());
 
@@ -249,9 +250,11 @@ public class CashShop implements Serializable {
     }
 
     public void sendedNote(int uniqueid) {
-        for (int i = 0; i < uniqueids.size(); i++) {
-            if (uniqueids.get(i).intValue() == uniqueid) {
-                uniqueids.remove(i);
+        Iterator<Integer> iterator = uniqueids.iterator();
+        if (iterator.hasNext()) {
+            Integer next = iterator.next();
+            if (next.equals(uniqueid)) {
+                iterator.remove();
             }
         }
     }

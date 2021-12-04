@@ -3,7 +3,7 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.annotation.Max;
 import io.ebean.annotation.View;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 
 @SuppressWarnings("EntityIdMissingInspection")
 @Entity
@@ -11,8 +11,23 @@ import javax.persistence.*;
 public class VRingAggregate {
 
     @Max
-    public Integer ringid;
-
+    Integer ringId;
     @Max
-    public Integer partnerringid;
+    Integer partnerRingId;
+
+    public Integer getRingId() {
+        return ringId;
+    }
+
+    public void setRingId(Integer ringId) {
+        this.ringId = ringId;
+    }
+
+    public Integer getPartnerRingId() {
+        return partnerRingId;
+    }
+
+    public void setPartnerRingId(Integer partnerRingId) {
+        this.partnerRingId = partnerRingId;
+    }
 }

@@ -14,14 +14,41 @@ import java.time.LocalDateTime;
 public class DFishingReward extends Model {
 
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer id;
     @NotNull
-    @Column(name = "chance")
-    public Integer chance;
-    @Column(name = "expiration")
-    public LocalDateTime expiration;
-    @Column(name = "name")
-    public String name;
+    Integer chance;
+    LocalDateTime expiration;
+    String name;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getChance() {
+        return chance;
+    }
+
+    public void setChance(Integer chance) {
+        this.chance = chance;
+    }
+
+    public LocalDateTime getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(LocalDateTime expiration) {
+        this.expiration = expiration;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

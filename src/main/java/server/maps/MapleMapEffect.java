@@ -21,8 +21,8 @@
 package server.maps;
 
 import client.MapleClient;
-import tools.MaplePacketCreator;
 import handling.MaplePacket;
+import tools.MaplePacketCreator;
 import tools.packet.MTSCSPacket;
 
 public class MapleMapEffect {

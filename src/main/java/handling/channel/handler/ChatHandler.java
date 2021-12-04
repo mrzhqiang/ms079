@@ -20,8 +20,8 @@
  */
 package handling.channel.handler;
 
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
 import client.messages.CommandProcessor;
 import constants.ServerConstants.CommandType;
 import handling.channel.ChannelServer;

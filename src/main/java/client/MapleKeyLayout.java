@@ -54,10 +54,10 @@ public class MapleKeyLayout implements Serializable {
         DCharacter one = new QDCharacter().id.eq(charid).findOne();
         for (Entry<Integer, Pair<Integer, Integer>> keybinding : keymap.entrySet()) {
             DKeyMap map = new DKeyMap();
-            map.character = one;
-            map.key = keybinding.getKey();
-            map.type = keybinding.getValue().left;
-            map.action = keybinding.getValue().right;
+            map.setCharacter(one);
+            map.setKey(keybinding.getKey());
+            map.setType(keybinding.getValue().left);
+            map.setAction(keybinding.getValue().right);
             map.save();
         }
     }

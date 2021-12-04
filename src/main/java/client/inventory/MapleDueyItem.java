@@ -28,7 +28,7 @@ public class MapleDueyItem implements IItem, Serializable {
     }
 
     public void setPosition(int position) {
-        this.item.position = position;
+        this.item.setPosition(position);
 
         if (pet != null) {
             pet.setInventoryPosition(position);
@@ -36,31 +36,31 @@ public class MapleDueyItem implements IItem, Serializable {
     }
 
     public void setQuantity(int quantity) {
-        this.item.quantity = quantity;
+        this.item.setQuantity(quantity);
     }
 
     @Override
     public int getItemId() {
-        return item.itemid;
+        return item.getItemId();
     }
 
     @Override
     public int getPosition() {
-        return item.position;
+        return item.getPosition();
     }
 
     @Override
     public int getFlag() {
-        return item.flag;
+        return item.getFlag();
     }
 
     public boolean getLocked() {
-        return item.flag == ItemFlag.LOCK.getValue();
+        return item.getFlag() == ItemFlag.LOCK.getValue();
     }
 
     @Override
     public int getQuantity() {
-        return item.quantity;
+        return item.getQuantity();
     }
 
     @Override
@@ -70,15 +70,15 @@ public class MapleDueyItem implements IItem, Serializable {
 
     @Override
     public String getOwner() {
-        return item.owner;
+        return item.getOwner();
     }
 
     public void setOwner(String owner) {
-        this.item.owner = owner;
+        this.item.setOwner(owner);
     }
 
     public void setFlag(int flag) {
-        this.item.flag = flag;
+        this.item.setFlag(flag);
     }
 
     public void setLocked(int flag) {
@@ -91,35 +91,35 @@ public class MapleDueyItem implements IItem, Serializable {
 
     @Override
     public long getExpiration() {
-        return item.expiredate.toInstant(ZoneOffset.UTC).toEpochMilli();
+        return item.getExpireDate().toInstant(ZoneOffset.UTC).toEpochMilli();
     }
 
     public void setExpiration(long expire) {
-        this.item.expiredate = LocalDateTime.ofInstant(Instant.ofEpochMilli(expire), ZoneOffset.UTC);
+        this.item.setExpireDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(expire), ZoneOffset.UTC));
     }
 
     public void setExpiration(LocalDateTime expiration) {
-        this.item.expiredate = expiration;
+        this.item.setExpireDate(expiration);
     }
 
     @Override
     public String getGMLog() {
-        return item.gmLog;
+        return item.getGmLog();
     }
 
     @Override
     public void setGMLog(String message) {
-        this.item.gmLog = message;
+        this.item.setGmLog(message);
     }
 
     @Override
     public int getUniqueId() {
-        return item.uniqueid;
+        return item.getUniqueId();
     }
 
     @Override
     public void setUniqueId(int id) {
-        this.item.uniqueid = id;
+        this.item.setUniqueId(id);
     }
 
     public MaplePet getPet() {
@@ -132,12 +132,12 @@ public class MapleDueyItem implements IItem, Serializable {
 
     @Override
     public void setGiftFrom(String gf) {
-        this.item.sender = gf;
+        this.item.setSender(gf);
     }
 
     @Override
     public String getGiftFrom() {
-        return item.sender;
+        return item.getSender();
     }
 
     @Override
@@ -152,7 +152,7 @@ public class MapleDueyItem implements IItem, Serializable {
 
     @Override
     public int compareTo(IItem other) {
-        return Integer.compare(Math.abs(item.position), Math.abs(other.getPosition()));
+        return Integer.compare(Math.abs(item.getPosition()), Math.abs(other.getPosition()));
     }
 
     @Override
@@ -161,24 +161,24 @@ public class MapleDueyItem implements IItem, Serializable {
             return false;
         }
         IItem ite = (IItem) obj;
-        return item.uniqueid == ite.getUniqueId()
-                && item.itemid == ite.getItemId()
-                && item.quantity == ite.getQuantity()
-                && Math.abs(item.position) == Math.abs(ite.getPosition());
+        return item.getUniqueId() == ite.getUniqueId()
+                && item.getItemId() == ite.getItemId()
+                && item.getQuantity() == ite.getQuantity()
+                && Math.abs(item.getPosition()) == Math.abs(ite.getPosition());
     }
 
     @Override
     public String toString() {
-        return "Item: " + item.itemid + " quantity: " + item.quantity;
+        return "Item: " + item.getItemId() + " quantity: " + item.getQuantity();
     }
 
     @Override
     public MapleRing getRing() {
-        if (!GameConstants.isEffectRing(item.itemid) || getUniqueId() <= 0) {
+        if (!GameConstants.isEffectRing(item.getItemId()) || getUniqueId() <= 0) {
             return null;
         }
         if (ring == null) {
-            ring = MapleRing.loadFromDb(getUniqueId(), item.position < 0);
+            ring = MapleRing.loadFromDb(getUniqueId(), item.getPosition() < 0);
         }
         return ring;
     }

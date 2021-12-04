@@ -1,31 +1,29 @@
 package handling.channel.handler;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import client.inventory.IItem;
-import client.inventory.ItemFlag;
-import com.github.mrzhqiang.maplestory.domain.DDueyPackage;
-import com.github.mrzhqiang.maplestory.domain.query.QDDueyPackage;
-import constants.GameConstants;
-import client.inventory.ItemLoader;
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
 import client.MapleClient;
+import client.inventory.IItem;
+import client.inventory.ItemFlag;
+import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.github.mrzhqiang.maplestory.domain.DDueyPackage;
+import com.github.mrzhqiang.maplestory.domain.query.QDDueyPackage;
+import constants.GameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.data.input.SeekableLittleEndianAccessor;
 import server.MapleDueyActions;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import tools.MaplePacketCreator;
 import tools.Pair;
+import tools.data.input.SeekableLittleEndianAccessor;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DueyHandler {
 
@@ -190,62 +188,62 @@ public class DueyHandler {
 
     private static boolean addMesoToDB(int mesos, String sName, int recipientID, boolean isOn) {
         DDueyPackage aPackage = new DDueyPackage();
-        aPackage.recieverId = recipientID;
-        aPackage.senderName = sName;
-        aPackage.mesos = mesos;
-        aPackage.timeStamp = LocalDateTime.now();
-        aPackage.checked = isOn ? 0 : 1;
-        aPackage.type = 3;
+        aPackage.setReceiverId(recipientID);
+        aPackage.setSenderName(sName);
+        aPackage.setMesos(mesos);
+        aPackage.setTimestamp(LocalDateTime.now());
+        aPackage.setChecked(isOn);
+        aPackage.setType(3);
         aPackage.save();
         return true;
     }
 
     private static boolean addItemToDB(IItem item, int quantity, int mesos, String sName, int recipientID, boolean isOn) {
         DDueyPackage aPackage = new DDueyPackage();
-        aPackage.recieverId = recipientID;
-        aPackage.senderName = sName;
-        aPackage.mesos = mesos;
-        aPackage.timeStamp = LocalDateTime.now();
-        aPackage.checked = isOn ? 0 : 1;
-        aPackage.type = item.getType();
+        aPackage.setReceiverId(recipientID);
+        aPackage.setSenderName(sName);
+        aPackage.setMesos(mesos);
+        aPackage.setTimestamp(LocalDateTime.now());
+        aPackage.setChecked(isOn);
+        aPackage.setType(item.getType());
         aPackage.save();
         ItemLoader.saveItems(Collections.singletonList(new Pair<>(item, GameConstants.getInventoryType(item.getItemId()))));
         return true;
     }
 
     public static List<MapleDueyActions> loadItems(MapleCharacter chr) {
-        return new QDDueyPackage().recieverId.eq(chr.getId()).findStream()
+        return new QDDueyPackage().receiverId.eq(chr.getId()).findStream()
                 .map(data -> {
-                    MapleDueyActions dueypack = getItemByPID(data.id);
-                    dueypack.setSender(data.senderName);
-                    dueypack.setMesos(data.mesos);
-                    dueypack.setSentTime(data.timeStamp);
+                    MapleDueyActions dueypack = getItemByPID(data.getId());
+                    dueypack.setSender(data.getSenderName());
+                    dueypack.setMesos(data.getMesos());
+                    dueypack.setSentTime(data.getTimestamp());
                     return dueypack;
                 })
                 .collect(Collectors.toList());
     }
 
     public static MapleDueyActions loadSingleItem(int packageid, int charid) {
-        return new QDDueyPackage().id.eq(packageid).recieverId.eq(charid).findOneOrEmpty()
+        return new QDDueyPackage().id.eq(packageid).receiverId.eq(charid).findOneOrEmpty()
                 .map(data -> {
-                    MapleDueyActions dueypack = getItemByPID(data.id);
-                    dueypack.setSender(data.senderName);
-                    dueypack.setMesos(data.mesos);
-                    dueypack.setSentTime(data.timeStamp);
+                    MapleDueyActions dueypack = getItemByPID(data.getId());
+                    dueypack.setSender(data.getSenderName());
+                    dueypack.setMesos(data.getMesos());
+                    dueypack.setSentTime(data.getTimestamp());
                     return dueypack;
                 }).orElse(null);
     }
 
     public static void reciveMsg(MapleClient c, int recipientId) {
-        DDueyPackage one = new QDDueyPackage().recieverId.eq(recipientId).findOne();
+        DDueyPackage one = new QDDueyPackage().receiverId.eq(recipientId).findOne();
         if (one != null) {
-            one.checked = 0;
+            one.setChecked(true);
             one.save();
         }
     }
 
     private static void removeItemFromDB(int packageid, int charid) {
-        new QDDueyPackage().id.eq(packageid).recieverId.eq(charid).delete();
+        new QDDueyPackage().id.eq(packageid).receiverId.eq(charid).delete();
     }
 
     private static MapleDueyActions getItemByPID(int packageid) {

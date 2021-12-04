@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,17 +12,52 @@ import javax.persistence.Table;
 public class DHyPay extends Model {
 
     @Id
-    public Integer id;
-    @Column(name = "accname")
-    public String accname;
+    Integer id;
+    String accName;
     @NotNull
-    @Column(name = "payUsed")
-    public Integer payUsed;
+    Integer payUsed;
     @NotNull
-    @Column(name = "pay")
-    public Integer pay;
+    Integer pay;
     @NotNull
-    @Column(name = "payReward")
-    public Integer payReward;
+    Integer payReward;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getAccName() {
+        return accName;
+    }
+
+    public void setAccName(String accName) {
+        this.accName = accName;
+    }
+
+    public Integer getPayUsed() {
+        return payUsed;
+    }
+
+    public void setPayUsed(Integer payUsed) {
+        this.payUsed = payUsed;
+    }
+
+    public Integer getPay() {
+        return pay;
+    }
+
+    public void setPay(Integer pay) {
+        this.pay = pay;
+    }
+
+    public Integer getPayReward() {
+        return payReward;
+    }
+
+    public void setPayReward(Integer payReward) {
+        this.payReward = payReward;
+    }
 }

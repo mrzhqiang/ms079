@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,18 +12,53 @@ import javax.persistence.Table;
 public class DWzQuestActSkillData extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "skillid")
-    public Integer skillid;
+    Integer skillId;
     @NotNull
-    @Column(name = "skillLevel")
-    public Integer skillLevel;
+    Integer skillLevel;
     @NotNull
-    @Column(name = "masterLevel")
-    public Integer masterLevel;
+    Integer masterLevel;
     @NotNull
-    @Column(name = "uniqueid")
-    public Integer uniqueid;
+    Integer uniqueId;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getSkillId() {
+        return skillId;
+    }
+
+    public void setSkillId(Integer skillId) {
+        this.skillId = skillId;
+    }
+
+    public Integer getSkillLevel() {
+        return skillLevel;
+    }
+
+    public void setSkillLevel(Integer skillLevel) {
+        this.skillLevel = skillLevel;
+    }
+
+    public Integer getMasterLevel() {
+        return masterLevel;
+    }
+
+    public void setMasterLevel(Integer masterLevel) {
+        this.masterLevel = masterLevel;
+    }
+
+    public Integer getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(Integer uniqueId) {
+        this.uniqueId = uniqueId;
+    }
 }

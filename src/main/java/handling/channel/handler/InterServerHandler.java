@@ -1,33 +1,36 @@
 package handling.channel.handler;
 
-import client.*;
-
-import java.util.List;
-
+import client.BuddyEntry;
+import client.MapleBuffStat;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.MapleQuestStatus;
+import client.SkillFactory;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
 import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
+import handling.world.CharacterIdChannelPair;
 import handling.world.CharacterTransfer;
 import handling.world.MapleMessenger;
 import handling.world.MapleMessengerCharacter;
-import handling.world.CharacterIdChannelPair;
 import handling.world.MaplePartyCharacter;
 import handling.world.PartyOperation;
 import handling.world.PlayerBuffStorage;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
-
-import java.util.Collection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.NPCScriptManager;
 import server.maps.FieldLimitType;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
-import tools.packet.FamilyPacket;
 import tools.data.input.SeekableLittleEndianAccessor;
+import tools.packet.FamilyPacket;
+
+import java.util.Collection;
+import java.util.List;
 
 public class InterServerHandler {
 
@@ -58,7 +61,7 @@ public class InterServerHandler {
         World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), -10);
         //World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), mts ? -20 : -10);
         ch.removePlayer(chr);
-        c.updateLoginState(MapleClient.CHANGE_CHANNEL, c.getSessionIPAddress());
+        c.updateLoginState(LoginState.CHANGE_CHANNEL, c.getSessionIPAddress());
         //c.getSession().write(MaplePacketCreator.getChannelChange(InetAddress.getByName(socket[0]), Integer.parseInt(CashShopServer.getIP().split(":")[1])));
         chr.saveToDB(false, false);
         chr.getMap().removePlayer(chr);
@@ -107,7 +110,7 @@ public class InterServerHandler {
             PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
             World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), mts ? -20 : -10);
             ch.removePlayer(chr);
-            c.updateLoginState(MapleClient.CHANGE_CHANNEL, c.getSessionIPAddress());
+            c.updateLoginState(LoginState.CHANGE_CHANNEL, c.getSessionIPAddress());
 
             //c.getSession().write(MaplePacketCreator.getChannelChange(InetAddress.getByName(socket[0]), Integer.parseInt(CashShopServer.getIP().split(":")[1])));
             chr.saveToDB(false, false);
@@ -141,11 +144,11 @@ public class InterServerHandler {
 
         ChannelServer.forceRemovePlayerByAccId(c, c.getAccID());
 
-        final int state = c.getLoginState();
+        final LoginState state = c.getLoginState();
         boolean allowLogin = false;
         String allowLoginTip = null;
         //进入这里可能是卡角色了
-        if (state == MapleClient.LOGIN_SERVER_TRANSITION || state == MapleClient.CHANGE_CHANNEL || state == MapleClient.LOGIN_NOTLOGGEDIN) {
+        if (state == LoginState.SERVER_TRANSITION || state == LoginState.CHANGE_CHANNEL || state == LoginState.NOT_LOGIN) {
             List<String> charNames = c.loadCharacterNames(c.getWorld());
             allowLogin = !World.isCharacterListConnected(charNames);
             if (!allowLogin) {
@@ -162,7 +165,7 @@ public class InterServerHandler {
             //channelServer.getPlayerStorage().deregisterPlayer(player);//不是登录状态，注销玩家
             return;
         }
-        c.updateLoginState(MapleClient.LOGIN_LOGGEDIN, c.getSessionIPAddress());
+        c.updateLoginState(LoginState.LOGGED_IN, c.getSessionIPAddress());
         // c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, c.getSessionIPAddress());
         channelServer.addPlayer(player);
         c.getSession().write(MaplePacketCreator.getCharInfo(player));

@@ -13,52 +13,163 @@ import javax.persistence.Table;
 public class DCashShopModifiedItem extends Model {
 
     @Id
-    @Column(name = "serial")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "name")
-    public String name;
+    String name;
     @NotNull
-    @Column(name = "discount_price")
-    public Integer discountPrice;
+    Integer discountPrice;
     @NotNull
-    @Column(name = "mark")
-    public Integer mark;
+    Integer mark;
     @NotNull
-    @Column(name = "showup")
-    public Boolean showup;
+    boolean showUp;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer itemId;
     @NotNull
-    @Column(name = "priority")
-    public Integer priority;
+    Integer priority;
     @NotNull
-    @Column(name = "package")
-    public Boolean packageField;
+    boolean packageField;
     @NotNull
-    @Column(name = "period")
-    public Integer period;
+    Integer period;
     @NotNull
-    @Column(name = "gender")
-    public Integer gender;
+    Integer gender;
     @NotNull
-    @Column(name = "count")
-    public Integer count;
+    Integer count;
     @NotNull
-    @Column(name = "meso")
-    public Integer meso;
+    Integer meso;
     @NotNull
-    @Column(name = "unk_1")
-    public Integer unk1;
+    Integer unk1;
     @NotNull
-    @Column(name = "unk_2")
-    public Integer unk2;
+    Integer unk2;
     @NotNull
-    @Column(name = "unk_3")
-    public Integer unk3;
+    Integer unk3;
     @NotNull
-    @Column(name = "extra_flags")
-    public Integer extraFlags;
+    Integer extraFlags;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(Integer discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public Integer getMark() {
+        return mark;
+    }
+
+    public void setMark(Integer mark) {
+        this.mark = mark;
+    }
+
+    public boolean isShowUp() {
+        return showUp;
+    }
+
+    public void setShowUp(boolean showUp) {
+        this.showUp = showUp;
+    }
+
+    public Integer getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public boolean isPackageField() {
+        return packageField;
+    }
+
+    public void setPackageField(boolean packageField) {
+        this.packageField = packageField;
+    }
+
+    public Integer getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(Integer period) {
+        this.period = period;
+    }
+
+    public Integer getGender() {
+        return gender;
+    }
+
+    public void setGender(Integer gender) {
+        this.gender = gender;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
+    }
+
+    public Integer getMeso() {
+        return meso;
+    }
+
+    public void setMeso(Integer meso) {
+        this.meso = meso;
+    }
+
+    public Integer getUnk1() {
+        return unk1;
+    }
+
+    public void setUnk1(Integer unk1) {
+        this.unk1 = unk1;
+    }
+
+    public Integer getUnk2() {
+        return unk2;
+    }
+
+    public void setUnk2(Integer unk2) {
+        this.unk2 = unk2;
+    }
+
+    public Integer getUnk3() {
+        return unk3;
+    }
+
+    public void setUnk3(Integer unk3) {
+        this.unk3 = unk3;
+    }
+
+    public Integer getExtraFlags() {
+        return extraFlags;
+    }
+
+    public void setExtraFlags(Integer extraFlags) {
+        this.extraFlags = extraFlags;
+    }
 }

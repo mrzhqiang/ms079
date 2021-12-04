@@ -1,19 +1,35 @@
 package handling.channel.handler;
 
-import client.*;
+import client.ISkill;
+import client.MapleBuffStat;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.PlayerStats;
+import client.SkillFactory;
+import client.SkillMacro;
 import client.anticheat.CheatingOffense;
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import constants.MapConstants;
 import handling.channel.ChannelServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.*;
-import server.Timer.CloneTimer;
+import server.AutobanManager;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MaplePortal;
+import server.MapleStatEffect;
+import server.Randomizer;
 import server.events.MapleSnowball.MapleSnowballs;
-import server.life.*;
+import server.life.MapleMonster;
+import server.life.MobAttackInfo;
+import server.life.MobAttackInfoFactory;
+import server.life.MobSkill;
+import server.life.MobSkillFactory;
 import server.maps.FieldLimitType;
 import server.maps.MapleMap;
 import server.maps.MapleMapObjectType;
@@ -764,12 +780,9 @@ public class PlayerHandler {
                 final double maxdamage2 = maxdamage;
                 final MapleStatEffect eff2 = effect;
                 final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
-                CloneTimer.getInstance().schedule(new Runnable() {
-
-                    public void run() {
-                        clone.getMap().broadcastMessage(MaplePacketCreator.closeRangeAttack(clone.getId(), attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, energy, clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk, attack2.charge));
-                        DamageParse.applyAttack(attack2, skil2, chr, attackCount2, maxdamage2, eff2, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED, null);
-                    }
+                Timer.CLONE.schedule(() -> {
+                    clone.getMap().broadcastMessage(MaplePacketCreator.closeRangeAttack(clone.getId(), attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, energy, clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk, attack2.charge));
+                    DamageParse.applyAttack(attack2, skil2, chr, attackCount2, maxdamage2, eff2, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED, null);
                 }, 500 * i + 500);
             }
         }
@@ -915,7 +928,7 @@ public class PlayerHandler {
                 final int visProjectile2 = visProjectile;
                 final int skillLevel2 = skillLevel;
                 final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
-                CloneTimer.getInstance().schedule(new Runnable() {
+                Timer.CLONE.schedule(new Runnable() {
 
                     public void run() {
                         clone.getMap().broadcastMessage(MaplePacketCreator.rangedAttack(clone.getId(), attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, visProjectile2, attack2.allDamage, attack2.position, clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk));
@@ -967,7 +980,7 @@ public class PlayerHandler {
                 final MapleStatEffect eff2 = effect;
                 final int skillLevel2 = skillLevel;
                 final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
-                CloneTimer.getInstance().schedule(new Runnable() {
+                Timer.CLONE.schedule(new Runnable() {
 
                     public void run() {
                         //if (attack.skill != 22121000 && attack.skill != 22151001) {
@@ -1005,7 +1018,7 @@ public class PlayerHandler {
             for (int i = 0; i < clones.length; i++) {
                 if (clones[i].get() != null) {
                     final MapleCharacter clone = clones[i].get();
-                    CloneTimer.getInstance().schedule(new Runnable() {
+                    Timer.CLONE.schedule(new Runnable() {
 
                         public void run() {
                             clone.getMap().broadcastMessage(MaplePacketCreator.facialExpression(clone, emote));
@@ -1129,7 +1142,7 @@ public class PlayerHandler {
                 if (clones[i].get() != null) {
                     final MapleCharacter clone = clones[i].get();
                     final List<LifeMovementFragment> res3 = new ArrayList<LifeMovementFragment>(res2);
-                    CloneTimer.getInstance().schedule(new Runnable() {
+                    Timer.CLONE.schedule(new Runnable() {
 
                         public void run() {
                             try {
@@ -1209,7 +1222,7 @@ public class PlayerHandler {
             chr.saveToDB(false, false);
             //chr.setInCS(false);
             c.getChannelServer().removePlayer(c.getPlayer());
-            c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION);
+            c.updateLoginState(LoginState.SERVER_TRANSITION);
             try {
                 c.getSession().write(MaplePacketCreator.getChannelChange(c, Integer.parseInt(socket[1])));
             } catch (Exception e) {
@@ -1348,7 +1361,7 @@ public class PlayerHandler {
         }
     }
 
-    public static final void InnerPortal(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void InnerPortal(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
         if (chr == null) {
             return;
         }

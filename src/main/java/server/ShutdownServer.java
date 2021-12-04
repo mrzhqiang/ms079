@@ -1,7 +1,6 @@
 package server;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
@@ -14,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.Set;
 
 @Singleton
@@ -31,12 +32,12 @@ public final class ShutdownServer implements Runnable {
     @Override
     public void run() {
         //Timer
-        Timer.WorldTimer.getInstance().stop();
-        Timer.MapTimer.getInstance().stop();
-        Timer.BuffTimer.getInstance().stop();
-        Timer.CloneTimer.getInstance().stop();
-        Timer.EventTimer.getInstance().stop();
-        Timer.EtcTimer.getInstance().stop();
+        Timer.WORLD.stop();
+        Timer.MAP.stop();
+        Timer.BUFF.stop();
+        Timer.CLONE.stop();
+        Timer.EVENT.stop();
+        Timer.ETC.stop();
 
         //Merchant
         for (ChannelServer cs : ChannelServer.getAllInstances()) {

@@ -1,6 +1,6 @@
 package KinMS.PvP;
 
-import java.awt.Rectangle;
+import java.awt.*;
 
 public class PvpAttackInfo
 {

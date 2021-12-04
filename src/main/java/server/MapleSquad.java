@@ -1,23 +1,23 @@
 package server;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import client.MapleClient;
 import client.MapleCharacter;
+import client.MapleClient;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import handling.channel.ChannelServer;
 import handling.world.World;
+import server.maps.MapleMap;
+import tools.MaplePacketCreator;
+import tools.Pair;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
-import server.Timer.EtcTimer;
-import server.maps.MapleMap;
-import tools.MaplePacketCreator;
-import tools.Pair;
 
 public class MapleSquad {
 
@@ -149,7 +149,7 @@ public class MapleSquad {
     }
 
     public void scheduleRemoval() {
-        removal = EtcTimer.getInstance().schedule(new Runnable() {
+        removal = Timer.ETC.schedule(new Runnable() {
 
             @Override
             public void run() {

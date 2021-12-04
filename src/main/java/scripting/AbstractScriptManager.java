@@ -20,21 +20,21 @@
  */
 package scripting;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
 import client.MapleClient;
-import java.io.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  *

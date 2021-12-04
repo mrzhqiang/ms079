@@ -20,8 +20,9 @@
  */
 package handling.world;
 
-import java.io.Serializable;
 import server.MapleStatEffect;
+
+import java.io.Serializable;
 
 public class PlayerBuffValueHolder implements Serializable {
 

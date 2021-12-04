@@ -15,7 +15,8 @@
  */
 package tools;
 
-import java.math.*;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Map;
 
 public final class Eval {

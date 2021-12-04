@@ -1,36 +1,36 @@
 package handling.channel.handler;
 
-import client.inventory.Equip;
-import client.inventory.IItem;
-import client.inventory.MapleInventoryType;
-import client.MapleClient;
 import client.MapleCharacter;
-import constants.GameConstants;
+import client.MapleClient;
 import client.MapleQuestStatus;
 import client.RockPaperScissors;
+import client.inventory.Equip;
+import client.inventory.IItem;
 import client.inventory.ItemFlag;
+import client.inventory.MapleInventoryType;
+import constants.GameConstants;
 import handling.SendPacketOpcode;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripting.NPCConversationManager;
+import scripting.NPCScriptManager;
 import server.AutobanManager;
-import server.MapleShop;
 import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MapleShop;
 import server.MapleStorage;
 import server.life.MapleNPC;
-import server.quest.MapleQuest;
-import scripting.NPCScriptManager;
-import scripting.NPCConversationManager;
-import server.MapleItemInformationProvider;
 import server.maps.MapleMap;
+import server.quest.MapleQuest;
 import tools.ArrayMap;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class NPCHandler {
 

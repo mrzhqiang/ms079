@@ -2,7 +2,6 @@ package tools;
 
 import java.util.Date;
 import java.util.SimpleTimeZone;
-import java.util.TimeZone;
 
 public class DateUtil {
 

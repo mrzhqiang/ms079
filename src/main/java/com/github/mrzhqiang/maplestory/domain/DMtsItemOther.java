@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -16,22 +15,65 @@ import java.time.LocalDateTime;
 public class DMtsItemOther extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "tab")
-    public Integer tab;
+    Integer tab;
     @NotNull
-    @Column(name = "price")
-    public Integer price;
+    Integer price;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "characterid")
-    public DCharacter character;
+    @JoinColumn(name = "character_id")
+    DCharacter character;
     @NotNull
-    @Column(name = "seller")
-    public String seller;
+    String seller;
     @NotNull
-    @Column(name = "expiration")
-    public LocalDateTime expiration;
+    LocalDateTime expiration;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getTab() {
+        return tab;
+    }
+
+    public void setTab(Integer tab) {
+        this.tab = tab;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public String getSeller() {
+        return seller;
+    }
+
+    public void setSeller(String seller) {
+        this.seller = seller;
+    }
+
+    public LocalDateTime getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(LocalDateTime expiration) {
+        this.expiration = expiration;
+    }
 }

@@ -22,12 +22,11 @@
 package server.events;
 
 import client.MapleCharacter;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import tools.MaplePacketCreator;
+
 import java.util.LinkedList;
 import java.util.List;
-import server.Timer.EventTimer;
-import server.maps.MapleMap;
-import server.maps.SavedLocationType;
-import tools.MaplePacketCreator;
 
 public class MapleCoconut extends MapleEvent {
 
@@ -137,7 +136,7 @@ public class MapleCoconut extends MapleEvent {
         getMap(0).broadcastMessage(MaplePacketCreator.hitCoconut(true, 0, 0));
         getMap(0).broadcastMessage(MaplePacketCreator.getClock(360));
 
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {
@@ -172,7 +171,7 @@ public class MapleCoconut extends MapleEvent {
 
     public void bonusTime() {
         getMap(0).broadcastMessage(MaplePacketCreator.getClock(120));
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {
@@ -212,7 +211,7 @@ public class MapleCoconut extends MapleEvent {
 
     public void warpOut() {
         setHittable(false);
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {

@@ -3,49 +3,141 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "wz_customlife")
 public class DWzCustomLife extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "dataid")
-    public Integer dataid;
+    Integer dataId;
     @NotNull
-    @Column(name = "f")
-    public Integer f;
+    Integer f;
     @NotNull
-    @Column(name = "hide")
-    public Integer hide;
+    Integer hide;
     @NotNull
-    @Column(name = "fh")
-    public Integer fh;
+    Integer fh;
     @NotNull
-    @Column(name = "type")
-    public String type;
+    String type;
     @NotNull
-    @Column(name = "cy")
-    public Integer cy;
+    Integer cy;
     @NotNull
-    @Column(name = "rx0")
-    public Integer rx0;
+    Integer rx0;
     @NotNull
-    @Column(name = "rx1")
-    public Integer rx1;
+    Integer rx1;
     @NotNull
-    @Column(name = "x")
-    public Integer x;
+    Integer x;
     @NotNull
-    @Column(name = "y")
-    public Integer y;
+    Integer y;
+    Integer mobTime;
+    @NotNull
+    Integer mid;
 
-    @Column(name = "mobtime")
-    public Integer mobtime;
-    @NotNull
-    @Column(name = "mid")
-    public Integer mid;
+    public Integer getId() {
+        return id;
+    }
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getDataId() {
+        return dataId;
+    }
+
+    public void setDataId(Integer dataId) {
+        this.dataId = dataId;
+    }
+
+    public Integer getMobTime() {
+        return mobTime;
+    }
+
+    public void setMobTime(Integer mobTime) {
+        this.mobTime = mobTime;
+    }
+
+    public Integer getF() {
+        return f;
+    }
+
+    public void setF(Integer f) {
+        this.f = f;
+    }
+
+    public Integer getHide() {
+        return hide;
+    }
+
+    public void setHide(Integer hide) {
+        this.hide = hide;
+    }
+
+    public Integer getFh() {
+        return fh;
+    }
+
+    public void setFh(Integer fh) {
+        this.fh = fh;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Integer getCy() {
+        return cy;
+    }
+
+    public void setCy(Integer cy) {
+        this.cy = cy;
+    }
+
+    public Integer getRx0() {
+        return rx0;
+    }
+
+    public void setRx0(Integer rx0) {
+        this.rx0 = rx0;
+    }
+
+    public Integer getRx1() {
+        return rx1;
+    }
+
+    public void setRx1(Integer rx1) {
+        this.rx1 = rx1;
+    }
+
+    public Integer getX() {
+        return x;
+    }
+
+    public void setX(Integer x) {
+        this.x = x;
+    }
+
+    public Integer getY() {
+        return y;
+    }
+
+    public void setY(Integer y) {
+        this.y = y;
+    }
+
+    public Integer getMid() {
+        return mid;
+    }
+
+    public void setMid(Integer mid) {
+        this.mid = mid;
+    }
 }

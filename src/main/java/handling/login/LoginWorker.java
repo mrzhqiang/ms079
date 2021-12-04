@@ -1,13 +1,14 @@
 package handling.login;
 
+import client.MapleClient;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import handling.channel.ChannelServer;
+import tools.MaplePacketCreator;
+import tools.packet.LoginPacket;
+
 import java.util.Map;
 import java.util.Map.Entry;
-
-import client.MapleClient;
-import handling.channel.ChannelServer;
-import server.Timer.PingTimer;
-import tools.packet.LoginPacket;
-import tools.MaplePacketCreator;
 
 /**
  * todo interface
@@ -48,7 +49,7 @@ public class LoginWorker {
         }
 
         if (client.finishLogin() == 0) {
-            if (client.getGender() == 10) {
+            if (client.getGender() == Gender.UNKNOWN) {
                 client.getSession().write(LoginPacket.getGenderNeeded(client));
             } else {
                 client.getSession().write(LoginPacket.getAuthSuccessRequest(client));
@@ -56,11 +57,11 @@ public class LoginWorker {
                 client.getSession().write(LoginPacket.getEndOfServerList());
 
             }
-            client.setIdleTask(PingTimer.getInstance().schedule(() -> {
+            client.setIdleTask(Timer.PING.schedule(() -> {
 //                    client.getSession().close();
             }, 10 * 60 * 10000));
         } else {
-            if (client.getGender() == 10) {
+            if (client.getGender() == Gender.UNKNOWN) {
                 client.getSession().write(LoginPacket.getGenderNeeded(client));
 
             } else {

@@ -20,22 +20,23 @@
  */
 package handling.channel;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.concurrent.locks.Lock;
-import java.util.Collections;
-import java.util.Collection;
-import client.MapleCharacterUtil;
 import client.MapleCharacter;
+import client.MapleCharacterUtil;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import handling.MaplePacket;
 import handling.world.CharacterTransfer;
 import handling.world.CheaterData;
 import handling.world.World;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import server.Timer.PingTimer;
 
 public class PlayerStorage {
 
@@ -43,15 +44,15 @@ public class PlayerStorage {
     private final Lock rL = mutex.readLock(), wL = mutex.writeLock();
     private final ReentrantReadWriteLock mutex2 = new ReentrantReadWriteLock();
     private final Lock rL2 = mutex2.readLock(), wL2 = mutex2.writeLock();
-    private final Map<String, MapleCharacter> nameToChar = new HashMap<String, MapleCharacter>();
+    private final Map<String, MapleCharacter> nameToChar = new HashMap<>();
     private final Map<Integer, MapleCharacter> idToChar = new HashMap<>();
-    private final Map<Integer, CharacterTransfer> PendingCharacter = new HashMap<Integer, CharacterTransfer>();
+    private final Map<Integer, CharacterTransfer> PendingCharacter = new HashMap<>();
     private int channel;
 
     public PlayerStorage(int channel) {
         this.channel = channel;
         // Prune once every 15 minutes
-        PingTimer.getInstance().schedule(new PersistingTask(), 900000);
+        Timer.PING.schedule(new PersistingTask(), 900000);
     }
 
     public final Collection<MapleCharacter> getAllCharacters() {
@@ -307,7 +308,7 @@ public class PlayerStorage {
                         itr.remove();
                     }
                 }
-                PingTimer.getInstance().schedule(new PersistingTask(), 900000);
+                Timer.PING.schedule(new PersistingTask(), 900000);
             } finally {
                 wL2.unlock();
             }

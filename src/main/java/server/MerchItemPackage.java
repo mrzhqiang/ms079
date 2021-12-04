@@ -1,10 +1,10 @@
 package server;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
-
 import client.inventory.IItem;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MerchItemPackage {
 

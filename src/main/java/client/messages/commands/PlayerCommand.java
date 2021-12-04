@@ -1,13 +1,8 @@
 package client.messages.commands;
 
-import client.MapleCharacter;
 import client.MapleClient;
-import client.inventory.MapleInventoryType;
-import client.inventory.MaplePet;
-import client.inventory.PetDataFactory;
 import constants.ServerConstants.PlayerGMRank;
 import handling.world.World;
-import java.util.Arrays;
 import scripting.NPCScriptManager;
 import server.life.MapleMonster;
 import server.maps.MapleMapObject;
@@ -15,7 +10,8 @@ import server.maps.MapleMapObjectType;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.StringUtil;
-import tools.packet.PetPacket;
+
+import java.util.Arrays;
 
 /**
  *

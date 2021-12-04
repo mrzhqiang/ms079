@@ -20,8 +20,8 @@
  */
 package handling.channel.handler;
 
-import client.MapleCharacterUtil;
 import client.MapleCharacter;
+import client.MapleCharacterUtil;
 import client.MapleClient;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
@@ -29,11 +29,12 @@ import handling.world.family.MapleFamily;
 import handling.world.family.MapleFamilyBuff;
 import handling.world.family.MapleFamilyBuff.MapleFamilyBuffEntry;
 import handling.world.family.MapleFamilyCharacter;
-import java.util.List;
 import server.maps.FieldLimitType;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.FamilyPacket;
+
+import java.util.List;
 
 public class FamilyHandler {
 

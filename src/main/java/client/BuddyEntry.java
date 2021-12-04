@@ -33,19 +33,19 @@ public class BuddyEntry {
     }
 
     public String getName() {
-        return character.name;
+        return character.getName();
     }
 
     public int getCharacterId() {
-        return character.id;
+        return character.getId();
     }
 
     public int getLevel() {
-        return character.level;
+        return character.getLevel();
     }
 
     public int getJob() {
-        return character.job;
+        return character.getJob();
     }
 
     public void setVisible(boolean visible) {
@@ -68,7 +68,7 @@ public class BuddyEntry {
     public final int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + character.id;
+        result = prime * result + character.getId();
         return result;
     }
 
@@ -84,6 +84,6 @@ public class BuddyEntry {
             return false;
         }
         final BuddyEntry other = (BuddyEntry) obj;
-        return character.id == other.character.id;
+        return character.getId().equals(other.character.getId());
     }
 }

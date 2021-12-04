@@ -3,7 +3,11 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,17 +15,45 @@ import java.time.LocalDateTime;
 public class DBossLog extends Model {
 
     @Id
-    @Column(name = "bosslogid")
-    public Integer id;
+    Integer id;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "characterid")
-    public DCharacter character;
+    @JoinColumn(name = "character_id")
+    DCharacter character;
     @NotNull
-    @Column(name = "bossid")
-    public String bossid;
+    String bossId;
     @NotNull
-    @Column(name = "lastattempt")
-    public LocalDateTime lastattempt;
+    LocalDateTime lastAttempt;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public DCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(DCharacter character) {
+        this.character = character;
+    }
+
+    public String getBossId() {
+        return bossId;
+    }
+
+    public void setBossId(String bossId) {
+        this.bossId = bossId;
+    }
+
+    public LocalDateTime getLastAttempt() {
+        return lastAttempt;
+    }
+
+    public void setLastAttempt(LocalDateTime lastAttempt) {
+        this.lastAttempt = lastAttempt;
+    }
 }

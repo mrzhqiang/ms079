@@ -1,7 +1,6 @@
 package tools.wztosql;
 
 import client.inventory.MapleInventoryType;
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.DWzItemAddData;
 import com.github.mrzhqiang.maplestory.domain.DWzItemData;
 import com.github.mrzhqiang.maplestory.domain.DWzItemEquipData;
@@ -10,6 +9,7 @@ import com.github.mrzhqiang.maplestory.domain.query.QDWzItemAddData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzItemData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzItemEquipData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzItemRewardData;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzDirectory;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
@@ -79,19 +79,19 @@ public class DumpItems {
         }
 
         DWzItemData itemData = new DWzItemData();
-        itemData.id = id;
+        itemData.setId(id);
 
         WzElement<?> stringData = getStringData(id);
         if (stringData == null) {
-            itemData.name = "";
-            itemData.msg = "";
-            itemData.desc = "";
+            itemData.setName("");
+            itemData.setMsg("");
+            itemData.setDesc("");
         } else {
-            itemData.name = Elements.findString(stringData, "name");
-            itemData.msg = Elements.findString(stringData, "msg");
-            itemData.desc = Elements.findString(stringData, "desc");
+            itemData.setName(Elements.findString(stringData, "name"));
+            itemData.setMsg(Elements.findString(stringData, "msg"));
+            itemData.setDesc(Elements.findString(stringData, "desc"));
         }
-        itemData.slotMax = iz.findByName("info/slotMax")
+        itemData.setSlotMax(iz.findByName("info/slotMax")
                 .map(element1 -> Elements.ofInt(element1, -1))
                 .orElseGet(() -> {
                     if (GameConstants.getInventoryType(id) == MapleInventoryType.EQUIP) {
@@ -99,7 +99,7 @@ public class DumpItems {
                     } else {
                         return 100;
                     }
-                });
+                }));
 
         double pEntry;
         if (iz.find("info/unitPrice") != null) {
@@ -119,9 +119,9 @@ public class DumpItems {
             pEntry = 1.0;
         }
 
-        itemData.price = String.valueOf(pEntry);
-        itemData.wholePrice = Elements.findInt(iz, "info/price", -1);
-        itemData.stateChange = Elements.findInt(iz, "info/stateChangeItem");
+        itemData.setPrice(String.valueOf(pEntry));
+        itemData.setWholePrice(Elements.findInt(iz, "info/price", -1));
+        itemData.setStateChange(Elements.findInt(iz, "info/stateChangeItem"));
         int flags = Elements.findInt(iz, "info/bagType");
         if (Elements.findInt(iz, "info/notSale") > 0) {
             flags |= 0x10;
@@ -151,12 +151,12 @@ public class DumpItems {
             flags |= 0x1000;
         }
 
-        itemData.flags = flags;
-        itemData.karma = Elements.findInt(iz, "info/tradeAvailable");
-        itemData.meso = Elements.findInt(iz, "info/meso");
-        itemData.monsterBook = Elements.findInt(iz, "info/mob");
-        itemData.itemMakeLevel = Elements.findInt(iz, "info/lv");
-        itemData.questId = Elements.findInt(iz, "info/questId");
+        itemData.setFlags(flags);
+        itemData.setKarma(Elements.findInt(iz, "info/tradeAvailable"));
+        itemData.setMeso(Elements.findInt(iz, "info/meso"));
+        itemData.setMonsterBook(Elements.findInt(iz, "info/mob"));
+        itemData.setItemMakeLevel(Elements.findInt(iz, "info/lv"));
+        itemData.setQuestId(Elements.findInt(iz, "info/questId"));
         StringBuilder scrollReqs = new StringBuilder(), consumeItem = new StringBuilder(), incSkill = new StringBuilder();
         iz.findByName("req").map(WzElement::childrenStream)
                 .ifPresent(stream -> stream.forEach(element -> {
@@ -172,8 +172,8 @@ public class DumpItems {
                     }
                     consumeItem.append(Elements.ofInt(element));
                 }));
-        itemData.scrollReqs = scrollReqs.toString();
-        itemData.consumeItem = consumeItem.toString();
+        itemData.setScrollReqs(scrollReqs.toString());
+        itemData.setConsumeItem(consumeItem.toString());
         Map<Integer, Map<String, Integer>> equipStats = new HashMap<>();
         equipStats.put(-1, new HashMap<>());
         iz.findByName("mob").map(WzElement::childrenStream)
@@ -209,7 +209,7 @@ public class DumpItems {
                                 }
                             });
                         }));
-        itemData.afterImage = iz.findByName("info").map(element1 -> {
+        itemData.setAfterImage(iz.findByName("info").map(element1 -> {
             Map<String, Integer> rett = equipStats.get(-1);
             element1.childrenStream().filter(data -> data.name().startsWith("inc"))
                     .forEach(data -> {
@@ -240,15 +240,15 @@ public class DumpItems {
                 });
             }
             return Elements.findString(element1, "afterImage");
-        }).orElse("");
+        }).orElse(""));
 
         for (Entry<Integer, Map<String, Integer>> stats : equipStats.entrySet()) {
             for (Entry<String, Integer> stat : stats.getValue().entrySet()) {
                 DWzItemEquipData equipData = new DWzItemEquipData();
-                equipData.id = id;
-                equipData.itemLevel = stats.getKey();
-                equipData.key = stat.getKey();
-                equipData.value = stat.getValue();
+                equipData.setId(id);
+                equipData.setItemLevel(stats.getKey());
+                equipData.setKey(stat.getKey());
+                equipData.setValue(stat.getValue());
                 equipData.save();
             }
         }
@@ -269,7 +269,7 @@ public class DumpItems {
                             if (subKey.name().equals("con")) {
                                 subKey.childrenStream().forEach(conK -> {
                                     DWzItemAddData addData = new DWzItemAddData();
-                                    addData.id = id;
+                                    addData.setId(id);
                                     switch (conK.name()) {
                                         case "job":
                                             StringBuilder sbbb = new StringBuilder();
@@ -282,28 +282,28 @@ public class DumpItems {
                                             } else {
                                                 sbbb.append(conK.value().toString());
                                             }
-                                            addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
-                                            addData.subKey = "con:job";
-                                            addData.value = sbbb.toString();
+                                            addData.setKey(element.name().equals("elemBoost") ? "elemboost" : element.name());
+                                            addData.setSubKey("con:job");
+                                            addData.setValue(sbbb.toString());
                                             addData.save();
                                             break;
                                         case "weekDay":
                                             // 01142367
                                             return;
                                         default:
-                                            addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
-                                            addData.subKey = "con:" + conK.name();
-                                            addData.value = conK.value().toString();
+                                            addData.setKey(element.name().equals("elemBoost") ? "elemboost" : element.name());
+                                            addData.setSubKey("con:" + conK.name());
+                                            addData.setValue(conK.value().toString());
                                             addData.save();
                                             break;
                                     }
                                 });
                             } else {
                                 DWzItemAddData addData = new DWzItemAddData();
-                                addData.id = id;
-                                addData.key = element.name().equals("elemBoost") ? "elemboost" : element.name();
-                                addData.subKey = subKey.name();
-                                addData.value = subKey.value().toString();
+                                addData.setId(id);
+                                addData.setKey(element.name().equals("elemBoost") ? "elemboost" : element.name());
+                                addData.setSubKey(subKey.name());
+                                addData.setValue(subKey.value().toString());
                                 addData.save();
                             }
                         });
@@ -320,28 +320,28 @@ public class DumpItems {
         if (dat != null) {
             totalprob = dat.childrenStream().map(reward -> {
                 DWzItemRewardData rewardData = new DWzItemRewardData();
-                rewardData.id = id;
-                rewardData.item = Elements.findInt(reward, "item");
-                rewardData.prob = Elements.findInt(reward, "prob");
-                rewardData.quantity = Elements.findInt(reward, "count");
-                rewardData.period = Elements.findInt(reward, "period");
-                rewardData.worldMsg = Elements.findString(reward, "worldMsg");
-                rewardData.effect = Elements.findString(reward, "Effect");
+                rewardData.setId(id);
+                rewardData.setItem(Elements.findInt(reward, "item"));
+                rewardData.setProb(Elements.findInt(reward, "prob"));
+                rewardData.setQuantity(Elements.findInt(reward, "count"));
+                rewardData.setPeriod(Elements.findInt(reward, "period"));
+                rewardData.setWorldMsg(Elements.findString(reward, "worldMsg"));
+                rewardData.setEffect(Elements.findString(reward, "Effect"));
                 rewardData.save();
                 return Elements.findInt(reward, "prob");
             }).reduce(0, Integer::sum);
         }
-        itemData.totalprob = totalprob;
-        itemData.incSkill = incSkill.toString();
+        itemData.setTotalProb(totalprob);
+        itemData.setIncSkill(incSkill.toString());
         dat = iz.find("replace");
         if (dat != null) {
-            itemData.replaceid = Elements.findInt(dat, "itemid");
-            itemData.replacemsg = Elements.findString(dat, "msg");
+            itemData.setReplaceId(Elements.findInt(dat, "itemid"));
+            itemData.setReplaceMsg(Elements.findString(dat, "msg"));
         } else {
-            itemData.replaceid = 0;
-            itemData.replacemsg = "";
+            itemData.setReplaceId(0);
+            itemData.setReplaceMsg("");
         }
-        itemData.create = Elements.findInt(iz, "info/create");
+        itemData.setCreate(Elements.findInt(iz, "info/create"));
         itemData.save();
     }
 

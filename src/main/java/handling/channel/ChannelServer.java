@@ -5,8 +5,6 @@ import client.MapleCharacter;
 import client.MapleClient;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import com.github.mrzhqiang.maplestory.di.Injectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import constants.ServerConstants;
 import handling.ByteArrayMaplePacket;
 import handling.MaplePacket;
@@ -25,8 +23,14 @@ import org.slf4j.LoggerFactory;
 import scripting.EventScriptManager;
 import server.MapleSquad;
 import server.MapleSquad.MapleSquadType;
-import server.Timer;
-import server.events.*;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import server.events.MapleCoconut;
+import server.events.MapleEvent;
+import server.events.MapleEventType;
+import server.events.MapleFitness;
+import server.events.MapleOla;
+import server.events.MapleOxQuiz;
+import server.events.MapleSnowball;
 import server.life.PlayerNPC;
 import server.maps.MapleMapFactory;
 import server.shops.HiredMerchant;
@@ -34,10 +38,20 @@ import tools.CollectionUtil;
 import tools.ConcurrentEnumMap;
 import tools.MaplePacketCreator;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -132,7 +146,7 @@ public final class ChannelServer implements Serializable {
         acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(codecFactory));
         players = new PlayerStorage(channel);
         loadEvents();
-        Timer tMan = Timer.TimerManager.getInstance();
+        Timer tMan = Timer.MANAGER;
         if (this.channel == 1) {
             tMan.register(AutoCherryMSEventManager.getInstance(this, getMapFactory()), 120000L);
         }
@@ -184,6 +198,10 @@ public final class ChannelServer implements Serializable {
 
     public static ChannelServer getInstance(Integer channel) {
         return INSTANCE_CACHED.get(channel);
+    }
+
+    public static boolean container(Integer channel) {
+        return getInstance(channel) != null;
     }
 
     public final void addPlayer(final MapleCharacter chr) {

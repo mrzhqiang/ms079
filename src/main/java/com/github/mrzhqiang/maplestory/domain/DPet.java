@@ -3,31 +3,81 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "pets")
 public class DPet extends Model {
 
     @Id
-    @Column(name = "petid")
-    public Integer id;
-    @Column(name = "name")
-    public String name;
+    Integer id;
+    String name;
     @NotNull
-    @Column(name = "level")
-    public Integer level;
+    Integer level;
     @NotNull
-    @Column(name = "closeness")
-    public Integer closeness;
+    Integer closeness;
     @NotNull
-    @Column(name = "fullness")
-    public Integer fullness;
+    Integer fullness;
     @NotNull
-    @Column(name = "seconds")
-    public Integer seconds;
+    Integer seconds;
     @NotNull
-    @Column(name = "flags")
-    public Integer flags;
+    Integer flags;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+
+    public Integer getCloseness() {
+        return closeness;
+    }
+
+    public void setCloseness(Integer closeness) {
+        this.closeness = closeness;
+    }
+
+    public Integer getFullness() {
+        return fullness;
+    }
+
+    public void setFullness(Integer fullness) {
+        this.fullness = fullness;
+    }
+
+    public Integer getSeconds() {
+        return seconds;
+    }
+
+    public void setSeconds(Integer seconds) {
+        this.seconds = seconds;
+    }
+
+    public Integer getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Integer flags) {
+        this.flags = flags;
+    }
 }

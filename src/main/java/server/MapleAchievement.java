@@ -20,11 +20,6 @@
  */
 package server;
 
-import client.MapleCharacter;
-import handling.world.World;
-import java.rmi.RemoteException;
-import tools.MaplePacketCreator;
-
 /**
  *
  * @author KyleShum

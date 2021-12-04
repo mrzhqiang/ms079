@@ -20,13 +20,12 @@
  */
 package handling.world;
 
-import java.awt.Point;
-import java.util.List;
-import java.io.Serializable;
-
 import client.MapleCharacter;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import server.maps.MapleDoor;
+
+import java.io.Serializable;
+import java.util.List;
 
 public class MaplePartyCharacter implements Serializable {
 

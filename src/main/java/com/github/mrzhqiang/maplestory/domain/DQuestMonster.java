@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,17 +12,59 @@ import javax.persistence.Table;
 public class DQuestMonster extends Model {
 
     @Id
-    public Integer id;
-    @Column(name = "questid")
-    public Integer questid;
-    @Column(name = "monsterid")
-    public Integer monsterid;
+    Integer id;
+    Integer questId;
+    Integer monsterId;
     @NotNull
-    @Column(name = "zt")
-    public Integer zt;
-    @Column(name = "charid")
-    public Integer charid;
-    @Column(name = "name")
-    public String name;
+    Integer zt;
+    Integer charId;
+    String name;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getQuestId() {
+        return questId;
+    }
+
+    public void setQuestId(Integer questId) {
+        this.questId = questId;
+    }
+
+    public Integer getMonsterId() {
+        return monsterId;
+    }
+
+    public void setMonsterId(Integer monsterId) {
+        this.monsterId = monsterId;
+    }
+
+    public Integer getZt() {
+        return zt;
+    }
+
+    public void setZt(Integer zt) {
+        this.zt = zt;
+    }
+
+    public Integer getCharId() {
+        return charId;
+    }
+
+    public void setCharId(Integer charId) {
+        this.charId = charId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

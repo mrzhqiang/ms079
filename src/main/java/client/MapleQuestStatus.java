@@ -21,14 +21,13 @@
 package client;
 
 import constants.GameConstants;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.io.Serializable;
-import java.util.Map.Entry;
-
-import java.util.Map.Entry;
 import server.life.MapleLifeFactory;
 import server.quest.MapleQuest;
+
+import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class MapleQuestStatus implements Serializable {
 

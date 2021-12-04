@@ -13,18 +13,53 @@ import javax.persistence.Table;
 public class DPlayerNPCEquip extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "npcid")
-    public Integer npcid;
+    Integer npcId;
     @NotNull
-    @Column(name = "equipid")
-    public Integer equipid;
+    Integer equipId;
     @NotNull
-    @Column(name = "equippos")
-    public Integer equippos;
+    Integer equipPos;
     @NotNull
-    @Column(name = "charid")
-    public Integer charid;
+    Integer charId;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getNpcId() {
+        return npcId;
+    }
+
+    public void setNpcId(Integer npcId) {
+        this.npcId = npcId;
+    }
+
+    public Integer getEquipId() {
+        return equipId;
+    }
+
+    public void setEquipId(Integer equipId) {
+        this.equipId = equipId;
+    }
+
+    public Integer getEquipPos() {
+        return equipPos;
+    }
+
+    public void setEquipPos(Integer equipPos) {
+        this.equipPos = equipPos;
+    }
+
+    public Integer getCharId() {
+        return charId;
+    }
+
+    public void setCharId(Integer charId) {
+        this.charId = charId;
+    }
 }

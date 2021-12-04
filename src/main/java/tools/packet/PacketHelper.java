@@ -1,41 +1,40 @@
 package tools.packet;
 
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.SimpleTimeZone;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-
-import client.inventory.IEquip;
-import client.inventory.Item;
 import client.ISkill;
-import constants.GameConstants;
-import client.inventory.MapleRing;
-import client.inventory.MaplePet;
 import client.MapleCharacter;
 import client.MapleCoolDownValueHolder;
+import client.MapleQuestStatus;
+import client.SkillEntry;
+import client.inventory.IEquip;
+import client.inventory.IItem;
+import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
-import client.MapleQuestStatus;
-import client.inventory.IItem;
-import client.SkillEntry;
-import client.inventory.*;
+import client.inventory.MaplePet;
+import client.inventory.MapleRing;
+import constants.GameConstants;
 import constants.ServerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MapleItemInformationProvider;
-import tools.Pair;
 import server.movement.LifeMovementFragment;
 import server.shops.AbstractPlayerStore;
 import server.shops.IMaplePlayerShop;
 import tools.DateUtil;
 import tools.KoreanDateUtil;
+import tools.Pair;
 import tools.data.output.LittleEndianWriter;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.SimpleTimeZone;
 
 public class PacketHelper {
 
@@ -143,18 +142,18 @@ public class PacketHelper {
         List<MapleRing> cRing = aRing.getLeft();
         mplew.writeShort(cRing.size());
         for (MapleRing ring : cRing) {
-            mplew.writeInt(ring.ring.partnerChrId);
+            mplew.writeInt(ring.ring.getPartnerChrId());
             mplew.writeAsciiString(ring.getPartnerName(), 13);
             mplew.writeLong(ring.getRingId());
-            mplew.writeLong(ring.ring.partnerRingId);
+            mplew.writeLong(ring.ring.getPartnerRingId());
         }
         List<MapleRing> fRing = aRing.getRight();
         mplew.writeShort(fRing.size());
         for (MapleRing ring : fRing) {
-            mplew.writeInt(ring.ring.partnerChrId);
+            mplew.writeInt(ring.ring.getPartnerChrId());
             mplew.writeAsciiString(ring.getPartnerName(), 13);
             mplew.writeLong(ring.getRingId());
-            mplew.writeLong(ring.ring.partnerRingId);
+            mplew.writeLong(ring.ring.getPartnerRingId());
             mplew.writeInt(ring.getItemId());
         }
         mplew.writeShort(0);
@@ -264,7 +263,7 @@ public class PacketHelper {
     public static final void addCharStats(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
         mplew.writeInt(chr.getId()); // character id
         mplew.writeAsciiString(chr.getName(), 13);
-        mplew.write(chr.getGender()); // gender (0 = male, 1 = female)
+        mplew.write(chr.getGender().getCodeByte()); // gender (0 = male, 1 = female)
         mplew.write(chr.getSkinColor()); // skin color
         mplew.writeInt(chr.getFace()); // face
         mplew.writeInt(chr.getHair()); // hair
@@ -297,7 +296,7 @@ public class PacketHelper {
     }
 
     public static final void addCharLook(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr, final boolean mega, boolean channelserver) {
-        mplew.write(chr.getGender());
+        mplew.write(chr.getGender().getCodeByte());
         mplew.write(chr.getSkinColor());
         mplew.writeInt(chr.getFace());
         mplew.write(mega ? 0 : 1);

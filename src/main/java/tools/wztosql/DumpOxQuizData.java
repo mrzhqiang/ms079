@@ -69,11 +69,11 @@ public class DumpOxQuizData {
                             return;
                         }
                         DWzOxData oxData = new DWzOxData();
-                        oxData.pkQuestion.questionset = Integer.parseInt(name1);
-                        oxData.pkQuestion.questionid = Integer.parseInt(name2);
-                        oxData.question = qs;
-                        oxData.display = ds;
-                        oxData.answer = as;
+                        oxData.getPkQuestion().setQuestionSet(Integer.parseInt(name1));
+                        oxData.getPkQuestion().setQuestionId(Integer.parseInt(name2));
+                        oxData.setQuestion(qs);
+                        oxData.setDisplay(ds);
+                        oxData.setAnswer(as);
                         oxData.save();
                     });
                 }));

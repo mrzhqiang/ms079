@@ -1,7 +1,5 @@
 package server.maps;
 
-import java.awt.Point;
-
 import client.MapleClient;
 import client.anticheat.CheatingOffense;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;

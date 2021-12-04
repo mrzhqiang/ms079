@@ -13,24 +13,73 @@ import javax.persistence.Table;
 public class DDropData extends Model {
 
     @Id
-    public Long id;
+    Long id;
     @NotNull
-    @Column(name = "dropperid")
-    public Integer dropperid;
+    Integer dropperId;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer itemId;
     @NotNull
-    @Column(name = "minimum_quantity")
-    public Integer minQuantity;
+    Integer minQuantity;
     @NotNull
-    @Column(name = "maximum_quantity")
-    public Integer maxQuantity;
+    Integer maxQuantity;
     @NotNull
-    @Column(name = "questid")
-    public Integer questid;
+    Integer questId;
     @NotNull
-    @Column(name = "chance")
-    public Integer chance;
+    Integer chance;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getDropperId() {
+        return dropperId;
+    }
+
+    public void setDropperId(Integer dropperId) {
+        this.dropperId = dropperId;
+    }
+
+    public Integer getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
+
+    public Integer getMinQuantity() {
+        return minQuantity;
+    }
+
+    public void setMinQuantity(Integer minQuantity) {
+        this.minQuantity = minQuantity;
+    }
+
+    public Integer getMaxQuantity() {
+        return maxQuantity;
+    }
+
+    public void setMaxQuantity(Integer maxQuantity) {
+        this.maxQuantity = maxQuantity;
+    }
+
+    public Integer getQuestId() {
+        return questId;
+    }
+
+    public void setQuestId(Integer questId) {
+        this.questId = questId;
+    }
+
+    public Integer getChance() {
+        return chance;
+    }
+
+    public void setChance(Integer chance) {
+        this.chance = chance;
+    }
 }

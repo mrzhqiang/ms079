@@ -20,14 +20,12 @@
  */
 package server.maps;
 
-import java.awt.Point;
-
 import client.MapleCharacter;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import server.Randomizer;
-import server.Timer.MapTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.life.MapleLifeFactory;
 import tools.MaplePacketCreator;
 
@@ -387,7 +385,7 @@ public class Event_DojoAgent {
         if (mobid != 0) {
             final int rand = Randomizer.nextInt(3);
 
-            MapTimer.getInstance().schedule(new Runnable() {
+            Timer.MAP.schedule(new Runnable() {
 
                 @Override
                 public void run() {

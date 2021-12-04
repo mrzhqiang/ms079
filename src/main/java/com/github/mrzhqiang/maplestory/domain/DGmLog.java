@@ -3,29 +3,73 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "gmlog")
 public class DGmLog extends Model {
 
     @Id
-    @Column(name = "gmlogid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "cid")
-    public Integer cid;
+    Integer cid;
     @NotNull
-    @Column(name = "command")
-    public String command;
+    String command;
     @NotNull
-    @Column(name = "mapid")
-    public Integer mapid;
+    Integer mapId;
     @NotNull
-    @Column(name = "name")
-    public String name;
+    String name;
     @NotNull
-    @Column(name = "ip")
-    public String ip;
+    String ip;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getCid() {
+        return cid;
+    }
+
+    public void setCid(Integer cid) {
+        this.cid = cid;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public Integer getMapId() {
+        return mapId;
+    }
+
+    public void setMapId(Integer mapId) {
+        this.mapId = mapId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
 }

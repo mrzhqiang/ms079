@@ -1,10 +1,8 @@
 package com.github.mrzhqiang.maplestory.domain;
 
-import com.google.common.base.MoreObjects;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -14,17 +12,23 @@ import javax.persistence.Table;
 public class DIPBans extends Model {
 
     @Id
-    @Column(name = "ipbanid")
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "ip")
-    public String ip;
+    String ip;
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("ip", ip)
-                .toString();
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 }

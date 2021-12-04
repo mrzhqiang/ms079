@@ -1,12 +1,76 @@
 package client;
 
 import client.anticheat.CheatTracker;
-import client.inventory.*;
-import com.github.mrzhqiang.helper.math.Numbers;
+import client.inventory.Equip;
+import client.inventory.IItem;
+import client.inventory.Item;
+import client.inventory.ItemFlag;
+import client.inventory.ItemLoader;
+import client.inventory.MapleInventory;
+import client.inventory.MapleInventoryIdentifier;
+import client.inventory.MapleInventoryType;
+import client.inventory.MapleMount;
+import client.inventory.MaplePet;
+import client.inventory.MapleRing;
+import client.inventory.ModifyInventory;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import com.github.mrzhqiang.maplestory.di.Injectors;
-import com.github.mrzhqiang.maplestory.domain.*;
-import com.github.mrzhqiang.maplestory.domain.query.*;
+import com.github.mrzhqiang.maplestory.domain.DAccount;
+import com.github.mrzhqiang.maplestory.domain.DAccountInfo;
+import com.github.mrzhqiang.maplestory.domain.DAchievement;
+import com.github.mrzhqiang.maplestory.domain.DBossLog;
+import com.github.mrzhqiang.maplestory.domain.DBuddy;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
+import com.github.mrzhqiang.maplestory.domain.DFameLog;
+import com.github.mrzhqiang.maplestory.domain.DFishingJf;
+import com.github.mrzhqiang.maplestory.domain.DHyPay;
+import com.github.mrzhqiang.maplestory.domain.DIPBans;
+import com.github.mrzhqiang.maplestory.domain.DInventorySlot;
+import com.github.mrzhqiang.maplestory.domain.DKeyMap;
+import com.github.mrzhqiang.maplestory.domain.DMountData;
+import com.github.mrzhqiang.maplestory.domain.DNote;
+import com.github.mrzhqiang.maplestory.domain.DOneTimeLog;
+import com.github.mrzhqiang.maplestory.domain.DPrizeLog;
+import com.github.mrzhqiang.maplestory.domain.DQuestInfo;
+import com.github.mrzhqiang.maplestory.domain.DQuestStatus;
+import com.github.mrzhqiang.maplestory.domain.DQuestStatusMob;
+import com.github.mrzhqiang.maplestory.domain.DRegrockLocation;
+import com.github.mrzhqiang.maplestory.domain.DSavedLocation;
+import com.github.mrzhqiang.maplestory.domain.DSkill;
+import com.github.mrzhqiang.maplestory.domain.DSkillCooldown;
+import com.github.mrzhqiang.maplestory.domain.DSkillMacro;
+import com.github.mrzhqiang.maplestory.domain.DTrockLocation;
+import com.github.mrzhqiang.maplestory.domain.DWishList;
+import com.github.mrzhqiang.maplestory.domain.Gender;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDAccountInfo;
+import com.github.mrzhqiang.maplestory.domain.query.QDAchievement;
+import com.github.mrzhqiang.maplestory.domain.query.QDBossLog;
+import com.github.mrzhqiang.maplestory.domain.query.QDBuddy;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDFameLog;
+import com.github.mrzhqiang.maplestory.domain.query.QDFishingJf;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
+import com.github.mrzhqiang.maplestory.domain.query.QDHyPay;
+import com.github.mrzhqiang.maplestory.domain.query.QDInventorySlot;
+import com.github.mrzhqiang.maplestory.domain.query.QDKeyMap;
+import com.github.mrzhqiang.maplestory.domain.query.QDMountData;
+import com.github.mrzhqiang.maplestory.domain.query.QDNote;
+import com.github.mrzhqiang.maplestory.domain.query.QDOneTimeLog;
+import com.github.mrzhqiang.maplestory.domain.query.QDPrizeLog;
+import com.github.mrzhqiang.maplestory.domain.query.QDQuestInfo;
+import com.github.mrzhqiang.maplestory.domain.query.QDQuestStatus;
+import com.github.mrzhqiang.maplestory.domain.query.QDQuestStatusMob;
+import com.github.mrzhqiang.maplestory.domain.query.QDRegrockLocation;
+import com.github.mrzhqiang.maplestory.domain.query.QDSavedLocation;
+import com.github.mrzhqiang.maplestory.domain.query.QDSkill;
+import com.github.mrzhqiang.maplestory.domain.query.QDSkillCooldown;
+import com.github.mrzhqiang.maplestory.domain.query.QDSkillMacro;
+import com.github.mrzhqiang.maplestory.domain.query.QDTrockLocation;
+import com.github.mrzhqiang.maplestory.domain.query.QDWishList;
+import com.github.mrzhqiang.maplestory.timer.Timer;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -20,33 +84,69 @@ import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
-import handling.world.*;
+import handling.world.CharacterTransfer;
+import handling.world.MapleMessenger;
+import handling.world.MapleMessengerCharacter;
+import handling.world.MapleParty;
+import handling.world.MaplePartyCharacter;
+import handling.world.PartyOperation;
+import handling.world.PlayerBuffStorage;
+import handling.world.PlayerBuffValueHolder;
+import handling.world.World;
 import handling.world.family.MapleFamily;
 import handling.world.family.MapleFamilyBuff;
 import handling.world.family.MapleFamilyBuff.MapleFamilyBuffEntry;
 import handling.world.family.MapleFamilyCharacter;
 import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildCharacter;
+import io.ebean.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.EventInstanceManager;
 import scripting.NPCScriptManager;
-import server.Timer;
-import server.*;
-import server.Timer.BuffTimer;
-import server.Timer.EtcTimer;
-import server.Timer.EventTimer;
-import server.Timer.MapTimer;
+import server.CashShop;
+import server.MapleCarnivalChallenge;
+import server.MapleCarnivalParty;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MaplePortal;
+import server.MapleShop;
+import server.MapleStatEffect;
+import server.MapleStorage;
+import server.MapleTrade;
+import server.RandomRewards;
+import server.Randomizer;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
 import server.life.MobSkill;
 import server.life.PlayerNPC;
-import server.maps.*;
+import server.maps.AbstractAnimatedMapleMapObject;
+import server.maps.Event_PyramidSubway;
+import server.maps.FieldLimitType;
+import server.maps.MapleDoor;
+import server.maps.MapleDragon;
+import server.maps.MapleFoothold;
+import server.maps.MapleMap;
+import server.maps.MapleMapEffect;
+import server.maps.MapleMapFactory;
+import server.maps.MapleMapObject;
+import server.maps.MapleMapObjectType;
+import server.maps.MapleSummon;
+import server.maps.SavedLocationType;
 import server.movement.LifeMovementFragment;
 import server.quest.MapleQuest;
 import server.shops.IMaplePlayerShop;
-import tools.*;
-import tools.packet.*;
+import tools.ConcurrentEnumMap;
+import tools.FileoutputUtil;
+import tools.MaplePacketCreator;
+import tools.MockIOSession;
+import tools.Pair;
+import tools.packet.MTSCSPacket;
+import tools.packet.MobPacket;
+import tools.packet.MonsterCarnivalPacket;
+import tools.packet.PetPacket;
+import tools.packet.PlayerShopPacket;
+import tools.packet.UIPacket;
 
 import java.awt.*;
 import java.io.Serializable;
@@ -59,9 +159,22 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -99,12 +212,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     private String name, chalktext, BlessOfFairy_Origin, charmessage;
     private long lastCombo, lastfametime, keydown_skill;
-    private int dojoRecord, gmLevel, gender, initialSpawnPoint, skinColor, guildrank = 5, allianceRank = 5, world, fairyExp = 30, numClones, subcategory; // Make this a quest record, TODO : Transfer it somehow with the current data
+    private Gender gender;
+    private int dojoRecord, gmLevel, initialSpawnPoint, skinColor, guildrank = 5, allianceRank = 5, world, fairyExp = 30, numClones, subcategory; // Make this a quest record, TODO : Transfer it somehow with the current data
     private int level, mulung_energy, combo, availableCP, totalCP, fame, hpApUsed, remainingAp;
     private int job;
+    private long acash;
+    private long maplepoints;
+    private long points;
+    private long vpoints;
     private int accountid, id, meso, exp, hair, face, mapid, bookCover, dojo, sg,
-            guildid = 0, fallcounter = 0, maplepoints, acash, chair, itemEffect, points, vpoints,
-            rank = 1, rankMove = 0, jobRank = 1, jobRankMove = 0, marriageId, marriageItemId = 0,
+            guildid = 0, fallcounter = 0, chair, itemEffect, rank = 1, rankMove = 0, jobRank = 1, jobRankMove = 0, marriageId, marriageItemId = 0,
             currentrep, totalrep, coconutteam = 0, followid = 0, battleshipHP = 0,
             expression, constellation, blood, month, day, beans, beansNum, beansRange, prefix;
     private boolean canSetBeansNum;
@@ -268,11 +385,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             DAccount account = optional.get();
 
 //            ret.client.setAccountName(account.name);
-            ret.acash = account.aCash;
-            ret.maplepoints = account.mPoint;
-            ret.points = account.point;
-            ret.vpoints = account.vPoint;
-            ret.lastGainHM = account.lastGainHM;
+            ret.acash = account.getCash();
+            ret.maplepoints = account.getmPoints();
+            ret.points = account.getPoints();
+            ret.vpoints = account.getvPoints();
+            ret.lastGainHM = account.getLastGainHm();
         }
         return ret;
     }
@@ -477,40 +594,40 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             ret.setPosition(portal.getPosition());
 
-            int partyid = one.party;
+            int partyid = one.getParty();
             if (partyid >= 0) {
                 MapleParty party = World.Party.getParty(partyid);
                 if (party != null && party.getMemberById(ret.id) != null) {
                     ret.party = party;
                 }
             }
-            ret.bookCover = one.monsterBookCover;
-            ret.dojo = one.dojoPts;
-            ret.dojoRecord = one.dojoRecord;
-            final String[] pets = one.pets.split(",");
+            ret.bookCover = one.getMonsterBookCover();
+            ret.dojo = one.getDojoPts();
+            ret.dojoRecord = one.getDojoRecord();
+            final String[] pets = one.getPets().split(",");
             for (int i = 0; i < ret.petStore.length; i++) {
                 ret.petStore[i] = Byte.parseByte(pets[i]);
             }
-            new QDAchievement().account.eq(one.account)
-                    .findEach(it -> ret.finishedAchievements.add(it.achievement.achievementid));
+            new QDAchievement().account.eq(one.getAccount())
+                    .findEach(it -> ret.finishedAchievements.add(it.getAchievement().getAchievementId()));
         }
         boolean compensate_previousEvans = false;
         for (DQuestStatus status : new QDQuestStatus().character.eq(one).findList()) {
-            int id = status.quest;
+            int id = status.getQuest();
             if (id == 170000) {
                 compensate_previousEvans = true;
             }
             MapleQuest q = MapleQuest.getInstance(id);
-            MapleQuestStatus questStatus = new MapleQuestStatus(q, status.status);
-            long cTime = status.time;
+            MapleQuestStatus questStatus = new MapleQuestStatus(q, status.getStatus());
+            long cTime = status.getTime();
             if (cTime > -1) {
                 questStatus.setCompletionTime(cTime * 1000);
             }
-            questStatus.setForfeited(status.forfeited);
-            questStatus.setCustomData(status.customData);
+            questStatus.setForfeited(status.getForfeited());
+            questStatus.setCustomData(status.getCustomData());
             ret.quests.put(q, questStatus);
             for (DQuestStatusMob mob : new QDQuestStatusMob().questStatus.eq(status).findList()) {
-                questStatus.setMobKills(mob.mob, mob.count);
+                questStatus.setMobKills(mob.getMob(), mob.getCount());
             }
         }
         if (channelserver) {
@@ -522,11 +639,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             DInventorySlot slot = optional.get();
 
-            ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(slot.equip);
-            ret.getInventory(MapleInventoryType.USE).setSlotLimit(slot.use);
-            ret.getInventory(MapleInventoryType.SETUP).setSlotLimit(slot.setup);
-            ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.etc);
-            ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.cash);
+            ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(slot.getEquip());
+            ret.getInventory(MapleInventoryType.USE).setSlotLimit(slot.getUse());
+            ret.getInventory(MapleInventoryType.SETUP).setSlotLimit(slot.getSetup());
+            ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.getEtc());
+            ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.getCash());
 
             for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, false, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
@@ -538,29 +655,29 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             DAccount account = new QDAccount().id.eq(ret.accountid).findOne();
             if (account != null) {
 //                ret.getClient().setAccountName(account.name);
-                ret.lastGainHM = account.lastGainHM;
-                ret.acash = account.aCash;
-                ret.maplepoints = account.mPoint;
-                ret.points = account.point;
-                ret.vpoints = account.vPoint;
+                ret.lastGainHM = account.getLastGainHm();
+                ret.acash = account.getCash();
+                ret.maplepoints = account.getmPoints();
+                ret.points = account.getPoints();
+                ret.vpoints = account.getvPoints();
 
-                account.lastLogon = LocalDateTime.now();
+                account.setLastLogin(LocalDateTime.now());
                 account.save();
             }
 
             List<DQuestInfo> infos = new QDQuestInfo().character.eq(one).findList();
             for (DQuestInfo info : infos) {
-                ret.questinfo.put(info.quest, info.customData);
+                ret.questinfo.put(info.getQuest(), info.getCustomData());
             }
 
             List<DSkill> skills = new QDSkill().character.eq(one).findList();
             ISkill skil;
             for (DSkill skill : skills) {
-                skil = SkillFactory.getSkill(skill.skillid);
-                if (skil != null && GameConstants.isApplicableSkill(skill.skillid)) {
-                    ret.skills.put(skil, new SkillEntry(skill.skilllevel.byteValue(), skill.masterlevel.byteValue(), skill.expiration));
+                skil = SkillFactory.getSkill(skill.getSkillId());
+                if (skil != null && GameConstants.isApplicableSkill(skill.getSkillId())) {
+                    ret.skills.put(skil, new SkillEntry(skill.getSkillLevel().byteValue(), skill.getMasterLevel().byteValue(), skill.getExpiration()));
                 } else if (skil == null) { //doesnt. exist. e.g. bb
-                    ret.remainingSp[GameConstants.getSkillBookForSkill(skill.skillid)] += skill.skilllevel;
+                    ret.remainingSp[GameConstants.getSkillBookForSkill(skill.getSkillId())] += skill.getSkillLevel();
                 }
             }
 
@@ -570,15 +687,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             List<DCharacter> characters = new QDCharacter().account.eq(account).orderBy().level.desc().findList();
             byte maxlevel_ = 0;
             for (DCharacter character : characters) {
-                if (character.id != charid) { // Not this character
-                    byte maxlevel = (byte) (character.level / 10);
+                if (character.getId() != charid) { // Not this character
+                    byte maxlevel = (byte) (character.getLevel() / 10);
 
                     if (maxlevel > 20) {
                         maxlevel = 20;
                     }
                     if (maxlevel > maxlevel_) {
                         maxlevel_ = maxlevel;
-                        ret.BlessOfFairy_Origin = character.name;
+                        ret.BlessOfFairy_Origin = character.getName();
                     }
 
                 } else if (charid < 17000 && !compensate_previousEvans && ret.job >= 2200 && ret.job <= 2218) { //compensate, watch max charid
@@ -594,21 +711,21 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             List<DSkillMacro> macros = new QDSkillMacro().character.eq(one).findList();
             int position;
             for (DSkillMacro macro : macros) {
-                position = macro.position;
-                SkillMacro skillMacro = new SkillMacro(macro.skill1, macro.skill2,
-                        macro.skill3, macro.name, macro.shout, position);
+                position = macro.getPosition();
+                SkillMacro skillMacro = new SkillMacro(macro.getSkill1(), macro.getSkill2(),
+                        macro.getSkill3(), macro.getName(), macro.getShout(), position);
                 ret.skillMacros[position] = skillMacro;
             }
 
             List<DKeyMap> maps = new QDKeyMap().character.eq(one).findList();
             Map<Integer, Pair<Integer, Integer>> keyb = ret.keylayout.Layout();
             for (DKeyMap map : maps) {
-                keyb.put(map.key, new Pair<>(map.type, map.action));
+                keyb.put(map.getKey(), new Pair<>(map.getType(), map.getAction()));
             }
 
             List<DSavedLocation> locations = new QDSavedLocation().character.eq(one).findList();
             for (DSavedLocation location : locations) {
-                ret.savedLocations[location.locationtype] = location.map;
+                ret.savedLocations[location.getLocationType()] = location.getMap();
             }
 
             // DATEDIFF(NOW(),`when`) < 30 表示：when 距离现在的时间在 30 天之内（不超过），因此换成日期就是 when > now - 30
@@ -620,8 +737,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ret.lastfametime = 0;
             ret.lastmonthfameids = new ArrayList<>(31);
             for (DFameLog log : logs) {
-                ret.lastfametime = Math.max(ret.lastfametime, log.when.toInstant(ZoneOffset.UTC).toEpochMilli());
-                ret.lastmonthfameids.add(log.to.id);
+                ret.lastfametime = Math.max(ret.lastfametime, log.getWhen().toInstant(ZoneOffset.UTC).toEpochMilli());
+                ret.lastmonthfameids.add(log.getTo().getId());
             }
 
             ret.buddylist.loadFromDb(one);
@@ -631,7 +748,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             List<DWishList> lists = new QDWishList().character.eq(one).findList();
             int i = 0;
             for (DWishList list : lists) {
-                ret.wishlist[i] = list.sn;
+                ret.wishlist[i] = list.getSn();
                 i++;
             }
             while (i < 10) {
@@ -642,7 +759,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             List<DTrockLocation> locationList = new QDTrockLocation().character.eq(one).findList();
             int r = 0;
             for (DTrockLocation location : locationList) {
-                ret.rocks[r] = location.mapid;
+                ret.rocks[r] = location.getMapId();
                 r++;
             }
             while (r < 10) {
@@ -653,7 +770,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             List<DRegrockLocation> regrockLocations = new QDRegrockLocation().character.eq(one).findList();
             r = 0;
             for (DRegrockLocation regrockLocation : regrockLocations) {
-                ret.regrocks[r] = regrockLocation.mapid;
+                ret.regrocks[r] = regrockLocation.getMapId();
                 r++;
             }
             while (r < 5) {
@@ -669,9 +786,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ret.mount = new MapleMount(ret,
                     mount != null ? mount.getItemId() : 0,
                     ret.job > 1000 && ret.job < 2000 ? 10001004 : (ret.job >= 2000 ? (ret.job == 2001 || ret.job >= 2200 ? 20011004 : (ret.job >= 3000 ? 30001004 : 20001004)) : 1004),
-                    mountData.fatigue,
-                    mountData.level,
-                    mountData.exp);
+                    mountData.getFatigue(), mountData.getLevel(), mountData.getExp());
             ret.stats.recalcLocalStats(true);
         } else { // Not channel server
             for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, true, charid).values()) {
@@ -683,173 +798,173 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     private void setCharacter(DCharacter one) {
         this.character = one;
-        this.mount_id = one.mountid;
-        this.name = one.name;
-        this.level = one.level;
-        this.fame = one.fame;
-        this.sg = one.sg;
-        this.stats.str = one.str;
-        this.stats.dex = one.dex;
-        this.stats.int_ = one.intelligence;
-        this.stats.luk = one.luk;
-        this.stats.maxhp = one.maxHP;
-        this.stats.maxmp = one.maxMP;
-        this.stats.hp = one.hp;
-        this.stats.mp = one.mp;
+        this.mount_id = one.getMountid();
+        this.name = one.getName();
+        this.level = one.getLevel();
+        this.fame = one.getFame();
+        this.sg = one.getSg();
+        this.stats.str = one.getStr();
+        this.stats.dex = one.getDex();
+        this.stats.int_ = one.getIntelligence();
+        this.stats.luk = one.getLuk();
+        this.stats.maxhp = one.getMaxHp();
+        this.stats.maxmp = one.getMaxMp();
+        this.stats.hp = one.getHp();
+        this.stats.mp = one.getMp();
 
-        this.exp = one.exp;
-        this.hpApUsed = one.hpApUsed.shortValue();
-        String[] sp = one.sp.split(",");
+        this.exp = one.getExp();
+        this.hpApUsed = one.getHpApUsed().shortValue();
+        String[] sp = one.getSp().split(",");
         for (int i = 0; i < this.remainingSp.length; i++) {
             this.remainingSp[i] = Integer.parseInt(sp[i]);
         }
-        this.remainingAp = one.ap.byteValue();
-        this.beans = one.beans;
-        this.meso = one.meso;
-        this.gmLevel = one.gm;
-        this.skinColor = one.skinColor;
-        this.gender = one.gender;
-        this.job = one.job;
-        this.hair = one.hair;
-        this.face = one.face;
-        this.accountid = one.account.id;
-        this.mapid = one.map;
-        this.initialSpawnPoint = one.spawnPoint;
-        this.world = one.world;
-        this.guildid = one.guild == null ? 0 : one.guild.id;
-        this.guildrank = one.guildRank;
-        this.allianceRank = one.allianceRank;
-        this.currentrep = one.currentRep;
-        this.totalrep = one.totalRep;
-        if (one.family != null && one.senior != null && one.junior1 != null && one.junior2 != null) {
-            this.makeMFC(one.family.id, one.senior.id, one.junior1.id, one.junior2.id);
+        this.remainingAp = one.getAp().byteValue();
+        this.beans = one.getBeans();
+        this.meso = one.getMeso();
+        this.gmLevel = one.getGm();
+        this.skinColor = one.getSkinColor();
+        this.gender = one.getGender();
+        this.job = one.getJob();
+        this.hair = one.getHair();
+        this.face = one.getFace();
+        this.accountid = one.getAccount().getId();
+        this.mapid = one.getMap();
+        this.initialSpawnPoint = one.getSpawnPoint();
+        this.world = one.getWorld();
+        this.guildid = one.getGuild() == null ? 0 : one.getGuild().getId();
+        this.guildrank = one.getGuildRank();
+        this.allianceRank = one.getAllianceRank();
+        this.currentrep = one.getCurrentRep();
+        this.totalrep = one.getTotalRep();
+        if (one.getFamily() != null && one.getSenior() != null && one.getJunior1() != null && one.getJunior2() != null) {
+            this.makeMFC(one.getFamily().getId(), one.getSenior().getId(), one.getJunior1().getId(), one.getJunior2().getId());
         }
         if (this.guildid > 0) {
             this.mgc = new MapleGuildCharacter(this.character, client.getChannel(), true);
         }
-        this.buddylist = new BuddyList(one.buddyCapacity);
-        this.subcategory = one.subcategory;
+        this.buddylist = new BuddyList(one.getBuddyCapacity());
+        this.subcategory = one.getSubcategory();
         this.mount = new MapleMount(this, 0, this.job > 1000 && this.job < 2000 ? 10001004 : (this.job >= 2000 ? (this.job == 2001 || (this.job >= 2200 && this.job <= 2218) ? 20011004 : (this.job >= 3000 ? 30001004 : 20001004)) : 1004), (byte) 0, (byte) 1, 0);
-        this.rank = one.rank;
-        this.rankMove = one.rankMove;
-        this.jobRank = one.jobRank;
-        this.jobRankMove = one.jobRankMove;
-        if (one.marriage != null) {
-            this.marriageId = one.marriage.id;
+        this.rank = one.getRank();
+        this.rankMove = one.getMoveRank();
+        this.jobRank = one.getJobRank();
+        this.jobRankMove = one.getJobMoveRank();
+        if (one.getMarriage() != null) {
+            this.marriageId = one.getMarriage().getId();
         }
-        this.charmessage = one.charMessage;
-        this.expression = one.expression;
-        this.constellation = one.constellation;
-        this.skillzq = one.skillzq;
-        this.bosslog = one.bosslog;
-        this.grname = one.grname;
-        this.djjl = one.djjl;
-        this.qiandao = one.qiandao;
-        this.jzname = one.jzname;
-        this.mrfbrw = one.mrfbrw;
-        this.mrsbossrw = one.mrsbossrw;
-        this.mrsgrw = one.mrsgrw;
-        this.mrfbrws = one.mrfbrws;
-        this.mrsbossrws = one.mrsbossrws;
-        this.mrsgrws = one.mrsgrws;
-        this.mrsjrw = one.mrsjrw;
-        this.hythd = one.hythd;
-        this.mrfbrwa = one.mrfbrwa;
-        this.mrsbossrwa = one.mrsbossrwa;
-        this.mrsgrwa = one.mrsgrwa;
-        this.mrfbrwas = one.mrfbrwas;
-        this.mrsbossrwas = one.mrsbossrwas;
-        this.mrsgrwas = one.mrsgrwas;
-        this.ddj = one.ddj;
-        this.vip = one.vip;
-        this.blood = one.blood;
-        this.month = one.month;
-        this.day = one.day;
-        this.prefix = one.prefix.intValue();
+        this.charmessage = one.getCharMessage();
+        this.expression = one.getExpression();
+        this.constellation = one.getConstellation();
+        this.skillzq = one.getSkillzq();
+        this.bosslog = one.getBosslog();
+        this.grname = one.getGrname();
+        this.djjl = one.getDjjl();
+        this.qiandao = one.getQiandao();
+        this.jzname = one.getJzname();
+        this.mrfbrw = one.getMrfbrw();
+        this.mrsbossrw = one.getMrsbossrw();
+        this.mrsgrw = one.getMrsgrw();
+        this.mrfbrws = one.getMrfbrws();
+        this.mrsbossrws = one.getMrsbossrws();
+        this.mrsgrws = one.getMrsgrws();
+        this.mrsjrw = one.getMrsjrw();
+        this.hythd = one.getHythd();
+        this.mrfbrwa = one.getMrfbrwa();
+        this.mrsbossrwa = one.getMrsbossrwa();
+        this.mrsgrwa = one.getMrsgrwa();
+        this.mrfbrwas = one.getMrfbrwas();
+        this.mrsbossrwas = one.getMrsbossrwas();
+        this.mrsgrwas = one.getMrsgrwas();
+        this.ddj = one.getDdj();
+        this.vip = one.getVip();
+        this.blood = one.getBlood();
+        this.month = one.getMonth();
+        this.day = one.getDay();
+        this.prefix = one.getPrefix().intValue();
     }
 
     public static void saveNewCharToDB(MapleCharacter chr, int type, boolean db) {
         DAccount account = new QDAccount().id.eq(chr.accountid).findOne();
-        DCharacter character = new DCharacter();
-        character.account = account;
-        character.name = chr.name;
-        character.level = 1;
-        character.fame = 0;
-        character.str = chr.stats.str;
-        character.dex = chr.stats.dex;
-        character.luk = chr.stats.luk;
-        character.intelligence = chr.stats.int_;
-        character.exp = 0;
-        character.hp = chr.stats.hp;
-        character.mp = chr.stats.mp;
-        character.maxHP = chr.stats.maxhp;
-        character.maxMP = chr.stats.maxmp;
-        character.sp = "0,0,0,0,0,0,0,0,0,0";
-        character.ap = 0;
-        character.gm = chr.getClient().gm ? 5 : 0;
-        character.skinColor = chr.skinColor;
-        character.gender = chr.gender;
-        character.job = chr.job;
-        character.hair = chr.hair;
-        character.face = chr.face;
-        character.map = type == 1 ? 0 : (type == 0 ? 130030000 : (type == 2 ? 914000000 : 910000000));
-        character.meso = chr.meso;
-        character.hpApUsed = 0;
-        character.spawnPoint = 0;
-        character.party = -1;
-        character.buddyCapacity = chr.buddylist.getCapacity();
-        character.monsterBookCover = 0;
-        character.dojoPts = 0;
-        character.dojoRecord = 0;
-        character.pets = "-1,-1,-1";
-        character.subcategory = 0;
-        character.marriage = null;
-        character.currentRep = 0;
-        character.totalRep = 0;
-        character.prefix = BigDecimal.valueOf(chr.prefix);
-        character.djjl = chr.djjl;
-        character.qiandao = chr.qiandao;
-        character.world = chr.world;
-        character.mountid = chr.mount_id;
-        character.sg = chr.sg;
+        DCharacter character = new DCharacter(account);
+        character.setAccount(account);
+        character.setName(chr.name);
+        character.setLevel(1);
+        character.setFame(0);
+        character.setStr(chr.stats.str);
+        character.setDex(chr.stats.dex);
+        character.setLuk(chr.stats.luk);
+        character.setIntelligence(chr.stats.int_);
+        character.setExp(0);
+        character.setHp(chr.stats.hp);
+        character.setMp(chr.stats.mp);
+        character.setMaxHp(chr.stats.maxhp);
+        character.setMaxMp(chr.stats.maxmp);
+        character.setSp("0,0,0,0,0,0,0,0,0,0");
+        character.setAp(0);
+        character.setGm(chr.getClient().gm ? 5 : 0);
+        character.setSkinColor(chr.skinColor);
+        character.setGender(chr.gender);
+        character.setJob(chr.job);
+        character.setHair(chr.hair);
+        character.setFace(chr.face);
+        character.setMap(type == 1 ? 0 : (type == 0 ? 130030000 : (type == 2 ? 914000000 : 910000000)));
+        character.setMeso(chr.meso);
+        character.setHpApUsed(0);
+        character.setSpawnPoint(0);
+        character.setParty(-1);
+        character.setBuddyCapacity(chr.buddylist.getCapacity());
+        character.setMonsterBookCover(0);
+        character.setDojoPts(0);
+        character.setDojoRecord(0);
+        character.setPets("-1,-1,-1");
+        character.setSubcategory(0);
+        character.setMarriage(null);
+        character.setCurrentRep(0);
+        character.setTotalRep(0);
+        character.setPrefix(BigDecimal.valueOf(chr.prefix));
+        character.setDjjl(chr.djjl);
+        character.setQiandao(chr.qiandao);
+        character.setWorld(chr.world);
+        character.setMountid(chr.mount_id);
+        character.setSg(chr.sg);
         chr.character = character;
         character.save();
 
         chr.quests.forEach((mapleQuest, mapleQuestStatus) -> {
             DQuestStatus questStatus = new DQuestStatus();
-            questStatus.character = character;
-            questStatus.quest = mapleQuestStatus.getQuest().getId();
-            questStatus.status = mapleQuestStatus.getStatus();
-            questStatus.time = (int) (mapleQuestStatus.getCompletionTime() / 1000);
-            questStatus.forfeited = mapleQuestStatus.getForfeited();
-            questStatus.customData = mapleQuestStatus.getCustomData();
+            questStatus.setCharacter(character);
+            questStatus.setQuest(mapleQuestStatus.getQuest().getId());
+            questStatus.setStatus(mapleQuestStatus.getStatus());
+            questStatus.setTime((int) (mapleQuestStatus.getCompletionTime() / 1000));
+            questStatus.setForfeited(mapleQuestStatus.getForfeited());
+            questStatus.setCustomData(mapleQuestStatus.getCustomData());
             questStatus.save();
 
             if (mapleQuestStatus.hasMobKills()) {
                 mapleQuestStatus.getMobKills().forEach((integer, mob) -> {
                     DQuestStatusMob statusMob = new DQuestStatusMob();
-                    statusMob.questStatus = questStatus;
-                    statusMob.mob = mob;
-                    statusMob.count = mapleQuestStatus.getMobKills(mob);
+                    statusMob.setQuestStatus(questStatus);
+                    statusMob.setMob(mob);
+                    statusMob.setCount(mapleQuestStatus.getMobKills(mob));
                     statusMob.save();
                 });
             }
         });
 
         DInventorySlot inventorySlot = new DInventorySlot();
-        inventorySlot.character = character;
-        inventorySlot.equip = 32;
-        inventorySlot.use = 32;
-        inventorySlot.setup = 32;
-        inventorySlot.etc = 32;
-        inventorySlot.cash = 60;
+        inventorySlot.setCharacter(character);
+        inventorySlot.setEquip(32);
+        inventorySlot.setUse(32);
+        inventorySlot.setSetup(32);
+        inventorySlot.setEtc(32);
+        inventorySlot.setCash(60);
         inventorySlot.save();
 
         DMountData mountData = new DMountData();
-        mountData.character = character;
-        mountData.level = 1;
-        mountData.exp = 0;
-        mountData.fatigue = 0;
+        mountData.setCharacter(character);
+        mountData.setLevel(1);
+        mountData.setExp(0);
+        mountData.setFatigue(0);
         mountData.save();
 
         // todo 优化代码
@@ -863,10 +978,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         for (int i = 0; i < array1.length; i++) {
             DKeyMap keyMap = new DKeyMap();
-            keyMap.character = character;
-            keyMap.key = array1[i];
-            keyMap.type = array2[i];
-            keyMap.action = array3[i];
+            keyMap.setCharacter(character);
+            keyMap.setKey(array1[i]);
+            keyMap.setType(array2[i]);
+            keyMap.setAction(array3[i]);
             keyMap.save();
         }
     }
@@ -876,27 +991,27 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return;
         }
 
-        if (character.hp < 1) {
-            character.hp = 50;
+        if (character.getHp() < 1) {
+            character.setHp(50);
         }
-        character.sp = Joiner.on(',').join(Lists.newArrayList(remainingSp));
+        character.setSp(Joiner.on(',').join(Lists.newArrayList(remainingSp)));
         if (!fromcs && map != null) {
             if (map.getForcedReturnId() != 999999999) {
-                character.map = map.getForcedReturnId();
+                character.setMap(map.getForcedReturnId());
             } else {
-                character.map = stats.getHp() < 1 ? map.getReturnMapId() : map.getId();
+                character.setMap(stats.getHp() < 1 ? map.getReturnMapId() : map.getId());
             }
         } else {
-            character.map = mapid;
+            character.setMap(mapid);
         }
         if (map == null) {
-            character.spawnPoint = 0;
+            character.setSpawnPoint(0);
         } else {
             MaplePortal closest = map.findClosestSpawnpoint(getPosition());
-            character.spawnPoint = (closest != null ? closest.getId() : 0);
+            character.setSpawnPoint(closest != null ? closest.getId() : 0);
         }
-        character.party = party != null ? party.getId() : -1;
-        character.buddyCapacity = buddylist.getCapacity();
+        character.setParty(party != null ? party.getId() : -1);
+        character.setBuddyCapacity(buddylist.getCapacity());
         StringBuilder petz = new StringBuilder();
         int petLength = 0;
         for (MaplePet pet : pets) {
@@ -912,7 +1027,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             petLength++;
         }
         String petstring = petz.toString();
-        character.pets = petstring.substring(0, petstring.length() - 1);
+        character.setPets(petstring.substring(0, petstring.length() - 1));
         character.save();
 
         new QDSkillMacro().character.eq(character).delete();
@@ -920,25 +1035,25 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             SkillMacro macro = skillMacros[i];
             if (macro != null) {
                 DSkillMacro skillMacro = new DSkillMacro();
-                skillMacro.character = character;
-                skillMacro.skill1 = macro.getSkill1();
-                skillMacro.skill2 = macro.getSkill2();
-                skillMacro.skill3 = macro.getSkill3();
-                skillMacro.name = macro.getName();
-                skillMacro.shout = macro.getShout();
-                skillMacro.position = i;
+                skillMacro.setCharacter(character);
+                skillMacro.setSkill1(macro.getSkill1());
+                skillMacro.setSkill2(macro.getSkill2());
+                skillMacro.setSkill3(macro.getSkill3());
+                skillMacro.setName(macro.getName());
+                skillMacro.setShout(macro.getShout());
+                skillMacro.setPosition(i);
             }
         }
 
         new QDInventorySlot().character.eq(character).delete();
 
         DInventorySlot inventorySlot = new DInventorySlot();
-        inventorySlot.character = character;
-        inventorySlot.equip = getInventory(MapleInventoryType.EQUIP).getSlotLimit();
-        inventorySlot.use = getInventory(MapleInventoryType.USE).getSlotLimit();
-        inventorySlot.setup = getInventory(MapleInventoryType.SETUP).getSlotLimit();
-        inventorySlot.etc = getInventory(MapleInventoryType.ETC).getSlotLimit();
-        inventorySlot.cash = getInventory(MapleInventoryType.CASH).getSlotLimit();
+        inventorySlot.setCharacter(character);
+        inventorySlot.setEquip(getInventory(MapleInventoryType.EQUIP).getSlotLimit());
+        inventorySlot.setUse(getInventory(MapleInventoryType.USE).getSlotLimit());
+        inventorySlot.setSetup(getInventory(MapleInventoryType.SETUP).getSlotLimit());
+        inventorySlot.setEtc(getInventory(MapleInventoryType.ETC).getSlotLimit());
+        inventorySlot.setCash(getInventory(MapleInventoryType.CASH).getSlotLimit());
         inventorySlot.save();
 
         saveInventory();
@@ -947,29 +1062,29 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         for (final Entry<Integer, String> q : questinfo.entrySet()) {
             DQuestInfo questInfo = new DQuestInfo();
-            questInfo.character = character;
-            questInfo.quest = q.getKey();
-            questInfo.customData = q.getValue();
+            questInfo.setCharacter(character);
+            questInfo.setQuest(q.getKey());
+            questInfo.setCustomData(q.getValue());
             questInfo.save();
         }
 
         new QDQuestStatus().character.eq(character).delete();
         for (MapleQuestStatus q : quests.values()) {
             DQuestStatus questStatus = new DQuestStatus();
-            questStatus.character = character;
-            questStatus.quest = q.getQuest().getId();
-            questStatus.status = q.getStatus();
-            questStatus.time = (int) (q.getCompletionTime() / 1000);
-            questStatus.forfeited = q.getForfeited();
-            questStatus.customData = q.getCustomData();
+            questStatus.setCharacter(character);
+            questStatus.setQuest(q.getQuest().getId());
+            questStatus.setStatus(q.getStatus());
+            questStatus.setTime((int) (q.getCompletionTime() / 1000));
+            questStatus.setForfeited(q.getForfeited());
+            questStatus.setCustomData(q.getCustomData());
             questStatus.save();
 
             if (q.hasMobKills()) {
                 for (int mob : q.getMobKills().keySet()) {
                     DQuestStatusMob questStatusMob = new DQuestStatusMob();
-                    questStatusMob.questStatus = questStatus;
-                    questStatusMob.mob = mob;
-                    questStatusMob.count = q.getMobKills(mob);
+                    questStatusMob.setQuestStatus(questStatus);
+                    questStatusMob.setMob(mob);
+                    questStatusMob.setCount(q.getMobKills(mob));
                     questStatusMob.save();
                 }
             }
@@ -980,11 +1095,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (Entry<ISkill, SkillEntry> entryEntry : skills.entrySet()) {
             if (GameConstants.isApplicableSkill(entryEntry.getKey().getId())) { //do not save additional skills
                 DSkill skill = new DSkill();
-                skill.character = character;
-                skill.skillid = entryEntry.getKey().getId();
-                skill.skilllevel = entryEntry.getValue().skillevel;
-                skill.masterlevel = entryEntry.getValue().masterlevel;
-                skill.expiration = entryEntry.getValue().expiration;
+                skill.setCharacter(character);
+                skill.setSkillId(entryEntry.getKey().getId());
+                skill.setSkillLevel(entryEntry.getValue().skillevel);
+                skill.setMasterLevel(entryEntry.getValue().masterlevel);
+                skill.setExpiration(entryEntry.getValue().expiration);
                 skill.save();
             }
         }
@@ -993,9 +1108,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (dc && cd.size() > 0) {
             for (final MapleCoolDownValueHolder cooling : cd) {
                 DSkillCooldown skillCooldown = new DSkillCooldown();
-                skillCooldown.skillID = cooling.skillId;
-                skillCooldown.startTime = cooling.startTime;
-                skillCooldown.length = cooling.length;
+                skillCooldown.setSkillId(cooling.skillId);
+                skillCooldown.setStartTime(cooling.startTime);
+                skillCooldown.setLength(cooling.length);
                 skillCooldown.save();
             }
         }
@@ -1004,20 +1119,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (SavedLocationType savedLocationType : SavedLocationType.values()) {
             if (savedLocations[savedLocationType.getValue()] != -1) {
                 DSavedLocation savedLocation = new DSavedLocation();
-                savedLocation.character = character;
-                savedLocation.locationtype = savedLocationType.getValue();
-                savedLocation.map = savedLocations[savedLocationType.getValue()];
+                savedLocation.setCharacter(character);
+                savedLocation.setLocationType(savedLocationType.getValue());
+                savedLocation.setMap(savedLocations[savedLocationType.getValue()]);
                 savedLocation.save();
             }
         }
 
-        new QDAchievement().account.eq(character.account).delete();
+        new QDAchievement().account.eq(character.getAccount()).delete();
 
         for (Integer achid : finishedAchievements) {
             DAchievement achievement = new DAchievement();
-            achievement.account = character.account;
-            achievement.achievement.charid = character.id;
-            achievement.achievement.achievementid = achid;
+            achievement.setAccount(character.getAccount());
+            achievement.getAchievement().setCharId(character.getId());
+            achievement.getAchievement().setAchievementId(achid);
             achievement.save();
         }
 
@@ -1035,8 +1150,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (BuddyEntry entry : buddylist.getBuddies()) {
             if (entry != null) {
                 DBuddy buddy = new DBuddy();
-                buddy.buddies = entry.getCharacterId();
-                buddy.pending = entry.isVisible() ? 0 : 1;
+                buddy.setBuddies(Lists.newArrayList(DB.reference(DCharacter.class, entry.getCharacterId())));
+                buddy.setPending(!entry.isVisible());
                 buddy.save();
             }
         }
@@ -1069,8 +1184,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         new QDWishList().character.eq(character).delete();
         for (int i = 0; i < getWishlistSize(); i++) {
             DWishList dWishList = new DWishList();
-            dWishList.character = character;
-            dWishList.sn = wishlist[i];
+            dWishList.setCharacter(character);
+            dWishList.setSn(wishlist[i]);
             dWishList.save();
         }
 
@@ -1078,8 +1193,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (int rock : rocks) {
             if (rock != 999999999) {
                 DTrockLocation trockLocation = new DTrockLocation();
-                trockLocation.character = character;
-                trockLocation.mapid = rock;
+                trockLocation.setCharacter(character);
+                trockLocation.setMapId(rock);
                 trockLocation.save();
             }
         }
@@ -1088,8 +1203,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (int regrock : regrocks) {
             if (regrock != 999999999) {
                 DTrockLocation trockLocation = new DTrockLocation();
-                trockLocation.character = character;
-                trockLocation.mapid = regrock;
+                trockLocation.setCharacter(character);
+                trockLocation.setMapId(regrock);
                 trockLocation.save();
             }
         }
@@ -1299,7 +1414,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (dragonBloodSchedule != null) {
             dragonBloodSchedule.cancel(false);
         }
-        dragonBloodSchedule = BuffTimer.getInstance().register(() -> {
+        dragonBloodSchedule = Timer.BUFF.register(() -> {
             if (stats.getHp() - bloodEffect.getX() > 1) {
                 cancelBuffStats(MapleBuffStat.DRAGONBLOOD);
             } else {
@@ -1314,7 +1429,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         client.getSession().write(MaplePacketCreator.getClock(time));
 
         time *= 1000;
-        mapTimeLimitTask = MapTimer.getInstance().register(() -> changeMap(to, to.getPortal(0)), time, time);
+        mapTimeLimitTask = Timer.MAP.register(() -> changeMap(to, to.getPortal(0)), time, time);
     }
 
     public int fishTasking = 0;
@@ -1336,7 +1451,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         cancelFishingTask();
 
         //no real reason for clone.
-        fishing = EtcTimer.getInstance().register(() -> {
+        fishing = Timer.ETC.register(() -> {
             final boolean expMulti = haveItem(2300001, 1, false, true);
             if (!expMulti && !haveItem(2300000, 1, false, true)) {
                 cancelFishingTask();
@@ -1812,7 +1927,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         //client.getSession().write(MaplePacketCreator.givePirateBuff(energyLevel, 0, stat));
                         // client.getSession().write(MaplePacketCreator.giveEnergyChargeTest(energyLevel, echeff.getDuration() / 1000));
                         setBuffedValue(MapleBuffStat.ENERGY_CHARGE, Integer.valueOf(energyLevel));
-                        Timer.BuffTimer.getInstance().schedule(new Runnable() {
+                        Timer.BUFF.schedule(new Runnable() {
 
                             @Override
                             public void run() {
@@ -1823,7 +1938,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                             }
                         }, 3 * 60 * 1000);
                         /*
-                         * Timer.WorldTimer.getInstance().register(new
+                         * Timer.WORLD.register(new
                          * Runnable() {
                          *
                          * public void run() { Integer energyLevel =
@@ -1862,7 +1977,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 // LOGGER.debug("能量S："+ nengls);
                 // LOGGER.debug("能量："+ nengl);
                 /*
-                 * Timer.WorldTimer.getInstance().register(new Runnable() {
+                 * Timer.WORLD.register(new Runnable() {
                  * @Override public void run() { energyPoint -= 200; if
                  * (energyPoint <= 0) { echeff.applyEnergyBuff(chrs, false); //
                  * One with time setBuffedValue(MapleBuffStat.ENERGY_CHARGE,
@@ -2008,7 +2123,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getId() {
-        return character.id;
+        return character.getId();
     }
 
     public String getName() {
@@ -2101,7 +2216,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return job;
     }
 
-    public int getGender() {
+    public Gender getGender() {
         return gender;
     }
 
@@ -2170,7 +2285,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.remainingSp[skillbook] = remainingSp;
     }
 
-    public void setGender(int gender) {
+    public void setGender(Gender gender) {
         this.gender = gender;
     }
 
@@ -3070,7 +3185,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         savedLocations[type.getValue()] = -1;
     }
 
-    public int getDY() {
+    public long getDY() {
         return maplepoints;
     }
 
@@ -3436,15 +3551,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
 
         DIPBans bans = new DIPBans();
-        bans.ip = client.getSession().getRemoteAddress().toString().split(":")[0];
+        bans.setIp(client.getSession().getRemoteAddress().toString().split(":")[0]);
         bans.save();
 
         client.getSession().close(true);
 
-        character.account.tempBan = LocalDateTime.now();
-        character.account.banReason = reason;
-        character.account.gReason = greason;
-        character.account.save();
+        DAccount account = character.getAccount();
+        account.setTempBan(LocalDateTime.now());
+        account.setBanReason(reason);
+        account.setgReason(greason);
+        account.save();
 
     }
 
@@ -3454,9 +3570,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             throw new RuntimeException("Trying to ban a non-loaded character (testhack)");
         }
 
-        character.account.banned = autoban ? 2 : 1;
-        character.account.banReason = reason;
-        character.account.save();
+        DAccount account = character.getAccount();
+        account.setBanned(autoban);
+        account.setBanReason(reason);
+        account.save();
 
         client.banMacs();
 //            String ip = client.getSessionIPAddress();
@@ -3468,7 +3585,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 //            }
 
         if (hellban) {
-            new QDAccount().email.eq(character.account.email)
+            new QDAccount().email.eq(account.getEmail())
                     .asUpdate()
                     .set("banned", autoban ? 2 : 1)
                     .set("banreason", reason)
@@ -3494,32 +3611,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 .name.eq(id)
                 .findOneOrEmpty()
                 // todo gm < ?  --- gmLevel
-                .map(it -> it.account);
+                .map(DCharacter::getAccount);
 
         boolean ret = false;
         if (optional.isPresent()) {
             DAccount account = optional.get();
-            account.banned = 1;
-            account.banReason = reason;
+            account.setBanned(true);
+            account.setBanReason(reason);
             account.save();
 
             if (gmlevel > 100) { //admin ban
-                String ip = account.sessionIP;
+                String ip = account.getSessionIp();
                 if (ip != null && ip.matches("/[0-9]{1,3}\\..*")) {
                     DIPBans bans = new DIPBans();
-                    bans.ip = ip;
+                    bans.setIp(ip);
                     bans.save();
                 }
-                if (account.mac != null) {
-                    String[] macData = account.mac.split(", ");
+                if (account.getMac() != null) {
+                    String[] macData = account.getMac().split(", ");
                     if (macData.length > 0) {
                         MapleClient.banMacs(macData);
                     }
                 }
                 if (hellban) {
-                    QDAccount qdAccount = new QDAccount().email.eq(account.email);
-                    if (account.sessionIP != null) {
-                        qdAccount.sessionIP.eq(account.sessionIP);
+                    QDAccount qdAccount = new QDAccount().email.eq(account.getEmail());
+                    if (account.getSessionIp() != null) {
+                        qdAccount.sessionIp.eq(account.getSessionIp());
                     }
                     qdAccount.asUpdate()
                             .set("banned", 1)
@@ -3780,8 +3897,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         lastmonthfameids.add(to.getId());
 
         DFameLog fameLog = new DFameLog();
-        fameLog.character = character;
-        fameLog.to = to.character;
+        fameLog.setCharacter(character);
+        fameLog.setTo(to.character);
         fameLog.save();
     }
 
@@ -3928,7 +4045,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGuildId() {
-        return character.guild.id;
+        return character.getGuild().getId();
     }
 
     public byte getGuildRank() {
@@ -3942,7 +4059,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 mgc = new MapleGuildCharacter(this.character, -1, false);
 
             } else {
-                mgc.character.guild.id = (guildid);
+                mgc.character.setGuild(new QDGuild().id.eq(guildid).findOne());
             }
         } else {
             mgc = null;
@@ -3952,7 +4069,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setGuildRank(int _rank) {
         guildrank = _rank;
         if (mgc != null) {
-            mgc.character.guildRank = (_rank);
+            mgc.character.setGuildRank((_rank));
         }
     }
 
@@ -3963,7 +4080,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setAllianceRank(int rank) {
         allianceRank = rank;
         if (mgc != null) {
-            mgc.character.allianceRank = (rank);
+            mgc.character.setAllianceRank(rank);
         }
     }
 
@@ -3982,8 +4099,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (guildid <= 0) {
             return;
         }
-        mgc.character.level = level;
-        mgc.character.job = (job);
+        mgc.character.setLevel(level);
+        mgc.character.setJob((job));
         World.Guild.memberLevelJobUpdate(mgc);
     }
 
@@ -4061,7 +4178,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public int getCSPoints(int type) {
+    public long getCSPoints(int type) {
         switch (type) {
             case 1:
                 return acash;
@@ -4202,22 +4319,22 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGamePointsPS() {//跑商
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID())
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID())
                 .worldId.eq(getWorld())
                 .findOneOrEmpty()
-                .orElse(new DAccountsInfo());
-        int gamePointsRQ = one.gamePointsps != null ? one.gamePointsps : 0;
-        LocalDate updateTime = one.updateTime != null ? one.updateTime : LocalDate.now();
+                .orElse(new DAccountInfo());
+        int gamePointsRQ = one.getGamePoints() != null ? one.getGamePoints() : 0;
+        LocalDateTime updateTime = one.getUpdated() != null ? one.getUpdated() : LocalDateTime.now();
 
-        if (updateTime.isBefore(LocalDate.now())) {
+        if (updateTime.isBefore(LocalDateTime.now())) {
             gamePointsRQ = 0;
-            one.gamePointsps = 0;
-            one.updateTime = LocalDate.now();
+            one.setGamePoints(0);
+            one.setUpdated(LocalDateTime.now());
         } else {
-            one.gamePointsps = 0;
+            one.setGamePoints(0);
         }
-        one.accId = getClient().getAccID();
-        one.worldId = getWorld();
+        one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+        one.setWorldId(getWorld());
         one.save();
         return gamePointsRQ;
     }
@@ -4232,12 +4349,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsPS(int amount) {//跑商
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID())
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID())
                 .worldId.eq(getWorld())
                 .findOneOrEmpty()
-                .orElse(new DAccountsInfo());
-        one.gamePointsps = 0;
-        one.updateTime = LocalDate.now();
+                .orElse(new DAccountInfo());
+        one.setGamePoints(0);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
@@ -4288,8 +4405,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         } else {
             new QDSkillCooldown().character.eq(character).findEach(it -> {
-                if (it.length + it.startTime - System.currentTimeMillis() > 0) {
-                    giveCoolDowns(it.skillID, it.startTime, it.length);
+                if (it.getLength() + it.getStartTime() - System.currentTimeMillis() > 0) {
+                    giveCoolDowns(it.getSkillId(), it.getStartTime(), it.getLength());
                 }
             });
             new QDSkillCooldown().character.eq(character).delete();
@@ -4330,7 +4447,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 if (isAlive() && diseases2.contains(disease)) {
                     final MapleCharacter character = this;
                     final MapleDisease disease_ = disease;
-                    Timer.WorldTimer.getInstance().schedule(new Runnable() {
+                    Timer.WORLD.schedule(new Runnable() {
                         //..getInstance().schedule(new Runnable() {
                         @Override
                         public void run() {
@@ -4418,7 +4535,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void deleteNote(int id, int fame) {
         DNote one = new QDNote().id.eq(id).findOne();
         if (one != null) {
-            if (one.gift == fame && fame > 0) {
+            if (one.getGift() == fame && fame > 0) {
                 addFame(fame);
                 updateSingleStat(MapleStat.FAME, getFame());
                 client.getSession().write(MaplePacketCreator.getShowFameGain(fame));
@@ -4494,7 +4611,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             client.getSession().write(MaplePacketCreator.showOwnBuffEffect(1320006, 1, (byte) (stats.Berserk ? 1 : 0)));
             map.broadcastMessage(this, MaplePacketCreator.showBuffeffect(getId(), 1320006, 1, (byte) (stats.Berserk ? 1 : 0)), false);
 
-            BerserkSchedule = BuffTimer.getInstance().schedule(new Runnable() {
+            BerserkSchedule = Timer.BUFF.schedule(new Runnable() {
 
                 @Override
                 public void run() {
@@ -4518,7 +4635,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (bHealingLvl > 0) {
             final MapleStatEffect healEffect = bHealing.getEffect(bHealingLvl);
             int healInterval = healEffect.getX() * 1000;
-            beholderHealingSchedule = BuffTimer.getInstance().register(new Runnable() {
+            beholderHealingSchedule = Timer.BUFF.register(new Runnable() {
 
                 @Override
                 public void run() {
@@ -4537,7 +4654,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (bBuffLvl > 0) {
             final MapleStatEffect buffEffect = bBuff.getEffect(bBuffLvl);
             int buffInterval = buffEffect.getX() * 1000;
-            beholderBuffSchedule = BuffTimer.getInstance().register(new Runnable() {
+            beholderBuffSchedule = Timer.BUFF.register(new Runnable() {
 
                 @Override
                 public void run() {
@@ -4687,36 +4804,36 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setOneTimeLog(String bossid) {
         DOneTimeLog log = new DOneTimeLog();
-        log.character = character;
-        log.log = bossid;
+        log.setCharacter(character);
+        log.setLog(bossid);
         log.save();
     }
 
     public int getBossLog(String bossid) {
         return new QDBossLog()
                 .character.eq(character)
-                .bossid.eq(bossid)
+                .bossId.eq(bossid)
                 // lastattempt >= subtime(current_timestamp, '1 0:0:0.0')
-                .lastattempt.ge(LocalDateTime.now().minus(Duration.ofDays(1)))
+                .lastAttempt.ge(LocalDateTime.now().minus(Duration.ofDays(1)))
                 .findCount();
     }
 
     public void setBossLog(String bossid) {
         DBossLog log = new DBossLog();
-        log.character = character;
-        log.bossid = bossid;
+        log.setCharacter(character);
+        log.setBossId(bossid);
         log.save();
     }
 
     public void setPrizeLog(String bossid) {
         DPrizeLog log = new DPrizeLog();
-        log.accid = getClient().getAccID();
-        log.bossid = bossid;
+        log.setAccid(getClient().getAccID());
+        log.setBossId(bossid);
         log.save();
     }
 
     public int getPrizeLog(String bossid) {
-        return new QDPrizeLog().accid.eq(getClient().getAccID()).bossid.eq(bossid).findCount();
+        return new QDPrizeLog().accid.eq(getClient().getAccID()).bossId.eq(bossid).findCount();
     }
 
     public void dropMessage(int type, String message) {
@@ -4872,14 +4989,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return stats.cashMod;
     }
 
-    public void setPoints(int p) {
+    public void setPoints(long p) {
         this.points = p;
         /*
          * if (this.points >= 1) { finishAchievement(1); }
          */
     }
 
-    public int getPoints() {
+    public long getPoints() {
         return points;
     }
 
@@ -4887,7 +5004,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.vpoints = p;
     }
 
-    public int getVPoints() {
+    public long getVPoints() {
         return vpoints;
     }
 
@@ -5002,7 +5119,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (equipped) {
                 dropMessage(5, "The Fairy Pendant's experience points will increase to " + (fairyExp) + "% after one hour.");
             }
-            fairySchedule = EtcTimer.getInstance().schedule(new Runnable() {
+            fairySchedule = Timer.ETC.schedule(new Runnable() {
 
                 public void run() {
                     if (fairyExp < 30 && stats.equippedFairy) {
@@ -5263,8 +5380,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public final int getCloneSize() {
         int z = 0;
-        for (int i = 0; i < clones.length; i++) {
-            if (clones[i].get() != null) {
+        for (WeakReference<MapleCharacter> mapleCharacterWeakReference : clones) {
+            if (mapleCharacterWeakReference.get() != null) {
                 z++;
             }
         }
@@ -5405,7 +5522,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PlayerBuffStorage.addDiseaseToStorage(getId(), getAllDiseases());
         World.ChannelChange_Data(new CharacterTransfer(this), getId(), channel);
         ch.removePlayer(this);
-        client.updateLoginState(MapleClient.CHANGE_CHANNEL, client.getSessionIPAddress());
+        client.updateLoginState(LoginState.CHANGE_CHANNEL, client.getSessionIPAddress());
         String s = this.client.getSessionIPAddress();
         LoginServer.addIPAuth(s.substring(s.indexOf('/') + 1));
         client.getSession().write(MaplePacketCreator.getChannelChange(client, Integer.parseInt(toch.getIP().split(":")[1])));
@@ -6007,7 +6124,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void startMapEffect(String msg, int itemId, int duration) {
         final MapleMapEffect mapEffect = new MapleMapEffect(msg, itemId);
         getClient().getSession().write(mapEffect.makeStartData());
-        EventTimer.getInstance().schedule(new Runnable() {
+        Timer.EVENT.schedule(new Runnable() {
 
             @Override
             public void run() {
@@ -6017,26 +6134,26 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getHyPay(int type) {
-        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        DHyPay one = new QDHyPay().accName.eq(getClient().getAccountName()).findOne();
         if (one != null) {
             switch (type) {
                 case 1:
-                    return one.pay;
+                    return one.getPay();
                 case 2:
-                    return one.payUsed;
+                    return one.getPayUsed();
                 case 3:
-                    return one.pay + one.payUsed;
+                    return one.getPay() + one.getPayUsed();
                 case 4:
-                    return one.payReward;
+                    return one.getPayReward();
                 default:
                     break;
             }
         } else {
             one = new DHyPay();
-            one.accname = getClient().getAccountName();
-            one.pay = 0;
-            one.payUsed = 0;
-            one.payReward = 0;
+            one.setAccName(getClient().getAccountName());
+            one.setPay(0);
+            one.setPayUsed(0);
+            one.setPayReward(0);
             one.save();
         }
         return 0;
@@ -6050,11 +6167,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int pay = getHyPay(1);
         int payUsed = getHyPay(2);
         int payReward = getHyPay(4);
-        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        DHyPay one = new QDHyPay().accName.eq(getClient().getAccountName()).findOne();
         if (one != null) {
-            one.pay = pay + hypay;
-            one.payUsed = payUsed;
-            one.payReward = payReward;
+            one.setPay(pay + hypay);
+            one.setPayUsed(payUsed);
+            one.setPayReward(payReward);
             one.save();
             return 1;
         }
@@ -6068,11 +6185,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         int payUsed = getHyPay(2);
         int payReward = getHyPay(4);
-        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        DHyPay one = new QDHyPay().accName.eq(getClient().getAccountName()).findOne();
         if (one != null) {
-            one.pay = pay - hypay;
-            one.payUsed = payUsed + hypay;
-            one.payReward = payReward + hypay;
+            one.setPay(pay - hypay);
+            one.setPayUsed(payUsed + hypay);
+            one.setPayReward(payReward + hypay);
             one.save();
             return 1;
         }
@@ -6087,9 +6204,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (pay > payReward) {
             return -1;
         }
-        DHyPay one = new QDHyPay().accname.eq(getClient().getAccountName()).findOne();
+        DHyPay one = new QDHyPay().accName.eq(getClient().getAccountName()).findOne();
         if (one != null) {
-            one.payReward = payReward - pay;
+            one.setPayReward(payReward - pay);
             one.save();
             return 1;
         }
@@ -6097,37 +6214,37 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGamePoints() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.gamePoints = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setGamePoints(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.gamePoints = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setGamePoints(0);
         }
         one.save();
-        return one.gamePoints;
+        return one.getGamePoints();
     }
 
     public int getGamePointsPD() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.gamePoints = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setGamePoints(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.gamePoints = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setGamePoints(0);
         }
         one.save();
-        return one.gamePoints;
+        return one.getGamePoints();
     }
 
     public void gainGamePoints(int amount) {
@@ -6145,9 +6262,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsPD(int amount) {
-        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
+        new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
                 .set("gamePointspd", amount)
-                .set("updateTime", LocalDate.now())
+                .set("updated", LocalDate.now())
                 .update();
     }
 
@@ -6156,27 +6273,27 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePoints(int amount) {
-        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
+        new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
                 .set("gamePoints", amount)
-                .set("updateTime", LocalDate.now())
+                .set("updated", LocalDate.now())
                 .update();
     }
 
     public int getGamePointsRQ() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.gamePointspd = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setGamePointsPd(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.gamePointspd = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setGamePointsPd(0);
         }
         one.save();
-        return one.gamePointspd;
+        return one.getGamePointsPd();
     }
 
     public void gainGamePointsRQ(int amount) {
@@ -6189,7 +6306,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateGamePointsRQ(int amount) {
-        new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld())
+        new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld())
                 .asUpdate()
                 .set("gamePointspd", amount)
                 .update();
@@ -6372,7 +6489,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return DebugMessage;
     }
 
-    public int getNX() {
+    public long getNX() {
         return getCSPoints(1);
     }
 
@@ -6408,13 +6525,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         final MapleMonster bomb = MapleLifeFactory.getMonster(9300166);
         bomb.changeLevel(250, true);
         getMap().spawnMonster_sSack(bomb, getPosition(), -2);
-        EventTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                map.killMonster(bomb, client.getPlayer(), false, false, (byte) 1);
-            }
-        }, 10 * 1000);
+        Timer.EVENT.schedule(() -> map.killMonster(bomb, client.getPlayer(), false, false, (byte) 1), 10 * 1000);
     }
 
     public boolean isAriantPQMap() {
@@ -6516,20 +6627,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     //--------------------------------------------赏金任务
     public int getSJRW() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.sjrw = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setSjrw(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.sjrw = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setSjrw(0);
         }
         one.save();
-        return one.sjrw;
+        return one.getSjrw();
     }
 
     public void gainSJRW(int amount) {
@@ -6542,33 +6653,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSJRW(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.sjrw = amount;
-        one.updateTime = LocalDate.now();
+        one.setSjrw(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     //--------------------------------------------每日副本任务
     public int getFBRW() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.fbrw = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setFbrw(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.fbrw = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setFbrw(0);
         }
         one.save();
-        return one.fbrw;
+        return one.getFbrw();
     }
 
     public void gainFBRW(int amount) {
@@ -6581,32 +6692,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateFBRW(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.fbrw = amount;
-        one.updateTime = LocalDate.now();
+        one.setFbrw(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     public int getFBRWA() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.fbrwa = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setFbrwa(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.fbrwa = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setFbrwa(0);
         }
         one.save();
-        return one.fbrwa;
+        return one.getFbrwa();
     }
 
     public void gainFBRWA(int amount) {
@@ -6619,33 +6730,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateFBRWA(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.fbrwa = amount;
-        one.updateTime = LocalDate.now();
+        one.setFbrwa(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     //--------------------------------------------每日杀怪任务
     public int getSGRW() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.sgrw = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setSgrw(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.sgrw = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setSgrw(0);
         }
         one.save();
-        return one.sgrw;
+        return one.getSgrw();
     }
 
     public void gainSGRW(int amount) {
@@ -6658,32 +6769,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSGRW(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.sgrw = amount;
-        one.updateTime = LocalDate.now();
+        one.setSgrw(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     public int getSGRWA() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.sgrwa = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setSgrwa(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.sgrwa = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setSgrwa(0);
         }
         one.save();
-        return one.sgrwa;
+        return one.getSgrwa();
     }
 
     public void gainSGRWA(int amount) {
@@ -6696,33 +6807,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSGRWA(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.sgrwa = amount;
-        one.updateTime = LocalDate.now();
+        one.setSgrwa(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     //--------------------------------------------每日杀BOSS任务
     public int getSBOSSRW() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.sbossrw = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setSbossrw(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.sbossrw = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setSbossrw(0);
         }
         one.save();
-        return one.sbossrw;
+        return one.getSbossrw();
     }
 
     public void gainSBOSSRW(int amount) {
@@ -6735,32 +6846,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSBOSSRW(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.sbossrw = amount;
-        one.updateTime = LocalDate.now();
+        one.setSbossrw(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     public int getSBOSSRWA() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.sbossrwa = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setSbossrwa(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.sbossrwa = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setSbossrwa(0);
         }
         one.save();
-        return one.sbossrwa;
+        return one.getSbossrwa();
     }
 
     public void gainSBOSSRWA(int amount) {
@@ -6773,33 +6884,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updateSBOSSRWA(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.sbossrwa = amount;
-        one.updateTime = LocalDate.now();
+        one.setSbossrwa(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
     //-------------七天礼包判断日期函数
     public int getlb() {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one != null) {
-            if (one.updateTime != null && one.updateTime.isBefore(LocalDate.now())) {
-                one.lb = 0;
-                one.updateTime = LocalDate.now();
+            if (one.getUpdated() != null && one.getUpdated().isBefore(LocalDateTime.now())) {
+                one.setLb(0);
+                one.setUpdated(LocalDateTime.now());
             }
         } else {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
-            one.lb = 0;
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
+            one.setLb(0);
         }
         one.save();
-        return one.lb;
+        return one.getLb();
     }
 
     public void gainlb(int amount) {
@@ -6812,14 +6923,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void updatelb(int amount) {
-        DAccountsInfo one = new QDAccountsInfo().accId.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
+        DAccountInfo one = new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).findOne();
         if (one == null) {
-            one = new DAccountsInfo();
-            one.accId = getClient().getAccID();
-            one.worldId = getWorld();
+            one = new DAccountInfo();
+            one.setAccount(new QDAccount().id.eq(getClient().getAccID()).findOne());
+            one.setWorldId(getWorld());
         }
-        one.lb = amount;
-        one.updateTime = LocalDate.now();
+        one.setLb(amount);
+        one.setUpdated(LocalDateTime.now());
         one.save();
     }
 
@@ -6996,20 +7107,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (one != null) {
             switch (type) {
                 case 1:
-                    return one.fishing;
+                    return one.getFishing();
                 case 2:
-                    return one.XX;
+                    return one.getXx();
                 case 3:
-                    return one.XXX;
+                    return one.getXxx();
                 default:
                     break;
             }
         } else {
             one = new DFishingJf();
-            one.accname = getClient().getAccountName();
-            one.fishing = 0;
-            one.XX = 0;
-            one.XXX = 0;
+            one.setAccname(getClient().getAccountName());
+            one.setFishing(0);
+            one.setXx(0);
+            one.setXxx(0);
             one.save();
         }
         return 0;
@@ -7024,9 +7135,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int XXX = getFishingJF(3);
         DFishingJf one = new QDFishingJf().accname.eq(getClient().getAccountName()).findOne();
         if (one != null) {
-            one.fishing = hypay + jf;
-            one.XX = XX;
-            one.XXX = XXX;
+            one.setFishing(hypay + jf);
+            one.setXx(XX);
+            one.setXxx(XXX);
             one.save();
             return 1;
         }
@@ -7042,9 +7153,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int XXX = getFishingJF(3);
         DFishingJf one = new QDFishingJf().accname.eq(getClient().getAccountName()).findOne();
         if (one != null) {
-            one.fishing = jf - hypay;
-            one.XX = XX;
-            one.XXX = XXX;
+            one.setFishing(jf - hypay);
+            one.setXx(XX);
+            one.setXxx(XXX);
             one.save();
             return 1;
         }

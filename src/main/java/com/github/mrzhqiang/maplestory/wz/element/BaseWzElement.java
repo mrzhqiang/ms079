@@ -10,12 +10,14 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -101,7 +103,9 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
      * @return 当前元素的子元素。默认返回 Null 值，表示不存在子元素。
      */
     protected WzElement<?> convertChildren(Element element) {
-        LOGGER.debug("遗漏的元素：" + element.parent());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("遗漏的元素：" + element.parent());
+        }
         return null;
     }
 
@@ -158,9 +162,11 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
                 .filter(filter)
                 .map(mapper)
                 // 如果存在相同的 Key 名称，那么只允许 first value 值
-                .collect(Collectors.toMap(WzElement::name, it -> it, (first, second) -> {
-                    sameChildren.add(second);
-                    return first;
-                }));
+                .collect(Collectors.toMap(WzElement::name, it -> it, this::mergeSameElement));
+    }
+
+    private WzElement<?> mergeSameElement(WzElement<?> first, WzElement<?> second) {
+        sameChildren.add(second);
+        return first;
     }
 }

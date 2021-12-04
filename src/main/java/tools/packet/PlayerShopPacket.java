@@ -1,14 +1,11 @@
 package tools.packet;
 
 import client.MapleCharacter;
-import client.inventory.IItem;
 import client.MapleClient;
+import client.inventory.IItem;
 import constants.ServerConstants;
 import handling.MaplePacket;
 import handling.SendPacketOpcode;
-import handling.channel.handler.PlayerInteractionHandler;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MerchItemPackage;
@@ -20,6 +17,8 @@ import server.shops.MaplePlayerShop;
 import server.shops.MaplePlayerShopItem;
 import tools.Pair;
 import tools.data.output.MaplePacketLittleEndianWriter;
+
+import java.util.List;
 
 public class PlayerShopPacket {
 

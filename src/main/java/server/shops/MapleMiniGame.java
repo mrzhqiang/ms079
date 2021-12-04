@@ -21,16 +21,16 @@
  */
 package server.shops;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleQuestStatus;
 import constants.GameConstants;
 import server.quest.MapleQuest;
 import tools.packet.PlayerShopPacket;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MapleMiniGame extends AbstractPlayerStore {
 

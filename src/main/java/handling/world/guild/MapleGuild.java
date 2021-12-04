@@ -9,6 +9,7 @@ import com.github.mrzhqiang.maplestory.domain.DGuild;
 import com.github.mrzhqiang.maplestory.domain.query.QDAlliance;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
+import com.google.common.base.Strings;
 import handling.MaplePacket;
 import handling.world.World;
 import handling.world.guild.MapleBBSThread.MapleBBSReply;
@@ -19,11 +20,18 @@ import tools.StringUtil;
 import tools.data.output.MaplePacketLittleEndianWriter;
 import tools.packet.UIPacket;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+
 
 public final class MapleGuild implements java.io.Serializable {
 
@@ -34,6 +42,8 @@ public final class MapleGuild implements java.io.Serializable {
     private enum BCOp {
         NONE, DISBAND, EMBELMCHANGE
     }
+
+    private static final MapleGuild EMPTY = new MapleGuild(null);
 
     // COW 写入时复制，避免多线程环境下，遍历时的修改导致并发异常或下标越界；
     // 其他线程安全的 List 需要在遍历时手动加锁，COW 不需要；
@@ -53,31 +63,31 @@ public final class MapleGuild implements java.io.Serializable {
 
     public MapleGuild(DGuild guild) {
         this.guild = guild;
-        List<DCharacter> datas = guild.characters;
-        if (datas.isEmpty()) {
-            LOGGER.error("没有公会成员 " + guild.id + ". 不可能……公会解散了");
-            proper = false;
-            return;
-        }
-        boolean leaderCheck = false;
-        for (DCharacter data : datas) {
-            if (data.equals(guild.leader)) {
-                leaderCheck = true;
+        if (guild != null) {
+            List<DCharacter> members = guild.getMembers();
+            if (members == null || members.isEmpty()) {
+                LOGGER.error("公会 {} 不存在成员，这是不可能的，除非公会解散了", guild.getName());
+                proper = false;
+                return;
             }
-            members.add(new MapleGuildCharacter(data, -1, false));
-        }
-
-        if (!leaderCheck) {
-            LOGGER.error("会长 " + guild.leader + " 不在公会 " + guild.id + ". 不可能……公会解散了。");
-            //  writeToDB(true);
-            proper = false;
-            return;
-        }
-
-        List<DBbsThread> threads = guild.threads;
-        for (DBbsThread data : threads) {
-            MapleBBSThread thread = new MapleBBSThread(data);
-            bbs.put(data.localthreadid, thread);
+            boolean leaderCheck = false;
+            for (DCharacter data : members) {
+                if (data.equals(guild.getLeader())) {
+                    leaderCheck = true;
+                }
+                this.members.add(new MapleGuildCharacter(data, -1, false));
+            }
+            if (!leaderCheck) {
+                LOGGER.error("会长 " + guild.getLeader() + " 不在公会 " + guild.getId() + ". 不可能……公会解散了。");
+                //  writeToDB(true);
+                proper = false;
+                return;
+            }
+            List<DBbsThread> threads = guild.getThreads();
+            for (DBbsThread data : threads) {
+                MapleBBSThread thread = new MapleBBSThread(data);
+                bbs.put(data.getLocalThreadId(), thread);
+            }
         }
     }
 
@@ -85,105 +95,106 @@ public final class MapleGuild implements java.io.Serializable {
         return new QDGuild().findStream().map(MapleGuild::new).collect(Collectors.toList());
     }
 
-    public boolean isProper() {
-        return proper;
+    public static MapleGuild empty() {
+        return EMPTY;
+    }
+
+    public boolean isValid() {
+        return guild != null && proper;
     }
 
     public void writeToDB(boolean bDisband) {
         if (!bDisband) {
-            guild.threads = Collections.emptyList();
-            guild.replies = Collections.emptyList();
+            guild.setThreads(Collections.emptyList());
+            guild.setReplies(Collections.emptyList());
             guild.save();
             for (MapleBBSThread bb : bbs.values()) {
                 bb.entity.save();
                 bb.replies.forEach((integer, mapleBBSReply) -> mapleBBSReply.reply.save());
             }
         } else {
-            guild.characters.forEach(dCharacter -> {
-                dCharacter.guildRank = 5;
-                dCharacter.allianceRank = 5;
+            guild.getMembers().forEach(dCharacter -> {
+                dCharacter.setGuildRank(5);
+                dCharacter.setAllianceRank(5);
                 dCharacter.save();
             });
-            guild.characters = Collections.emptyList();
-            guild.threads = Collections.emptyList();
-            guild.replies = Collections.emptyList();
+            guild.setMembers(Collections.emptyList());
+            guild.setThreads(Collections.emptyList());
+            guild.setReplies(Collections.emptyList());
 
-            MapleGuildAlliance alliance = World.Alliance.getAlliance(guild.alliance.id);
+            MapleGuildAlliance alliance = World.Alliance.getAlliance(guild.getAlliance().getId());
             if (alliance != null) {
-                alliance.removeGuild(guild.id, false);
+                alliance.removeGuild(guild.getId(), false);
             }
 
             guild.delete();
 
-            broadcast(MaplePacketCreator.guildDisband(guild.id));
+            broadcast(MaplePacketCreator.guildDisband(guild.getId()));
         }
     }
 
     public int getId() {
-        return guild.id;
+        return guild.getId();
     }
 
     public int getLeaderId() {
-        return guild.leader.id;
+        return guild.getLeader().getId();
     }
 
     public MapleCharacter getLeader(MapleClient c) {
-        return c.getChannelServer().getPlayerStorage().getCharacterById(guild.leader.id);
+        return c.getChannelServer().getPlayerStorage().getCharacterById(guild.getLeader().getId());
     }
 
     public int getGP() {
-        return guild.GP;
+        return guild.getGp();
     }
 
     public int getLogo() {
-        return guild.logo;
+        return guild.getLogo();
     }
 
     public void setLogo(int l) {
-        guild.logo = l;
+        guild.setLogo(l);
     }
 
     public int getLogoColor() {
-        return guild.logoColor;
+        return guild.getLogoColor();
     }
 
     public void setLogoColor(int c) {
-        guild.logoColor = c;
+        guild.setLogoColor(c);
     }
 
     public int getLogoBG() {
-        return guild.logoBG;
+        return guild.getLogoBg();
     }
 
     public void setLogoBG(int bg) {
-        guild.logoBG = bg;
+        guild.setLogoBg(bg);
     }
 
     public int getLogoBGColor() {
-        return guild.logoBGColor;
+        return guild.getLogoBgColor();
     }
 
     public void setLogoBGColor(int c) {
-        guild.logoBGColor = c;
+        guild.setLogoBgColor(c);
     }
 
     public String getNotice() {
-        if (guild.notice == null) {
-            return "";
-        }
-        return guild.notice;
+        return Strings.nullToEmpty(guild.getNotice());
     }
 
     public String getName() {
-        return guild.name;
+        return guild.getName();
     }
 
     public int getCapacity() {
-        return guild.capacity;
+        return guild.getCapacity();
     }
 
     public int getSignature() {
-        return guild.signature;
+        return guild.getSignature();
     }
 
     public void broadcast(MaplePacket packet) {
@@ -208,15 +219,15 @@ public final class MapleGuild implements java.io.Serializable {
             for (MapleGuildCharacter mgc : members) {
                 if (bcop == BCOp.DISBAND) {
                     if (mgc.isOnline()) {
-                        World.Guild.setGuildAndRank(mgc.character.id, 0, 5, 5);
+                        World.Guild.setGuildAndRank(mgc.character.getId(), 0, 5, 5);
                     } else {
-                        setOfflineGuildStatus(0, (byte) 5, (byte) 5, mgc.character.id);
+                        setOfflineGuildStatus(0, (byte) 5, (byte) 5, mgc.character.getId());
                     }
-                } else if (mgc.isOnline() && mgc.character.id != exceptionId) {
+                } else if (mgc.isOnline() && mgc.character.getId() != exceptionId) {
                     if (bcop == BCOp.EMBELMCHANGE) {
-                        World.Guild.changeEmblem(guild.id, mgc.character.id, new MapleGuildSummary(this));
+                        World.Guild.changeEmblem(guild.getId(), mgc.character.getId(), new MapleGuildSummary(this));
                     } else {
-                        World.Broadcast.sendGuildPacket(mgc.character.id, packet, exceptionId, guild.id);
+                        World.Broadcast.sendGuildPacket(mgc.character.getId(), packet, exceptionId, guild.getId());
                     }
                 }
             }
@@ -235,7 +246,7 @@ public final class MapleGuild implements java.io.Serializable {
             if (!mgc.isOnline()) {
                 continue;
             }
-            if (mem.contains(mgc.character) || !mgc.character.guild.equals(guild)) {
+            if (mem.contains(mgc.character) || !mgc.character.getGuild().equals(guild)) {
                 members.remove(mgc);
                 continue;
             }
@@ -244,10 +255,10 @@ public final class MapleGuild implements java.io.Serializable {
         bDirty = false;
     }
 
-    public void setOnline(int cid, boolean online, int channel) {
+    public void updateMemberOnline(int cid, boolean online, int channel) {
         boolean bBroadcast = true;
         for (MapleGuildCharacter mgc : members) {
-            if (mgc.character.guild.equals(guild) && mgc.character.id == cid) {
+            if (mgc.character.getGuild().equals(guild) && mgc.character.getId() == cid) {
                 if (mgc.isOnline() == online) {
                     bBroadcast = false;
                 }
@@ -257,16 +268,16 @@ public final class MapleGuild implements java.io.Serializable {
             }
         }
         if (bBroadcast) {
-            broadcast(MaplePacketCreator.guildMemberOnline(guild.id, cid, online), cid);
-            if (guild.alliance.id > 0) {
-                World.Alliance.sendGuild(MaplePacketCreator.allianceMemberOnline(guild.alliance.id, guild.id, cid, online), guild.id, guild.alliance.id);
+            broadcast(MaplePacketCreator.guildMemberOnline(guild.getId(), cid, online), cid);
+            if (guild.getAlliance().getId() > 0) {
+                World.Alliance.sendGuild(MaplePacketCreator.allianceMemberOnline(guild.getAlliance().getId(), guild.getId(), cid, online), guild.getId(), guild.getAlliance().getId());
             }
         }
         bDirty = true; // member formation has changed, update notifications
         init = true;
     }
 
-    public void guildChat(String name, int cid, String msg) {
+    public void chat(String name, int cid, String msg) {
         broadcast(MaplePacketCreator.multiChat(name, msg, 2), cid);
     }
 
@@ -280,7 +291,7 @@ public final class MapleGuild implements java.io.Serializable {
 
     public int getAllianceId() {
         //return alliance.getId();
-        return guild.alliance.id;
+        return guild.getAlliance().getId();
     }
 
     public int getInvitedId() {
@@ -292,37 +303,35 @@ public final class MapleGuild implements java.io.Serializable {
     }
 
     public void setAllianceId(int a) {
-        guild.alliance = new QDAlliance().id.eq(a).findOne();
+        guild.setAlliance(new QDAlliance().id.eq(a).findOne());
         guild.save();
     }
 
-    // function to create guild, returns the guild id if successful, 0 if not
+    // 创建公会的函数，如果成功则返回公会ID，否则返回0
     public static int createGuild(int leaderId, String name) {
         if (name == null || name.length() > 12) {
             return 0;
         }
         Optional<DGuild> oneOrEmpty = new QDGuild().name.eq(name).findOneOrEmpty();
         if (oneOrEmpty.isPresent()) {
-            return oneOrEmpty.get().id;
+            return oneOrEmpty.get().getId();
         }
 
-        DGuild guild = new DGuild();
-        guild.name = name;
-        guild.leader = new QDCharacter().id.eq(leaderId).findOne();
-        guild.signature = Math.toIntExact(System.currentTimeMillis() / 1000);
+        DGuild guild = new DGuild(new QDCharacter().id.eq(leaderId).findOne(), name);
+        guild.setSignature(Math.toIntExact(System.currentTimeMillis() / 1000));
         guild.save();
-        return guild.id;
+        return guild.getId();
     }
 
-    public int addGuildMember(MapleGuildCharacter mgc) {
+    public boolean addMember(MapleGuildCharacter mgc) {
         // first of all, insert it into the members keeping alphabetical order of lowest ranks ;)
         wL.lock();
         try {
-            if (members.size() >= guild.capacity) {
-                return 0;
+            if (members.size() >= guild.getCapacity()) {
+                return false;
             }
             for (int i = members.size() - 1; i >= 0; i--) {
-                if (members.get(i).character.guildRank < 5 || members.get(i).character.name.compareTo(mgc.character.name) < 0) {
+                if (members.get(i).character.getGuildRank() < 5 || members.get(i).character.getName().compareTo(mgc.character.getName()) < 0) {
                     members.add(i + 1, mgc);
                     bDirty = true;
                     break;
@@ -333,13 +342,13 @@ public final class MapleGuild implements java.io.Serializable {
         }
         gainGP(50);
         broadcast(MaplePacketCreator.newGuildMember(mgc));
-        if (guild.alliance.id > 0) {
-            World.Alliance.sendGuild(guild.alliance.id);
+        if (guild.getAlliance().getId() > 0) {
+            World.Alliance.sendGuild(guild.getAlliance().getId());
         }
-        return 1;
+        return true;
     }
 
-    public void leaveGuild(MapleGuildCharacter mgc) {
+    public void memberLeave(MapleGuildCharacter mgc) {
         broadcast(MaplePacketCreator.memberLeft(mgc, false));
         gainGP(-50);
         wL.lock();
@@ -347,35 +356,35 @@ public final class MapleGuild implements java.io.Serializable {
             bDirty = true;
             members.remove(mgc);
             if (mgc.isOnline()) {
-                World.Guild.setGuildAndRank(mgc.character.id, 0, 5, 5);
+                World.Guild.setGuildAndRank(mgc.character.getId(), 0, 5, 5);
             } else {
-                setOfflineGuildStatus((short) 0, (byte) 5, (byte) 5, mgc.character.id);
+                setOfflineGuildStatus((short) 0, (byte) 5, (byte) 5, mgc.character.getId());
             }
-            if (guild.alliance.id > 0) {
-                World.Alliance.sendGuild(guild.alliance.id);
+            if (guild.getAlliance().getId() > 0) {
+                World.Alliance.sendGuild(guild.getAlliance().getId());
             }
         } finally {
             wL.unlock();
         }
     }
 
-    public void expelMember(MapleGuildCharacter initiator, String name, int cid) {
+    public void removeMember(MapleGuildCharacter initiator, String name, int cid) {
         wL.lock();
         try {
             for (MapleGuildCharacter mgc : members) {
-                if (mgc.character.id == cid && initiator.character.guildRank < mgc.character.guildRank) {
+                if (mgc.character.getId() == cid && initiator.character.getGuildRank() < mgc.character.getGuildRank()) {
                     broadcast(MaplePacketCreator.memberLeft(mgc, true));
 
                     bDirty = true;
 
                     gainGP(-50);
-                    if (guild.alliance.id > 0) {
-                        World.Alliance.sendGuild(guild.alliance.id);
+                    if (guild.getAlliance().getId() > 0) {
+                        World.Alliance.sendGuild(guild.getAlliance().getId());
                     }
                     if (mgc.isOnline()) {
                         World.Guild.setGuildAndRank(cid, 0, 5, 5);
                     } else {
-                        MapleCharacterUtil.sendNote(mgc.character.name, initiator.character.name, "You have been expelled from the guild.", 0);
+                        MapleCharacterUtil.sendNote(mgc.character.getName(), initiator.character.getName(), "You have been expelled from the guild.", 0);
                         setOfflineGuildStatus((short) 0, (byte) 5, (byte) 5, cid);
                     }
                     members.remove(mgc);
@@ -393,35 +402,35 @@ public final class MapleGuild implements java.io.Serializable {
 
     public void changeARank(boolean leader) {
         for (MapleGuildCharacter mgc : members) {
-            if (guild.leader.equals(mgc.character)) {
-                changeARank(mgc.character.id, leader ? 1 : 2);
+            if (guild.getLeader().equals(mgc.character)) {
+                changeARank(mgc.character.getId(), leader ? 1 : 2);
             } else {
-                changeARank(mgc.character.id, 3);
+                changeARank(mgc.character.getId(), 3);
             }
         }
     }
 
     public void changeARank(int newRank) {
         for (MapleGuildCharacter mgc : members) {
-            changeARank(mgc.character.id, newRank);
+            changeARank(mgc.character.getId(), newRank);
         }
     }
 
     public void changeARank(int cid, int newRank) {
-        if (guild.alliance.id <= 0) {
+        if (guild.getAlliance().getId() <= 0) {
             return;
         }
         for (MapleGuildCharacter mgc : members) {
-            if (cid == mgc.character.id) {
+            if (cid == mgc.character.getId()) {
                 if (mgc.isOnline()) {
-                    World.Guild.setGuildAndRank(cid, guild.id, mgc.character.guildRank, newRank);
+                    World.Guild.setGuildAndRank(cid, guild.getId(), mgc.character.getGuildRank(), newRank);
                 } else {
-                    setOfflineGuildStatus(guild.id, mgc.character.guildRank, (byte) newRank, cid);
+                    setOfflineGuildStatus(guild.getId(), mgc.character.getGuildRank(), (byte) newRank, cid);
                 }
-                mgc.character.allianceRank = newRank;
+                mgc.character.setAllianceRank(newRank);
                 //WorldRegistryImpl.getInstance().sendGuild(MaplePacketCreator.changeAllianceRank(allianceid, mgc), -1, allianceid);
                 //WorldRegistryImpl.getInstance().sendGuild(MaplePacketCreator.updateAllianceRank(allianceid, mgc), -1, allianceid);
-                World.Alliance.sendGuild(guild.alliance.id);
+                World.Alliance.sendGuild(guild.getAlliance().getId());
                 return;
             }
         }
@@ -431,13 +440,13 @@ public final class MapleGuild implements java.io.Serializable {
 
     public void changeRank(int cid, int newRank) {
         for (MapleGuildCharacter mgc : members) {
-            if (cid == mgc.character.id) {
+            if (cid == mgc.character.getId()) {
                 if (mgc.isOnline()) {
-                    World.Guild.setGuildAndRank(cid, guild.id, newRank, mgc.character.allianceRank);
+                    World.Guild.setGuildAndRank(cid, guild.getId(), newRank, mgc.character.getAllianceRank());
                 } else {
-                    setOfflineGuildStatus(guild.id, (byte) newRank, mgc.character.allianceRank, cid);
+                    setOfflineGuildStatus(guild.getId(), (byte) newRank, mgc.character.getAllianceRank(), cid);
                 }
-                mgc.character.guildRank = newRank;
+                mgc.character.setGuildRank(newRank);
                 broadcast(MaplePacketCreator.changeRank(mgc));
                 return;
             }
@@ -446,30 +455,30 @@ public final class MapleGuild implements java.io.Serializable {
         LOGGER.error("INFO: unable to find the correct id for changeRank({}, {})", cid, newRank);
     }
 
-    public void setGuildNotice(String notice) {
-        guild.notice = notice;
-        broadcast(MaplePacketCreator.guildNotice(guild.id, notice));
+    public void notice(String notice) {
+        guild.setNotice(notice);
+        broadcast(MaplePacketCreator.guildNotice(guild.getId(), notice));
     }
 
-    public void memberLevelJobUpdate(MapleGuildCharacter mgc) {
+    public void updateMemberInfo(MapleGuildCharacter mgc) {
         for (MapleGuildCharacter member : members) {
             if (member.character.equals(mgc.character)) {
-                int old_level = member.character.level;
-                int old_job = member.character.job;
-                member.character.job = (mgc.character.job);
-                member.character.level = mgc.character.level;
-                if (mgc.character.level > old_level) {
-                    gainGP((mgc.character.level - old_level) * mgc.character.level / 10, false); //level 199->200 = 20 gp
+                int old_level = member.character.getLevel();
+                int old_job = member.character.getJob();
+                member.character.setJob(mgc.character.getJob());
+                member.character.setLevel(mgc.character.getLevel());
+                if (mgc.character.getLevel() > old_level) {
+                    gainGP((mgc.character.getLevel() - old_level) * mgc.character.getLevel() / 10, false); //level 199->200 = 20 gp
                 }
-                if (old_level != mgc.character.level) {
+                if (old_level != mgc.character.getLevel()) {
                     // this.broadcast(MaplePacketCreator.sendLevelup(false, mgc.character.level, mgc.getName()), mgc.getId());
                 }
-                if (old_job != mgc.character.job) {
+                if (old_job != mgc.character.getJob()) {
                     //  this.broadcast(MaplePacketCreator.sendJobup(false, mgc.getJobId(), mgc.getName()), mgc.getId());
                 }
                 broadcast(MaplePacketCreator.guildMemberLevelJobUpdate(mgc));
-                if (guild.alliance.id > 0) {
-                    World.Alliance.sendGuild(MaplePacketCreator.updateAlliance(mgc, guild.alliance.id), guild.id, guild.alliance.id);
+                if (guild.getAlliance()!= null) {
+                    World.Alliance.sendGuild(MaplePacketCreator.updateAlliance(mgc, guild.getAlliance().getId()), guild.getId(), guild.getAlliance().getId());
                 }
                 break;
             }
@@ -478,7 +487,7 @@ public final class MapleGuild implements java.io.Serializable {
 
     public void changeRankTitle(String[] ranks) {
         System.arraycopy(ranks, 0, rankTitles, 0, 5);
-        broadcast(MaplePacketCreator.rankTitleChange(guild.id, ranks));
+        broadcast(MaplePacketCreator.rankTitleChange(guild.getId(), ranks));
     }
 
     public void disbandGuild() {
@@ -486,21 +495,21 @@ public final class MapleGuild implements java.io.Serializable {
         broadcast(null, -1, BCOp.DISBAND);
     }
 
-    public void setGuildEmblem(int bg, int bgcolor, int logo, int logocolor) {
+    public void setEmblem(int bg, int bgcolor, int logo, int logocolor) {
         broadcast(null, -1, BCOp.EMBELMCHANGE);
 
         if (guild != null) {
-            guild.logo = logo;
-            guild.logoColor = logocolor;
-            guild.logoBG = bg;
-            guild.logoBGColor = bgcolor;
+            guild.setLogo(logo);
+            guild.setLogoColor(logocolor);
+            guild.setLogoBg(bg);
+            guild.setLogoBgColor(bgcolor);
             guild.save();
         }
     }
 
     public MapleGuildCharacter getMGC(int cid) {
         for (MapleGuildCharacter mgc : members) {
-            if (mgc.character.id == cid) {
+            if (mgc.character.getId() == cid) {
                 return mgc;
             }
         }
@@ -508,11 +517,11 @@ public final class MapleGuild implements java.io.Serializable {
     }
 
     public boolean increaseCapacity() {
-        if (guild.capacity >= 100 || ((guild.capacity + 5) > 100)) {
+        if (guild.getCapacity() >= 100 || ((guild.getCapacity() + 5) > 100)) {
             return false;
         }
-        guild.capacity += 5;
-        broadcast(MaplePacketCreator.guildCapacityChange(this.guild.id, this.guild.capacity));
+        guild.setCapacity(guild.getCapacity() + 5);
+        broadcast(MaplePacketCreator.guildCapacityChange(this.guild.getId(), this.guild.getCapacity()));
         guild.save();
         return true;
     }
@@ -525,11 +534,11 @@ public final class MapleGuild implements java.io.Serializable {
         if (amount == 0) { //no change, no broadcast and no sql.
             return;
         }
-        if (amount + guild.GP < 0) {
-            amount = -guild.GP;
+        if (amount + guild.getGp() < 0) {
+            amount = -guild.getGp();
         } //0 lowest
-        guild.GP += amount;
-        broadcast(MaplePacketCreator.updateGP(guild.id, guild.GP));
+        guild.setGp(guild.getGp() + amount);
+        broadcast(MaplePacketCreator.updateGP(guild.getId(), guild.getGp()));
         if (broadcast) {
             broadcast(UIPacket.getGPMsg(amount));
         }
@@ -540,16 +549,16 @@ public final class MapleGuild implements java.io.Serializable {
         mplew.write(members.size());
 
         for (MapleGuildCharacter mgc : members) {
-            mplew.writeInt(mgc.character.id);
+            mplew.writeInt(mgc.character.getId());
         }
         for (MapleGuildCharacter mgc : members) {
-            mplew.writeAsciiString(StringUtil.getRightPaddedStr(mgc.character.name, '\0', 13));
-            mplew.writeInt(mgc.character.job);
-            mplew.writeInt(mgc.character.level);
-            mplew.writeInt(mgc.character.guildRank);
+            mplew.writeAsciiString(StringUtil.getRightPaddedStr(mgc.character.getName(), '\0', 13));
+            mplew.writeInt(mgc.character.getJob());
+            mplew.writeInt(mgc.character.getLevel());
+            mplew.writeInt(mgc.character.getGuildRank());
             mplew.writeInt(mgc.isOnline() ? 1 : 0);
-            mplew.writeInt(guild.signature);
-            mplew.writeInt(mgc.character.allianceRank);
+            mplew.writeInt(guild.getSignature());
+            mplew.writeInt(mgc.character.getAllianceRank());
         }
     }
 
@@ -562,10 +571,11 @@ public final class MapleGuild implements java.io.Serializable {
         if (mc == null) {
             return MapleGuildResponse.NOT_IN_CHANNEL;
         }
-        if (mc.character.guild.id > 0) {
+        if (mc.character.getGuild().getId() > 0) {
             return MapleGuildResponse.ALREADY_IN_GUILD;
         }
-        mc.getClient().getSession().write(MaplePacketCreator.guildInvite(c.getPlayer().character.guild.id, c.getPlayer().character.name, c.getPlayer().character.level, c.getPlayer().getJob()));
+        mc.getClient().getSession().write(MaplePacketCreator.guildInvite(c.getPlayer().character.getGuild().getId(),
+                c.getPlayer().character.getName(), c.getPlayer().character.getLevel(), c.getPlayer().getJob()));
         return null;
     }
 
@@ -586,14 +596,14 @@ public final class MapleGuild implements java.io.Serializable {
     public int addBBSThread(String title, String text, int icon, boolean bNotice, int posterID) {
         int add = bbs.get(0) == null ? 1 : 0; //add 1 if no notice
         int ret = bNotice ? 0 : Math.max(1, bbs.size() + add);
-        bbs.put(ret, new MapleBBSThread(ret, title, text, System.currentTimeMillis(), guild.id, posterID, icon));
+        bbs.put(ret, new MapleBBSThread(ret, title, text, System.currentTimeMillis(), guild.getId(), posterID, icon));
         return ret;
     }
 
     public void editBBSThread(int localthreadid, String title, String text, int icon, int posterID, int guildRank) {
         MapleBBSThread thread = bbs.get(localthreadid);
         if (thread != null && (thread.ownerID == posterID || guildRank <= 2)) {
-            bbs.put(localthreadid, new MapleBBSThread(localthreadid, title, text, System.currentTimeMillis(), guild.id, thread.ownerID, icon));
+            bbs.put(localthreadid, new MapleBBSThread(localthreadid, title, text, System.currentTimeMillis(), guild.getId(), thread.ownerID, icon));
         }
     }
 
@@ -615,7 +625,7 @@ public final class MapleGuild implements java.io.Serializable {
         MapleBBSThread thread = bbs.get(localthreadid);
         if (thread != null) {
             MapleBBSReply reply = thread.replies.get(replyid);
-            if (reply != null && (reply.reply.postercid == posterID || guildRank <= 2)) {
+            if (reply != null && (reply.reply.getPoster().getId() == posterID || guildRank <= 2)) {
                 thread.replies.remove(replyid);
             }
         }
@@ -624,9 +634,9 @@ public final class MapleGuild implements java.io.Serializable {
     public static void setOfflineGuildStatus(int guildid, int guildrank, int alliancerank, int cid) {
         DCharacter one = new QDCharacter().id.eq(cid).findOne();
         if (one != null) {
-            one.guild = new QDGuild().id.eq(guildid).findOne();
-            one.guildRank = guildrank;
-            one.allianceRank = alliancerank;
+            one.setGuild(new QDGuild().id.eq(guildid).findOne());
+            one.setGuildRank(guildrank);
+            one.setAllianceRank(alliancerank);
             one.save();
         }
     }
@@ -656,7 +666,7 @@ public final class MapleGuild implements java.io.Serializable {
     }
 
     public static void gpRank(MapleClient c, int npcid) {
-        List<DGuild> guilds = new QDGuild().orderBy().GP.desc().setMaxRows(50).findList();
+        List<DGuild> guilds = new QDGuild().orderBy().gp.desc().setMaxRows(50).findList();
         c.getSession().write(MaplePacketCreator.gpRank(npcid, guilds));
     }
 

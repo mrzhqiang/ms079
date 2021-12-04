@@ -13,7 +13,7 @@ import client.inventory.PetDataFactory;
 import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DFamily;
 import com.github.mrzhqiang.maplestory.domain.DGuild;
-import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.VCharacterAggregate;
 import com.github.mrzhqiang.maplestory.domain.query.QDFamily;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import com.github.mrzhqiang.maplestory.domain.query.QVCharacterAggregate;
@@ -33,7 +33,7 @@ import handling.world.guild.MapleGuildCharacter;
 import handling.world.guild.MapleGuildSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.Timer.WorldTimer;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import server.maps.MapleMap;
 import server.maps.MapleMapItem;
 import tools.CollectionUtil;
@@ -44,7 +44,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +175,7 @@ public final class World {
             int party = new QVCharacterAggregate()
                     .select(QVCharacterAggregate.alias().party)
                     .findOneOrEmpty()
-                    .map(it -> it.party)
+                    .map(VCharacterAggregate::getParty)
                     .map(integer -> integer + 2)
                     .orElse(1);
             RUNNING_PARTY_ID.set(party);
@@ -341,15 +340,15 @@ public final class World {
                     final BuddyList buddylist = addChar.getBuddylist();
                     switch (operation) {
                         case ADDED:
-                            if (buddylist.contains(character.id)) {
+                            if (buddylist.contains(character.getId())) {
                                 buddylist.put(new BuddyEntry(character, group, channel, true));
-                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.id, channel - 1));
+                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.getId(), channel - 1));
                             }
                             break;
                         case DELETED:
-                            if (buddylist.contains(character.id)) {
-                                buddylist.put(new BuddyEntry(character, group, -1, buddylist.get(character.id).isVisible()));
-                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.id, -1));
+                            if (buddylist.contains(character.getId())) {
+                                buddylist.put(new BuddyEntry(character, group, -1, buddylist.get(character.getId()).isVisible()));
+                                addChar.getClient().getSession().write(MaplePacketCreator.updateBuddyChannel(character.getId(), -1));
                             }
                             break;
                     }
@@ -358,7 +357,7 @@ public final class World {
         }
 
         public static BuddyAddResult requestBuddyAdd(String addName, int channelFrom, DCharacter character) {
-            int ch = Find.findChannel(character.id);
+            int ch = Find.findChannel(character.getId());
             if (ch > 0) {
                 MapleCharacter addChar = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(addName);
                 if (addChar != null) {
@@ -366,9 +365,9 @@ public final class World {
                     if (buddylist.isFull()) {
                         return BuddyAddResult.BUDDYLIST_FULL;
                     }
-                    if (!buddylist.contains(character.id)) {
+                    if (!buddylist.contains(character.getId())) {
                         buddylist.addBuddyRequest(addChar.getClient(), channelFrom, character);
-                    } else if (buddylist.containsVisible(character.id)) {
+                    } else if (buddylist.containsVisible(character.getId())) {
                         return BuddyAddResult.ALREADY_ON_LIST;
                     }
                 }
@@ -561,7 +560,7 @@ public final class World {
             LOGGER.info(">>> 初始化 [家族系统]");
             Stopwatch started = Stopwatch.createStarted();
             for (MapleGuild guild : MapleGuild.loadAll()) {
-                if (guild.isProper()) {
+                if (guild.isValid()) {
                     ID_GUILD_CACHED.put(guild.getId(), guild);
                     NAME_GUILD_CACHED.put(guild.getName(), guild);
                 }
@@ -585,7 +584,7 @@ public final class World {
             }
 
             ret = new MapleGuild(optional.get());
-            if (ret.getId() <= 0 || !ret.isProper()) { //failed to load
+            if (ret.getId() <= 0 || !ret.isValid()) { //failed to load
                 return null;
             }
             ID_GUILD_CACHED.put(id, ret);
@@ -613,9 +612,9 @@ public final class World {
         }
 
         public static void setGuildMemberOnline(MapleGuildCharacter mc, boolean bOnline, int channel) {
-            MapleGuild g = getGuild(mc.character.guild.id);
+            MapleGuild g = getGuild(mc.character.getGuild().getId());
             if (g != null) {
-                g.setOnline(mc.character.id, bOnline, channel);
+                g.updateMemberOnline(mc.character.getId(), bOnline, channel);
             }
         }
 
@@ -626,25 +625,25 @@ public final class World {
             }
         }
 
-        public static int addGuildMember(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.character.guild.id);
+        public static boolean addGuildMember(MapleGuildCharacter mc) {
+            MapleGuild g = getGuild(mc.character.getGuild().getId());
             if (g != null) {
-                return g.addGuildMember(mc);
+                return g.addMember(mc);
             }
-            return 0;
+            return false;
         }
 
         public static void leaveGuild(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.character.guild.id);
+            MapleGuild g = getGuild(mc.character.getGuild().getId());
             if (g != null) {
-                g.leaveGuild(mc);
+                g.memberLeave(mc);
             }
         }
 
         public static void guildChat(int gid, String name, int cid, String msg) {
             MapleGuild g = getGuild(gid);
             if (g != null) {
-                g.guildChat(name, cid, msg);
+                g.chat(name, cid, msg);
             }
         }
 
@@ -656,23 +655,23 @@ public final class World {
         }
 
         public static void expelMember(MapleGuildCharacter initiator, String name, int cid) {
-            MapleGuild g = getGuild(initiator.character.guild.id);
+            MapleGuild g = getGuild(initiator.character.getGuild().getId());
             if (g != null) {
-                g.expelMember(initiator, name, cid);
+                g.removeMember(initiator, name, cid);
             }
         }
 
         public static void setGuildNotice(int gid, String notice) {
             MapleGuild g = getGuild(gid);
             if (g != null) {
-                g.setGuildNotice(notice);
+                g.notice(notice);
             }
         }
 
         public static void memberLevelJobUpdate(MapleGuildCharacter mc) {
-            MapleGuild g = getGuild(mc.character.guild.id);
+            MapleGuild g = getGuild(mc.character.getGuild().getId());
             if (g != null) {
-                g.memberLevelJobUpdate(mc);
+                g.updateMemberInfo(mc);
             }
         }
 
@@ -686,7 +685,7 @@ public final class World {
         public static void setGuildEmblem(int gid, short bg, byte bgcolor, short logo, byte logocolor) {
             MapleGuild g = getGuild(gid);
             if (g != null) {
-                g.setGuildEmblem(bg, bgcolor, logo, logocolor);
+                g.setEmblem(bg, bgcolor, logo, logocolor);
             }
         }
 
@@ -706,9 +705,9 @@ public final class World {
             if (g != null) {
                 MapleGuildCharacter mc = g.getMGC(charid);
                 if (mc != null) {
-                    if (mc.character.guildRank > 1) //not leader
+                    if (mc.character.getGuildRank() > 1) //not leader
                     {
-                        g.leaveGuild(mc);
+                        g.memberLeave(mc);
                     } else {
                         g.disbandGuild();
                     }
@@ -1342,7 +1341,7 @@ public final class World {
     }
 
     public static void registerRespawn() {
-        WorldTimer.getInstance().register(new Respawn(), 3000); //divisible by 9000 if possible.
+        Timer.WORLD.register(new Respawn(), 3000); //divisible by 9000 if possible.
         //3000 good or bad? ive no idea >_>
         //buffs can also be done, but eh
 
@@ -1391,7 +1390,7 @@ public final class World {
     }
 
     public static void scheduleRateDelay(final String type, long delay) {
-        WorldTimer.getInstance().schedule(new Runnable() {
+        Timer.WORLD.schedule(new Runnable() {
 
             @Override
             public void run() {

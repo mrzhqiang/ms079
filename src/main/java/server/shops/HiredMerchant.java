@@ -4,6 +4,7 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.IItem;
 import client.inventory.ItemFlag;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import handling.channel.ChannelServer;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
-import server.Timer.EtcTimer;
 import server.maps.MapleMap;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
@@ -35,21 +35,17 @@ public class HiredMerchant extends AbstractPlayerStore {
     public HiredMerchant(MapleCharacter owner, int itemId, String desc) {
         super(owner, itemId, desc, "", 3);
         this.start = System.currentTimeMillis();
-        this.blacklist = new LinkedList<String>();
-        this.schedule = EtcTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                /*
-                 * if ((HiredMerchant.this.getMCOwner() != null) &&
-                 * (HiredMerchant.this.getMCOwner().getPlayerShop() ==
-                 * HiredMerchant.this)) {
-                 * HiredMerchant.this.getMCOwner().setPlayerShop(null); }
-                 * HiredMerchant.this.removeAllVisitors(-1, -1);
-                 */
-                //      HiredMerchant.this.closeShop(true, true);
-                closeShop(true, true);
-            }
+        this.blacklist = new LinkedList<>();
+        this.schedule = Timer.ETC.schedule(() -> {
+            /*
+             * if ((HiredMerchant.this.getMCOwner() != null) &&
+             * (HiredMerchant.this.getMCOwner().getPlayerShop() ==
+             * HiredMerchant.this)) {
+             * HiredMerchant.this.getMCOwner().setPlayerShop(null); }
+             * HiredMerchant.this.removeAllVisitors(-1, -1);
+             */
+            //      HiredMerchant.this.closeShop(true, true);
+            closeShop(true, true);
         }, 1000 * 60 * 60 * 24);
     }
 

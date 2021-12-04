@@ -1,31 +1,12 @@
-/*
- This file is part of the OdinMS Maple Story Server
- Copyright (C) 2008 ~ 2010 Patrick Huy <patrick.huy@frz.cc> 
- Matthias Butz <matze@odinms.de>
- Jan Christian Meyer <vimes@odinms.de>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License version 3
- as published by the Free Software Foundation. You may not use, modify
- or distribute this program under any other version of the
- GNU Affero General Public License.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package server.maps;
 
-import java.awt.Rectangle;
 import client.MapleClient;
+import com.github.mrzhqiang.maplestory.timer.Timer;
 import scripting.ReactorScriptManager;
-import server.Timer.MapTimer;
 import tools.MaplePacketCreator;
 import tools.Pair;
+
+import java.awt.*;
 
 public class MapleReactor extends AbstractMapleMapObject {
 
@@ -138,13 +119,7 @@ public class MapleReactor extends AbstractMapleMapObject {
     }
 
     public void delayedDestroyReactor(long delay) {
-        MapTimer.getInstance().schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                map.destroyReactor(getObjectId());
-            }
-        }, delay);
+        Timer.MAP.schedule(() -> map.destroyReactor(getObjectId()), delay);
     }
 
     public void hitReactor(int charPos, short stance, MapleClient c) {
@@ -217,7 +192,7 @@ public class MapleReactor extends AbstractMapleMapObject {
     }
 
     public void delayedHitReactor(final MapleClient c, long delay) {
-        MapTimer.getInstance().schedule(new Runnable() {
+        Timer.MAP.schedule(new Runnable() {
 
             @Override
             public void run() {
@@ -227,7 +202,7 @@ public class MapleReactor extends AbstractMapleMapObject {
     }
 
     public void scheduleSetState(final byte oldState, final byte newState, long delay) {
-        MapTimer.getInstance().schedule(new Runnable() {
+        Timer.MAP.schedule(new Runnable() {
 
             @Override
             public void run() {

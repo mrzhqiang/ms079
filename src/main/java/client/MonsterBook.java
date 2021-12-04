@@ -50,10 +50,10 @@ public class MonsterBook implements Serializable {
     }
 
     public static MonsterBook loadCards(final int charid) {
-        List<DMonsterBook> books = new QDMonsterBook().cardid.eq(charid).orderBy().cardid.asc().findList();
+        List<DMonsterBook> books = new QDMonsterBook().character.id.eq(charid).orderBy().cardId.asc().findList();
         Map<Integer, Integer> cards = new LinkedHashMap<>();
         for (DMonsterBook book : books) {
-            cards.put(book.cardid, book.level);
+            cards.put(book.getCardId(), book.getLevel());
         }
         return new MonsterBook(cards);
     }
@@ -63,15 +63,15 @@ public class MonsterBook implements Serializable {
             return;
         }
 
-        new QDMonsterBook().cardid.eq(charid).delete();
+        new QDMonsterBook().cardId.eq(charid).delete();
 
         DCharacter one = new QDCharacter().id.eq(charid).findOne();
 
         for (Entry<Integer, Integer> all : cards.entrySet()) {
             DMonsterBook book = new DMonsterBook();
-            book.character = one;
-            book.cardid = all.getKey();
-            book.level = all.getValue();
+            book.setCharacter(one);
+            book.setCardId(all.getKey());
+            book.setLevel(all.getValue());
             book.save();
         }
     }

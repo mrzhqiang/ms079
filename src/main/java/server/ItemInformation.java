@@ -1,19 +1,15 @@
 package server;
 
 import client.inventory.Equip;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.github.mrzhqiang.maplestory.domain.DWzItemData;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import constants.GameConstants;
 import tools.Triple;
+
+import java.util.List;
+import java.util.Map;
 
 public class ItemInformation {
 
@@ -34,9 +30,9 @@ public class ItemInformation {
 
     public ItemInformation(DWzItemData data) {
         this.data = data;
-        int slotMax = GameConstants.getSlotMax(data.id);
-        data.slotMax = slotMax > 0 ? slotMax : data.slotMax;
-        String scrollRq = data.scrollReqs;
+        int slotMax = GameConstants.getSlotMax(data.getId());
+        data.setSlotMax(slotMax > 0 ? slotMax : data.getSlotMax());
+        String scrollRq = data.getScrollReqs();
         if (scrollRq != null && !scrollRq.isEmpty()) {
             for (String rq : Splitter.on(',').split(scrollRq)) {
                 if (rq.length() > 1) {
@@ -44,7 +40,7 @@ public class ItemInformation {
                 }
             }
         }
-        String consumeItem = data.consumeItem;
+        String consumeItem = data.getConsumeItem();
         if (consumeItem != null && !consumeItem.isEmpty()) {
             for (String item : Splitter.on(',').split(consumeItem)) {
                 if (item.length() > 1) {
@@ -52,7 +48,7 @@ public class ItemInformation {
                 }
             }
         }
-        String incRq = data.incSkill;
+        String incRq = data.getIncSkill();
         if (incRq != null && !incRq.isEmpty()) {
             for (String rq : Splitter.on(',').split(incRq)) {
                 if (rq.length() > 1) {

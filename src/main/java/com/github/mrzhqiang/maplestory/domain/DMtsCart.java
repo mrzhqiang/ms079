@@ -13,12 +13,34 @@ import javax.persistence.Table;
 public class DMtsCart extends Model {
 
     @Id
-    public Integer id;
+    Integer id;
     @NotNull
-    @Column(name = "characterid")
-    public Integer characterid;
+    @Column(name = "character_id")
+    Integer characterId;
     @NotNull
-    @Column(name = "itemid")
-    public Integer itemid;
+    Integer itemId;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getCharacterId() {
+        return characterId;
+    }
+
+    public void setCharacterId(Integer characterId) {
+        this.characterId = characterId;
+    }
+
+    public Integer getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Integer itemId) {
+        this.itemId = itemId;
+    }
 }

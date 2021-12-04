@@ -1,14 +1,17 @@
 package com.github.mrzhqiang.maplestory.di;
 
+import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
+import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import javax.inject.Singleton;
 import com.google.inject.name.Named;
 import io.ebean.Database;
 import io.ebean.DatabaseFactory;
 import io.ebean.config.DatabaseConfig;
 import io.ebean.datasource.DataSourceConfig;
 
+import javax.inject.Singleton;
 import java.util.Properties;
 
 /**
@@ -38,5 +41,23 @@ final class DatabaseModule extends AbstractModule {
         // 这里我们不设置 serverName
         dataSourceConfig.loadSettings(properties, null);
         return dataSourceConfig;
+    }
+
+    @Singleton
+    @Provides
+    static QDAccount qdAccount(Database database) {
+        return new QDAccount(database);
+    }
+
+    @Singleton
+    @Provides
+    static QDGuild qdGuild(Database database) {
+        return new QDGuild(database);
+    }
+
+    @Singleton
+    @Provides
+    static QDCharacter qdCharacter(Database database) {
+        return new QDCharacter(database);
     }
 }

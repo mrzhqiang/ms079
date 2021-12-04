@@ -1,7 +1,7 @@
 package server.maps;
 
-import com.github.mrzhqiang.helper.math.Numbers;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzCustomLife;
+import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
@@ -22,7 +22,12 @@ import server.life.MapleNPC;
 import server.maps.MapleNodes.MapleNodeInfo;
 import server.maps.MapleNodes.MaplePlatform;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -433,9 +438,9 @@ public class MapleMapFactory {
 
     public static void loadCustomLife() {
         new QDWzCustomLife().findEach(it -> {
-            int mapid = it.mid;
-            AbstractLoadedMapleLife myLife = loadLife(it.dataid, it.f,
-                    it.hide > 0, it.fh, it.cy, it.rx0, it.rx1, it.x, it.y, it.type, it.mobtime);
+            int mapid = it.getMid();
+            AbstractLoadedMapleLife myLife = loadLife(it.getDataId(), it.getF(),
+                    it.getHide() > 0, it.getFh(), it.getCy(), it.getRx0(), it.getRx1(), it.getX(), it.getY(), it.getType(), it.getMobTime());
             if (myLife == null) {
                 return;
             }

@@ -9,7 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.CashItemInfo.CashModInfo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CashItemFactory {
@@ -81,7 +86,7 @@ public class CashItemFactory {
         final CashItemInfo stats = itemStats.get(sn);
         // final CashItemInfo stats = itemStats.get(Integer.valueOf(sn));
         final CashModInfo z = getModInfo(sn);
-        if (z != null && z.item.showup) {
+        if (z != null && z.item.isShowUp()) {
             return z.toCItem(stats); //null doesnt matter
         }
         if (stats == null || !stats.onSale()) {

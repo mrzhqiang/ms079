@@ -3,7 +3,6 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -13,65 +12,218 @@ import javax.persistence.Table;
 public class DWzItemData extends Model {
 
     @Id
-    @Column(name = "itemid")
-    public Integer id;
-    @Column(name = "name")
-    public String name;
-    @Column(name = "msg")
-    public String msg;
-    @Column(name = "desc")
-    public String desc;
+    Integer id;
+    String name;
+    String msg;
+    String desc;
     @NotNull
-    @Column(name = "slotMax")
-    public Integer slotMax;
+    Integer slotMax;
     @NotNull
-    @Column(name = "price")
-    public String price;
+    String price;
     @NotNull
-    @Column(name = "wholePrice")
-    public Integer wholePrice;
+    Integer wholePrice;
     @NotNull
-    @Column(name = "stateChange")
-    public Integer stateChange;
+    Integer stateChange;
     @NotNull
-    @Column(name = "flags")
-    public Integer flags;
+    Integer flags;
     @NotNull
-    @Column(name = "karma")
-    public Integer karma;
+    Integer karma;
     @NotNull
-    @Column(name = "meso")
-    public Integer meso;
+    Integer meso;
     @NotNull
-    @Column(name = "monsterBook")
-    public Integer monsterBook;
+    Integer monsterBook;
     @NotNull
-    @Column(name = "itemMakeLevel")
-    public Integer itemMakeLevel;
+    Integer itemMakeLevel;
     @NotNull
-    @Column(name = "questId")
-    public Integer questId;
-    @Column(name = "scrollReqs")
-    public String scrollReqs;
-    @Column(name = "consumeItem")
-    public String consumeItem;
+    Integer questId;
+    String scrollReqs;
+    String consumeItem;
     @NotNull
-    @Column(name = "totalprob")
-    public Integer totalprob;
+    Integer totalProb;
     @NotNull
-    @Column(name = "incSkill")
-    public String incSkill;
+    String incSkill;
     @NotNull
-    @Column(name = "replaceid")
-    public Integer replaceid;
+    Integer replaceId;
     @NotNull
-    @Column(name = "replacemsg")
-    public String replacemsg;
+    String replaceMsg;
     @NotNull
-    @Column(name = "create")
-    public Integer create;
+    Integer create;
     @NotNull
-    @Column(name = "afterImage")
-    public String afterImage;
+    String afterImage;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public Integer getSlotMax() {
+        return slotMax;
+    }
+
+    public void setSlotMax(Integer slotMax) {
+        this.slotMax = slotMax;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+    public Integer getWholePrice() {
+        return wholePrice;
+    }
+
+    public void setWholePrice(Integer wholePrice) {
+        this.wholePrice = wholePrice;
+    }
+
+    public Integer getStateChange() {
+        return stateChange;
+    }
+
+    public void setStateChange(Integer stateChange) {
+        this.stateChange = stateChange;
+    }
+
+    public Integer getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Integer flags) {
+        this.flags = flags;
+    }
+
+    public Integer getKarma() {
+        return karma;
+    }
+
+    public void setKarma(Integer karma) {
+        this.karma = karma;
+    }
+
+    public Integer getMeso() {
+        return meso;
+    }
+
+    public void setMeso(Integer meso) {
+        this.meso = meso;
+    }
+
+    public Integer getMonsterBook() {
+        return monsterBook;
+    }
+
+    public void setMonsterBook(Integer monsterBook) {
+        this.monsterBook = monsterBook;
+    }
+
+    public Integer getItemMakeLevel() {
+        return itemMakeLevel;
+    }
+
+    public void setItemMakeLevel(Integer itemMakeLevel) {
+        this.itemMakeLevel = itemMakeLevel;
+    }
+
+    public Integer getQuestId() {
+        return questId;
+    }
+
+    public void setQuestId(Integer questId) {
+        this.questId = questId;
+    }
+
+    public String getScrollReqs() {
+        return scrollReqs;
+    }
+
+    public void setScrollReqs(String scrollReqs) {
+        this.scrollReqs = scrollReqs;
+    }
+
+    public String getConsumeItem() {
+        return consumeItem;
+    }
+
+    public void setConsumeItem(String consumeItem) {
+        this.consumeItem = consumeItem;
+    }
+
+    public Integer getTotalProb() {
+        return totalProb;
+    }
+
+    public void setTotalProb(Integer totalProb) {
+        this.totalProb = totalProb;
+    }
+
+    public String getIncSkill() {
+        return incSkill;
+    }
+
+    public void setIncSkill(String incSkill) {
+        this.incSkill = incSkill;
+    }
+
+    public Integer getReplaceId() {
+        return replaceId;
+    }
+
+    public void setReplaceId(Integer replaceId) {
+        this.replaceId = replaceId;
+    }
+
+    public String getReplaceMsg() {
+        return replaceMsg;
+    }
+
+    public void setReplaceMsg(String replaceMsg) {
+        this.replaceMsg = replaceMsg;
+    }
+
+    public Integer getCreate() {
+        return create;
+    }
+
+    public void setCreate(Integer create) {
+        this.create = create;
+    }
+
+    public String getAfterImage() {
+        return afterImage;
+    }
+
+    public void setAfterImage(String afterImage) {
+        this.afterImage = afterImage;
+    }
 }

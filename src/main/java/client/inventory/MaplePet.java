@@ -118,23 +118,23 @@ public class MaplePet implements Serializable {
         int ret1 = MapleItemInformationProvider.getInstance().getPetFlagInfo(itemid);
 
         DPet dPet = new DPet();
-        dPet.id = uniqueid;
-        dPet.name = name;
-        dPet.level = level;
-        dPet.closeness = closeness;
-        dPet.fullness = fullness;
-        dPet.seconds = secondsLeft;
-        dPet.flags = ret1;
+        dPet.setId(uniqueid);
+        dPet.setName(name);
+        dPet.setLevel(level);
+        dPet.setCloseness(closeness);
+        dPet.setFlags(fullness);
+        dPet.setSeconds(secondsLeft);
+        dPet.setFlags(ret1);
         dPet.save();
         return new MaplePet(itemid, dPet, uniqueid);
     }
 
     public String getName() {
-        return pet.name;
+        return pet.getName();
     }
 
     public void setName(String name) {
-        this.pet.name = name;
+        this.pet.setName(name);
         this.changed = true;
     }
 
@@ -163,41 +163,41 @@ public class MaplePet implements Serializable {
     }
 
     public int getCloseness() {
-        return pet.closeness;
+        return pet.getCloseness();
     }
 
     public void setCloseness(int closeness) {
         if (closeness >= 2147483647 || closeness <= 0) {
             closeness = 1;
         }
-        this.pet.closeness = closeness;
+        this.pet.setCloseness(closeness);
         this.changed = true;
     }
 
     public int getLevel() {
-        return pet.level;
+        return pet.getLevel();
     }
 
     public void setLevel(int level) {
-        this.pet.level = (int) level;
+        this.pet.setLevel(level);
         this.changed = true;
     }
 
     public int getFullness() {
-        return pet.fullness;
+        return pet.getFullness();
     }
 
     public void setFullness(int fullness) {
-        this.pet.fullness = fullness;
+        this.pet.setFullness(fullness);
         this.changed = true;
     }
 
     public int getFlags() {
-        return pet.flags;
+        return pet.getFlags();
     }
 
     public void setFlags(int fffh) {
-        this.pet.flags = fffh;
+        this.pet.setFlags(fffh);
         this.changed = true;
     }
 
@@ -251,11 +251,11 @@ public class MaplePet implements Serializable {
     }
 
     public int getSecondsLeft() {
-        return pet.seconds;
+        return pet.getSeconds();
     }
 
     public void setSecondsLeft(int sl) {
-        this.pet.seconds = sl;
+        this.pet.setSeconds(sl);
         this.changed = true;
     }
 }

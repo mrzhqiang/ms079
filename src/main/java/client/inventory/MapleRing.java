@@ -1,15 +1,13 @@
 package client.inventory;
 
 import client.MapleCharacter;
-
-import java.sql.SQLException;
-import java.io.Serializable;
-
 import com.github.mrzhqiang.maplestory.domain.DRing;
 import com.github.mrzhqiang.maplestory.domain.query.QDRing;
-
-import java.util.Comparator;
 import server.MapleInventoryManipulator;
+
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.Comparator;
 
 public class MapleRing implements Serializable {
 
@@ -52,19 +50,19 @@ public class MapleRing implements Serializable {
 
     public static void addToDB(int itemid, MapleCharacter chr, String player, int id, int[] ringId) throws SQLException {
         DRing ring = new DRing();
-        ring.id = ringId[0];
-        ring.itemid = itemid;
-        ring.partnerChrId = chr.getId();
-        ring.partnername = chr.getName();
-        ring.partnerRingId = ringId[1];
+        ring.setId(ringId[0]);
+        ring.setItemId(itemid);
+        ring.setPartnerChrId(chr.getId());
+        ring.setPartnerName(chr.getName());
+        ring.setPartnerRingId(ringId[1]);
         ring.save();
 
         ring = new DRing();
-        ring.id = ringId[1];
-        ring.itemid = itemid;
-        ring.partnerChrId = id;
-        ring.partnername = player;
-        ring.partnerRingId = ringId[0];
+        ring.setId(ringId[1]);
+        ring.setItemId(itemid);
+        ring.setPartnerChrId(id);
+        ring.setPartnerName(player);
+        ring.setPartnerRingId(ringId[0]);
         ring.save();
     }
 
@@ -100,7 +98,7 @@ public class MapleRing implements Serializable {
     }
 
     public int getItemId() {
-        return ring.itemid;
+        return ring.getItemId();
     }
 
     public boolean isEquipped() {
@@ -112,11 +110,11 @@ public class MapleRing implements Serializable {
     }
 
     public String getPartnerName() {
-        return ring.partnername;
+        return ring.getPartnerName();
     }
 
     public void setPartnerName(String partnerName) {
-        this.ring.partnername = partnerName;
+        this.ring.setPartnerName(partnerName);
     }
 
     @Override
@@ -140,7 +138,7 @@ public class MapleRing implements Serializable {
             return;
         }
 
-        new QDRing().id.eq(one.id).or().id.eq(one.partnerRingId).delete();
+        new QDRing().id.eq(one.getId()).or().id.eq(one.getPartnerRingId()).delete();
     }
 
     public static class RingComparator implements Comparator<MapleRing>, Serializable {
