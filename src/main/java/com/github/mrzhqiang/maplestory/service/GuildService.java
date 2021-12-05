@@ -88,12 +88,12 @@ public final class GuildService {
 
     public void init() {
         LOGGER.info(">>> 准备初始化 [家族系统]");
-        Stopwatch started = Stopwatch.createStarted();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         // 注意，这里不使用 findStream
         // 1. 不想在这里使用 try-resource 语句
         // 2. 结果不会很大，所以不需要迭代方式查询
         qdGuild.findList().stream().map(MapleGuild::new).filter(MapleGuild::isValid).forEach(this::addCached);
-        LOGGER.info("<<< [家族系统] 初始化完毕，共加载 {} 个家族，耗时：{}", idGuildCached.size(), started.stop());
+        LOGGER.info("<<< [家族系统] 初始化完毕，共加载 {} 个家族，耗时：{}", idGuildCached.size(), stopwatch.stop());
     }
 
     public void addCached(MapleGuild guild) {

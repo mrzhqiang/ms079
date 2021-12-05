@@ -129,7 +129,7 @@ public class MapleFamily implements java.io.Serializable {
     }
 
     public static List<MapleFamily> loadAll() {
-        return new QDFamily().findStream()
+        return new QDFamily().findList().stream()
                 .map(MapleFamily::new)
                 .collect(Collectors.toList());
     }

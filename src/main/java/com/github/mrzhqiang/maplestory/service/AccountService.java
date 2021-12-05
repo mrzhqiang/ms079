@@ -23,11 +23,11 @@ public final class AccountService {
 
     public void resetAccount() {
         LOGGER.info(">>> 重置 [账号状态]");
-        Stopwatch resetWatch = Stopwatch.createStarted();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         int count = qdAccount.asUpdate()
                 .set("state", LoginState.NOT_LOGIN)
                 .set("last_gain_hm", 0)
                 .update();
-        LOGGER.info("<<< [账号状态] 重置完毕，耗时：{}，影响行数：{}", resetWatch.stop(), count);
+        LOGGER.info("<<< [账号状态] 重置完毕，耗时：{}，影响行数：{}", stopwatch.stop(), count);
     }
 }

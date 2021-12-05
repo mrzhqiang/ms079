@@ -29,8 +29,7 @@ public class MapleGuildAlliance {
     }
 
     public static List<MapleGuildAlliance> loadAll() {
-        return new QDAlliance()
-                .findStream()
+        return new QDAlliance().findList().stream()
                 .map(MapleGuildAlliance::new)
                 .collect(Collectors.toList());
     }

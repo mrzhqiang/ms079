@@ -60,7 +60,8 @@ public final class ApplicationStarter {
 
     @Inject
     public ApplicationStarter(ServerProperties properties, AccountService accountService,
-                              WorldService worldService, ServerInfoService serverInfoService, CashShopServer shopServer, LoginServer loginServer,
+                              WorldService worldService, ServerInfoService serverInfoService,
+                              CashShopServer shopServer, LoginServer loginServer,
                               ShutdownServer shutdown) {
         this.properties = properties;
         this.accountService = accountService;

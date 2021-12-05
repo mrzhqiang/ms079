@@ -51,11 +51,11 @@ public final class AllianceService {
 
     public void init() {
         LOGGER.info(">>> 初始化 [家族联盟系统]");
-        Stopwatch started = Stopwatch.createStarted();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         for (MapleGuildAlliance alliance : MapleGuildAlliance.loadAll()) {
             cached.put(alliance.getId(), alliance);
         }
-        LOGGER.info("<<< [家族联盟系统] 初始化完毕，耗时：{}", started.stop());
+        LOGGER.info("<<< [家族联盟系统] 初始化完毕，耗时：{}", stopwatch.stop());
     }
 
     public MapleGuildAlliance getAlliance(Integer allianceId) {

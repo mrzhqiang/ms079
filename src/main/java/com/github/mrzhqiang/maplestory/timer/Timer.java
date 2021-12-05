@@ -38,11 +38,11 @@ public enum Timer {
 
     public static void init() {
         LOGGER.info(">>> 初始化 [时钟线程]");
-        Stopwatch timeWatch = Stopwatch.createStarted();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         for (Timer timer : Timer.values()) {
             timer.start();
         }
-        LOGGER.info("<<< [时钟线程] 初始化完毕，耗时：{}", timeWatch.stop());
+        LOGGER.info("<<< [时钟线程] 初始化完毕，耗时：{}", stopwatch.stop());
     }
 
     public void start() {
