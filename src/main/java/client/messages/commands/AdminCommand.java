@@ -25,6 +25,7 @@ import com.github.mrzhqiang.maplestory.domain.DPlayerNPC;
 import com.github.mrzhqiang.maplestory.domain.DWzCustomLife;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDInventoryItem;
+import com.github.mrzhqiang.maplestory.auth.AuthenticationServer;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
 import constants.ServerConstants;
@@ -32,7 +33,6 @@ import constants.ServerConstants.PlayerGMRank;
 import handling.RecvPacketOpcode;
 import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
-import handling.login.LoginServer;
 import handling.login.handler.AutoRegister;
 import handling.world.CheaterData;
 import handling.world.World;
@@ -190,6 +190,9 @@ public class AdminCommand {
     }
 
     public static class 人数上限 extends setUserLimit {
+        public 人数上限() {
+            super(Injectors.get(AuthenticationServer.class));
+        }
     }
 
     public static class 封号状态 extends BanStatus {
@@ -251,16 +254,23 @@ public class AdminCommand {
         }
     }
 
+    @Singleton
     public static class setUserLimit extends CommandExecute {
 
+        private final AuthenticationServer authenticationServer;
+
+        @Inject
+        public setUserLimit(AuthenticationServer authenticationServer) {
+            this.authenticationServer = authenticationServer;
+        }
+
         public int execute(MapleClient c, String[] splitted) {
-            int UserLimit = LoginServer.getUserLimit();
             try {
-                UserLimit = Integer.parseInt(splitted[1]);
+                int userLimit = Integer.parseInt(splitted[1]);
+                authenticationServer.setUserLimit(userLimit);
+                c.getPlayer().dropMessage("服务器人数上限已更改为" + userLimit);
             } catch (Exception ignored) {
             }
-            LoginServer.setUserLimit(UserLimit);
-            c.getPlayer().dropMessage("服务器人数上限已更改为" + UserLimit);
             return 1;
         }
     }

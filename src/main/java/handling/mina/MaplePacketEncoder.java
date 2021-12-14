@@ -35,7 +35,7 @@ public final class MaplePacketEncoder implements ProtocolEncoder {
     public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
         MapleClient client = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);
         if (client != null) {
-            MapleAESOFB send_crypto = client.getSendCrypto();
+            MapleAESOFB sendCrypto = client.getSendCrypto();
             byte[] inputInitialPacket = ((MaplePacket) message).getBytes();
             // todo Netty LoggingHandler
             if (properties.isPacketLogger()) {
@@ -80,9 +80,9 @@ public final class MaplePacketEncoder implements ProtocolEncoder {
             Lock mutex = client.getLock();
             mutex.lock();
             try {
-                byte[] header = send_crypto.getPacketHeader(unencrypted.length);
+                byte[] header = sendCrypto.getPacketHeader(unencrypted.length);
                 MapleCustomEncryption.encryptData(unencrypted); // Encrypting Data
-                send_crypto.crypt(unencrypted); // Crypt it with IV
+                sendCrypto.crypt(unencrypted); // Crypt it with IV
                 System.arraycopy(header, 0, ret, 0, 4); // Copy the header > "Ret", first 4 bytes
             } finally {
                 mutex.unlock();

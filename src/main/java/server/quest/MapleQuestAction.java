@@ -8,7 +8,6 @@ import client.SkillFactory;
 import client.inventory.InventoryException;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DWzQuestActData;
-import com.github.mrzhqiang.maplestory.domain.Gender;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActItemData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActQuestData;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzQuestActSkillData;
@@ -26,7 +25,6 @@ import tools.Triple;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +63,7 @@ public class MapleQuestAction implements Serializable {
                 items = new ArrayList<>();
                 new QDWzQuestActItemData().uniqueId.eq(data.getUniqueId()).findEach(it ->
                         //, rs.getInt("jobEx")
-                        items.add(new QuestItem(it.getItemId(), it.getCount(), it.getPeriod(), it.getGender(), it.getJob(),it.getJobEx(),it.getProp())));
+                        items.add(new QuestItem(it.getItemId(), it.getCount(), it.getPeriod(), it.getGender(), it.getJob(), it.getJobEx(), it.getProp())));
                 break;
             case quest:
                 state = new ArrayList<>();
@@ -75,7 +73,7 @@ public class MapleQuestAction implements Serializable {
             case skill:
                 skill = new ArrayList<>();
                 new QDWzQuestActSkillData().uniqueId.eq(data.getUniqueId()).findEach(it ->
-                        skill.add(new Triple<>(it.getSkillId(), it.getSkillLevel(), it.getMasterLevel())));
+                        skill.add(Triple.of(it.getSkillId(), it.getSkillLevel(), it.getMasterLevel())));
                 break;
         }
     }
@@ -165,18 +163,18 @@ public class MapleQuestAction implements Serializable {
                 //c.gainExp(this.intStore * GameConstants.getExpRate_Quest(c.getLevel()) * c.getStat().questBonus * (c.getTrait(MapleTrait.MapleTraitType.sense).getLevel() * 3 / 10 + 100) / 100, true, true, true);
                 break;
             case item:
-                Map props = new HashMap();
+                Map<Integer, Integer> props = new HashMap<>();
                 for (QuestItem item : this.items) {
                     if ((item.prop > 0) && (canGetItem(item, c))) {
                         for (int i = 0; i < item.prop; i++) {
-                            props.put(Integer.valueOf(props.size()), Integer.valueOf(item.itemid));
+                            props.put(props.size(), item.itemid);
                         }
                     }
                 }
                 selection = 0;
                 extNum = 0;
                 if (props.size() > 0) {
-                    selection = ((Integer) props.get(Integer.valueOf(Randomizer.nextInt(props.size())))).intValue();
+                    selection = props.get(Randomizer.nextInt(props.size()));
                 }
                 for (QuestItem item : this.items) {
                     if (!canGetItem(item, c)) {
@@ -185,7 +183,7 @@ public class MapleQuestAction implements Serializable {
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            ? (extSelection != null) && (extSelection != extNum++)
                             : id != selection)) {
                         continue;
                     }
@@ -231,14 +229,13 @@ public class MapleQuestAction implements Serializable {
                 }
                 break;
             case skill:
-                for (Triple skills : this.skill) {
-                    int skillid = ((Integer) skills.left).intValue();
-                    int skillLevel = ((Integer) skills.mid).intValue();
-                    int masterLevel = ((Integer) skills.right).intValue();
+                for (Triple<Integer, Integer, Integer> skills : this.skill) {
+                    int skillid = skills.getLeft();
+                    int skillLevel = skills.getMid();
+                    int masterLevel = skills.getRight();
                     ISkill skillObject = SkillFactory.getSkill(skillid);
                     boolean found = false;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
-                        int applicableJob = ((Integer) i$.next()).intValue();
+                    for (int applicableJob : this.applicableJobs) {
                         if (c.getJob() == applicableJob) {
                             found = true;
                             break;
@@ -280,10 +277,9 @@ public class MapleQuestAction implements Serializable {
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
-                        int job_val = ((Integer) i$.next()).intValue();
-                        if ((c.getJob() >= job_val) && (job_val > finalJob)) {
-                            finalJob = job_val;
+                    for (int applicableJob : this.applicableJobs) {
+                        if ((c.getJob() >= applicableJob) && (applicableJob > finalJob)) {
+                            finalJob = applicableJob;
                         }
                     }
                     if (finalJob == 0) {
@@ -313,19 +309,19 @@ public class MapleQuestAction implements Serializable {
     public boolean checkEnd(MapleCharacter c, Integer extSelection) {
         switch (this.type) {
             case item:
-                Map props = new HashMap();
+                Map<Integer, Integer> props = new HashMap<>();
 
                 for (QuestItem item : this.items) {
                     if ((item.prop > 0) && (canGetItem(item, c))) {
                         for (int i = 0; i < item.prop; i++) {
-                            props.put(Integer.valueOf(props.size()), Integer.valueOf(item.itemid));
+                            props.put(props.size(), item.itemid);
                         }
                     }
                 }
                 int selection = 0;
                 int extNum = 0;
                 if (props.size() > 0) {
-                    selection = ((Integer) props.get(Integer.valueOf(Randomizer.nextInt(props.size())))).intValue();
+                    selection = props.get(Randomizer.nextInt(props.size()));
                 }
                 byte eq = 0;
                 byte use = 0;
@@ -340,7 +336,7 @@ public class MapleQuestAction implements Serializable {
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            ? (extSelection != null) && (extSelection != extNum++)
                             : id != selection)) {
                         continue;
                     }
@@ -421,18 +417,18 @@ public class MapleQuestAction implements Serializable {
                 // c.gainExp(this.intStore * GameConstants.getExpRate_Quest(c.getLevel()) * c.getStat().questBonus * (c.getTrait(MapleTrait.MapleTraitType.sense).getLevel() * 3 / 10 + 100) / 100, true, true, true);
                 break;
             case item:
-                Map props = new HashMap();
+                Map<Integer, Integer> props = new HashMap<>();
                 for (QuestItem item : this.items) {
                     if ((item.prop > 0) && (canGetItem(item, c))) {
                         for (int i = 0; i < item.prop; i++) {
-                            props.put(Integer.valueOf(props.size()), Integer.valueOf(item.itemid));
+                            props.put(props.size(), item.itemid);
                         }
                     }
                 }
                 selection = 0;
                 extNum = 0;
                 if (props.size() > 0) {
-                    selection = ((Integer) props.get(Integer.valueOf(Randomizer.nextInt(props.size())))).intValue();
+                    selection = props.get(Randomizer.nextInt(props.size()));
                 }
                 for (QuestItem item : this.items) {
                     if (!canGetItem(item, c)) {
@@ -441,7 +437,7 @@ public class MapleQuestAction implements Serializable {
                     int id = item.itemid;
                     if ((item.prop != -2)
                             && (item.prop == -1
-                            ? (extSelection != null) || (extSelection.intValue() != extNum++)
+                            ? (extSelection != null) && (extSelection != extNum++)
                             : id != selection)) {
                         continue;
                     }
@@ -474,10 +470,10 @@ public class MapleQuestAction implements Serializable {
                 }
                 break;
             case skill:
-                for (Triple skills : this.skill) {
-                    int skillid = ((Integer) skills.left).intValue();
-                    int skillLevel = ((Integer) skills.mid).intValue();
-                    int masterLevel = ((Integer) skills.right).intValue();
+                for (Triple<Integer, Integer, Integer> skills : this.skill) {
+                    int skillid = skills.getLeft();
+                    int skillLevel = skills.getMid();
+                    int masterLevel = skills.getRight();
                     ISkill skillObject = SkillFactory.getSkill(skillid);
                     boolean found = false;
                     for (int applicableJob : applicableJobs) {
@@ -510,10 +506,9 @@ public class MapleQuestAction implements Serializable {
                 int sp_val = this.intStore;
                 if (this.applicableJobs.size() > 0) {
                     int finalJob = 0;
-                    for (Iterator i$ = this.applicableJobs.iterator(); i$.hasNext(); ) {
-                        int job_val = ((Integer) i$.next()).intValue();
-                        if ((c.getJob() >= job_val) && (job_val > finalJob)) {
-                            finalJob = job_val;
+                    for (int applicableJob : this.applicableJobs) {
+                        if ((c.getJob() >= applicableJob) && (applicableJob > finalJob)) {
+                            finalJob = applicableJob;
                         }
                     }
                     if (finalJob == 0) {
@@ -538,80 +533,80 @@ public class MapleQuestAction implements Serializable {
     }
 
     private static List<Integer> getJobBy5ByteEncoding(int encoded) {
-        List ret = new ArrayList();
+        List<Integer> ret = new ArrayList<>();
         if ((encoded & 0x1) != 0) {
-            ret.add(Integer.valueOf(0));
+            ret.add(0);
         }
         if ((encoded & 0x2) != 0) {
-            ret.add(Integer.valueOf(100));
+            ret.add(100);
         }
         if ((encoded & 0x4) != 0) {
-            ret.add(Integer.valueOf(200));
+            ret.add(200);
         }
         if ((encoded & 0x8) != 0) {
-            ret.add(Integer.valueOf(300));
+            ret.add(300);
         }
         if ((encoded & 0x10) != 0) {
-            ret.add(Integer.valueOf(400));
+            ret.add(400);
         }
         if ((encoded & 0x20) != 0) {
-            ret.add(Integer.valueOf(500));
+            ret.add(500);
         }
         if ((encoded & 0x400) != 0) {
-            ret.add(Integer.valueOf(1000));
+            ret.add(1000);
         }
         if ((encoded & 0x800) != 0) {
-            ret.add(Integer.valueOf(1100));
+            ret.add(1100);
         }
         if ((encoded & 0x1000) != 0) {
-            ret.add(Integer.valueOf(1200));
+            ret.add(1200);
         }
         if ((encoded & 0x2000) != 0) {
-            ret.add(Integer.valueOf(1300));
+            ret.add(1300);
         }
         if ((encoded & 0x4000) != 0) {
-            ret.add(Integer.valueOf(1400));
+            ret.add(1400);
         }
         if ((encoded & 0x8000) != 0) {
-            ret.add(Integer.valueOf(1500));
+            ret.add(1500);
         }
         if ((encoded & 0x20000) != 0) {
-            ret.add(Integer.valueOf(2001));
-            ret.add(Integer.valueOf(2200));
+            ret.add(2001);
+            ret.add(2200);
         }
         if ((encoded & 0x100000) != 0) {
-            ret.add(Integer.valueOf(2000));
-            ret.add(Integer.valueOf(2001));
+            ret.add(2000);
+            ret.add(2001);
         }
         if ((encoded & 0x200000) != 0) {
-            ret.add(Integer.valueOf(2100));
+            ret.add(2100);
         }
         if ((encoded & 0x400000) != 0) {
-            ret.add(Integer.valueOf(2001));
-            ret.add(Integer.valueOf(2200));
+            ret.add(2001);
+            ret.add(2200);
         }
         if ((encoded & 0x40000000) != 0) {
-            ret.add(Integer.valueOf(3000));
-            ret.add(Integer.valueOf(3200));
-            ret.add(Integer.valueOf(3300));
-            ret.add(Integer.valueOf(3500));
+            ret.add(3000);
+            ret.add(3200);
+            ret.add(3300);
+            ret.add(3500);
         }
         return ret;
     }
 
     private static List<Integer> getJobBySimpleEncoding(int encoded) {
-        List ret = new ArrayList();
+        List<Integer> ret = new ArrayList<>();
         if ((encoded & 0x1) != 0) {
-            ret.add(Integer.valueOf(200));
+            ret.add(200);
         }
         if ((encoded & 0x2) != 0) {
-            ret.add(Integer.valueOf(300));
+            ret.add(300);
         }
         if ((encoded & 0x4) != 0) {
-            ret.add(Integer.valueOf(400));
+            ret.add(400);
         }
         if ((encoded & 0x8) != 0) {
-            ret.add(Integer.valueOf(500));
+            ret.add(500);
         }
         return ret;
     }

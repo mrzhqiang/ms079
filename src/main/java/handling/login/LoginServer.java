@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-@Singleton
 public final class LoginServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginServer.class);
@@ -46,7 +45,6 @@ public final class LoginServer {
     private boolean finishedShutdown = true;
     private int usersOn = 0;
 
-    @Inject
     public LoginServer(ServerProperties properties) {
         LoginServer.flag = properties.getFlag();
         LoginServer.userLimit = properties.getOnlineLimit();
@@ -57,7 +55,7 @@ public final class LoginServer {
     }
 
     public static void putLoginAuth(int chrid, String ip, String tempIp, int channel) {
-        LOGIN_AUTH.put(chrid, new Triple<>(ip, tempIp, channel));
+        LOGIN_AUTH.put(chrid, Triple.of(ip, tempIp, channel));
         LOGIN_IP_AUTH.add(ip);
     }
 
@@ -103,6 +101,10 @@ public final class LoginServer {
         } catch (IOException e) {
             LOGGER.error("绑定到端口 " + port + " 失败！", e);
         }
+    }
+
+    public void start() {
+
     }
 
     public void shutdown() {

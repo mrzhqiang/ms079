@@ -210,7 +210,7 @@ public class GuildHandler {
                 if (c.getPlayer().getGuildId() <= 0 || c.getPlayer().getGuildRank() != 1) {
                     return;
                 }
-                String ranks[] = new String[5];
+                String[] ranks = new String[5];
                 for (int i = 0; i < 5; i++) {
                     ranks[i] = slea.readMapleAsciiString();
                 }

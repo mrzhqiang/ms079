@@ -3,6 +3,7 @@ package com.github.mrzhqiang.maplestory.starter;
 import client.MapleCharacter;
 import client.SkillFactory;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
+import com.github.mrzhqiang.maplestory.auth.AuthenticationServer;
 import com.github.mrzhqiang.maplestory.service.AccountService;
 import com.github.mrzhqiang.maplestory.service.ServerInfoService;
 import com.github.mrzhqiang.maplestory.service.WorldService;
@@ -14,7 +15,6 @@ import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
 import handling.login.LoginInformationProvider;
-import handling.login.LoginServer;
 import handling.world.World;
 import handling.world.family.MapleFamilyBuff;
 import org.slf4j.Logger;
@@ -55,20 +55,20 @@ public final class ApplicationStarter {
     private final ServerInfoService serverInfoService;
 
     private final CashShopServer shopServer;
-    private final LoginServer loginServer;
+    private final AuthenticationServer authenticationServer;
     private final ShutdownServer shutdown;
 
     @Inject
     public ApplicationStarter(ServerProperties properties, AccountService accountService,
                               WorldService worldService, ServerInfoService serverInfoService,
-                              CashShopServer shopServer, LoginServer loginServer,
+                              CashShopServer shopServer, AuthenticationServer authenticationServer,
                               ShutdownServer shutdown) {
         this.properties = properties;
         this.accountService = accountService;
         this.worldService = worldService;
         this.serverInfoService = serverInfoService;
         this.shopServer = shopServer;
-        this.loginServer = loginServer;
+        this.authenticationServer = authenticationServer;
         this.shutdown = shutdown;
     }
 
@@ -127,7 +127,8 @@ public final class ApplicationStarter {
 
                 LOGGER.info(">>> 初始化 [登录服务器]");
                 Stopwatch loginWatch = Stopwatch.createStarted();
-                LoginServer.run_startup_configurations();
+                authenticationServer.init();
+                authenticationServer.run();
                 LOGGER.info("<<< [登录服务器] 初始化完毕，耗时：{}", loginWatch.stop());
 
                 LOGGER.info(">>> 初始化 [频道服务器]");
@@ -157,7 +158,7 @@ public final class ApplicationStarter {
                     LOGGER.error("SpeedRunner 错误", e);
                 }
                 World.registerRespawn();
-                loginServer.setOn();
+                authenticationServer.setOn();
             }
         });
     }

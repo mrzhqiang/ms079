@@ -10,6 +10,7 @@ import com.github.mrzhqiang.maplestory.domain.query.QDAlliance;
 import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGuild;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import handling.MaplePacket;
 import handling.world.World;
 import handling.world.guild.MapleBBSThread.MapleBBSReply;
@@ -39,8 +40,8 @@ public final class MapleGuild implements java.io.Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleGuild.class);
 
-    private enum BCOp {
-        NONE, DISBAND, EMBELMCHANGE
+    private enum BCOP {
+        NONE, DISBAND, EMBLEM_CHANGE
     }
 
     private static final MapleGuild EMPTY = new MapleGuild(null);
@@ -48,9 +49,9 @@ public final class MapleGuild implements java.io.Serializable {
     // COW 写入时复制，避免多线程环境下，遍历时的修改导致并发异常或下标越界；
     // 其他线程安全的 List 需要在遍历时手动加锁，COW 不需要；
     // 但是遍历的同时，其他线程修改了 COW，则会产生新的数组，占据内存消耗，遍历的还是旧的数组。
-    private final List<MapleGuildCharacter> members = new CopyOnWriteArrayList<>();
+    private final List<MapleGuildCharacter> members = Lists.newCopyOnWriteArrayList();
 
-    private final String[] rankTitles = new String[5]; // 1 = master, 2 = jr, 5 = the lowest member
+    private final String[] rankTitles = new String[5]; // 1 = 主, 2 = 小弟, 5 = 最低的成员
     private boolean bDirty = true;
     private int invitedid = 0;
     private final Map<Integer, MapleBBSThread> bbs = new HashMap<>();
@@ -198,15 +199,15 @@ public final class MapleGuild implements java.io.Serializable {
     }
 
     public void broadcast(MaplePacket packet) {
-        broadcast(packet, -1, BCOp.NONE);
+        broadcast(packet, -1, BCOP.NONE);
     }
 
     public void broadcast(MaplePacket packet, int exception) {
-        broadcast(packet, exception, BCOp.NONE);
+        broadcast(packet, exception, BCOP.NONE);
     }
 
     // multi-purpose function that reaches every member of guild (except the character with exceptionId) in all channels with as little access to rmi as possible
-    public void broadcast(MaplePacket packet, int exceptionId, BCOp bcop) {
+    public void broadcast(MaplePacket packet, int exceptionId, BCOP bcop) {
         wL.lock();
         try {
             buildNotifications();
@@ -217,14 +218,14 @@ public final class MapleGuild implements java.io.Serializable {
         rL.lock();
         try {
             for (MapleGuildCharacter mgc : members) {
-                if (bcop == BCOp.DISBAND) {
+                if (bcop == BCOP.DISBAND) {
                     if (mgc.isOnline()) {
                         World.Guild.setGuildAndRank(mgc.character.getId(), 0, 5, 5);
                     } else {
                         setOfflineGuildStatus(0, (byte) 5, (byte) 5, mgc.character.getId());
                     }
                 } else if (mgc.isOnline() && mgc.character.getId() != exceptionId) {
-                    if (bcop == BCOp.EMBELMCHANGE) {
+                    if (bcop == BCOP.EMBLEM_CHANGE) {
                         World.Guild.changeEmblem(guild.getId(), mgc.character.getId(), new MapleGuildSummary(this));
                     } else {
                         World.Broadcast.sendGuildPacket(mgc.character.getId(), packet, exceptionId, guild.getId());
@@ -492,11 +493,11 @@ public final class MapleGuild implements java.io.Serializable {
 
     public void disbandGuild() {
         writeToDB(true);
-        broadcast(null, -1, BCOp.DISBAND);
+        broadcast(null, -1, BCOP.DISBAND);
     }
 
     public void setEmblem(int bg, int bgcolor, int logo, int logocolor) {
-        broadcast(null, -1, BCOp.EMBELMCHANGE);
+        broadcast(null, -1, BCOP.EMBLEM_CHANGE);
 
         if (guild != null) {
             guild.setLogo(logo);

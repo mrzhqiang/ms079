@@ -319,7 +319,7 @@ public class MapleItemInformationProvider {
             return;
         }
         ItemInformation tmpInfo = dataCache.get(itemID);
-        tmpInfo.equipAdditions.add(new Triple<>(data.getKey(), data.getSubKey(), data.getValue()));
+        tmpInfo.equipAdditions.add(Triple.of(data.getKey(), data.getSubKey(), data.getValue()));
     }
 
     public void initItemEquipData(DWzItemEquipData data) {
@@ -344,7 +344,7 @@ public class MapleItemInformationProvider {
         if (data.getMonsterBook() > 0 && data.getId() / 10000 == 238) {
             mobIds.put(data.getMonsterBook(), data.getId());
             for (Map.Entry<Integer, Triple<Integer, List<Integer>, List<Integer>>> set : monsterBookSets.entrySet()) {
-                if (set.getValue().mid.contains(data.getId())) {
+                if (set.getValue().getMid().contains(data.getId())) {
                     ret.cardSet = set.getKey();
                     break;
                 }
