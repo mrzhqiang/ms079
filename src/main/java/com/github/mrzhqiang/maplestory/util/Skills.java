@@ -17,8 +17,10 @@ import java.util.stream.Collectors;
 /**
  * 技能工具类。
  */
-public enum Skills {
-    ; // no instances
+public final class Skills {
+    private Skills() {
+        // no instances
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Skills.class);
 
@@ -81,7 +83,7 @@ public enum Skills {
     private static boolean checkBuffByAction(boolean isBuff, WzElement<?> action) {
         isBuff |= Optional.ofNullable(action)
                 .flatMap(it -> it.findByName("0"))
-                .map(Elements::ofString)
+                .map(it -> Elements.ofString((WzElement<?>) it))
                 .filter("alert2"::equals)
                 .isPresent();
         return isBuff;

@@ -259,7 +259,7 @@ public class BuddyList implements Serializable {
 
     public static boolean getBuddyPending(int chrId, int buddyId) {
         return new QDBuddy().owner.id.eq(chrId)
-                .buddies.id.eq(buddyId)
+                .buddy.id.eq(buddyId)
                 .findOneOrEmpty()
                 .map(DBuddy::isPending)
                 .orElse(false);
@@ -268,7 +268,7 @@ public class BuddyList implements Serializable {
     public static void addBuddyToDB(MapleCharacter player, BuddyEntry buddy) {
         DBuddy dBuddy = new DBuddy();
         dBuddy.setOwner(new QDCharacter().id.eq(buddy.getCharacterId()).findOne());
-        dBuddy.setBuddies(Lists.newArrayList(new QDCharacter().id.eq(player.getId()).findOne()));
+        dBuddy.setBuddies(new QDCharacter().id.eq(player.getId()).findOne());
         dBuddy.setGroupName(buddy.getGroup());
         dBuddy.setPending(true);
         dBuddy.save();

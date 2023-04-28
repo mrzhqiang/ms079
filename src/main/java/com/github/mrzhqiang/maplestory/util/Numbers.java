@@ -9,33 +9,41 @@ import java.math.BigDecimal;
  * <p>
  * 这个类是从我自己的辅助工具框架 helper 复制而来。
  */
-public enum Numbers {
-    ; // no instances
+public final class Numbers {
+    private Numbers() {
+        // no instances
+    }
 
     /**
+     * 字符串的整型值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofInt(null) == 0
      *     ofInt("")   == 0
      *     ofInt("1")  == 1
      * </pre>
      *
-     * @param number 仅包含整型数字的字符串。
-     * @return 整型数字。无效的数字字符串将默认返回 0。
+     * @param number 字符串。
+     * @return 字符串对应的整型数字。如果字符串无效，将默认返回 0 值。
      */
     public static int ofInt(String number) {
         return ofInt(number, 0);
     }
 
     /**
+     * 字符串的整型值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofInt(null,0) == 0
      *     ofInt("",1)   == 1
      *     ofInt("1",0)  == 1
      * </pre>
      *
-     * @param number       仅包含整型数字的字符串。
-     * @param defaultValue 默认返回的整型数字。
-     * @return 整型数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的整型数字。如果字符串无效，将返回默认值。
      */
     public static int ofInt(String number, int defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -50,29 +58,34 @@ public enum Numbers {
     }
 
     /**
+     * 字符串的长整型值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofLong(null) == 0L
      *     ofLong("")   == 0L
      *     ofLong("1")  == 1L
      * </pre>
      *
-     * @param number 仅包含长整型数字的字符串。
-     * @return 长整型数字。无效的数字字符串将默认返回 0L。
+     * @param number 字符串。
+     * @return 字符串对应的长整型数字。如果字符串无效，将默认返回 0L 值。
      */
     public static long ofLong(String number) {
         return ofLong(number, 0L);
     }
 
     /**
+     * 字符串的长整型值——支持自定义默认值。
+     *
      * <pre>
      *     ofLong(null,0L) == 0L
      *     ofLong("",1L)   == 1L
      *     ofLong("1",0L)  == 1L
      * </pre>
      *
-     * @param number       仅包含长整型数字的字符串。
-     * @param defaultValue 默认返回的长整型数字。
-     * @return 长整型数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的长整型数字。如果字符串无效，将返回默认值。
      */
     public static long ofLong(String number, long defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -87,29 +100,35 @@ public enum Numbers {
     }
 
     /**
+     * 字符串的单精度浮点值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofFloat(null)    == 0.0f
      *     ofFloat("")      == 0.0f
      *     ofFloat("1.0")   == 1.0f
      * </pre>
      *
-     * @param number 包含单精度浮点型数字的字符串。
-     * @return 单精度浮点型数字。无效的字符串将默认返回 0.0f。
+     * @param number 字符串。
+     * @return 字符串对应的单精度浮点数字。如果字符串无效，将默认返回 0.0f 值。
      */
     public static float ofFloat(String number) {
         return ofFloat(number, 0.0f);
     }
 
     /**
+     * 字符串的单精度浮点值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofFloat(null,0.0f) == 0.0f
      *     ofFloat("",1.0f)   == 1.0f
      *     ofFloat("1",0.0f)  == 1.0f
      * </pre>
      *
-     * @param number       包含单精度浮点型数字的字符串。
-     * @param defaultValue 默认返回的单精度浮点型数字。
-     * @return 单精度浮点型数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的单精度浮点型数字。如果字符串无效，将返回默认值。
      */
     public static float ofFloat(String number, float defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -124,29 +143,35 @@ public enum Numbers {
     }
 
     /**
+     * 字符串的双精度浮点值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofDouble(null) == 0.0d
      *     ofDouble("")   == 0.0d
      *     ofDouble("1")  == 1.0d
      * </pre>
      *
-     * @param number 包含双精度浮点型数字的字符串。
-     * @return 双精度浮点型数字。无效的字符串将默认返回 0.0d。
+     * @param number 字符串。
+     * @return 字符串对应的双精度浮点型数字。如果字符串无效，将默认返回 0.0d 值。
      */
     public static double ofDouble(String number) {
         return ofDouble(number, 0.0d);
     }
 
     /**
+     * 字符串的双精度浮点值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *     ofDouble(null,0.0d) == 0.0d
      *     ofDouble("",1.0d)   == 1.0d
      *     ofDouble("1",0.0d)  == 1.0d
      * </pre>
      *
-     * @param number       包含双精度浮点型数字的字符串。
-     * @param defaultValue 默认返回的双精度浮点型数字。
-     * @return 双精度浮点型数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的双精度浮点型数字。如果字符串无效，将返回默认值。
      */
     public static double ofDouble(String number, double defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -161,56 +186,68 @@ public enum Numbers {
     }
 
     /**
+     * 大数字的双精度数值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *   ofDouble(null)                     == 0.0d
      *   ofDouble(BigDecimal.valueOf(1.0d)) == 1.0d
      * </pre>
      *
-     * @param number 大数值数字，带小数点。
-     * @return 双精度浮点型数字。无效的字符串将默认返回 0.0d。
+     * @param number 大数字。
+     * @return 大数字对应的双精度浮点型数字。如果大数字无效，将默认返回 0.0d 值。
      */
     public static double ofDouble(BigDecimal number) {
         return ofDouble(number, 0.0d);
     }
 
     /**
+     * 大数字的双精度数值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *   ofDouble(null, 1.1d)                     == 1.1d
      *   ofDouble(BigDecimal.valueOf(1.0d), 1.1d) == 1.0d
      * </pre>
      *
-     * @param number       大数值数字，带小数点。
-     * @param defaultValue 默认返回的双精度浮点型数字。
-     * @return 双精度浮点型数字。
+     * @param number       大数字。
+     * @param defaultValue 默认值。
+     * @return 大数字对应的双精度浮点型数字。如果大数字无效，将返回默认值。
      */
     public static double ofDouble(BigDecimal number, double defaultValue) {
         return number == null ? defaultValue : number.doubleValue();
     }
 
     /**
+     * 字符串的字节值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
-     *   ofByte(null) ==  0
-     *   ofByte("")   ==  0
-     *   ofByte("1")  ==  1
+     *   ofByte(null) ==  (byte)0
+     *   ofByte("")   ==  (byte)0
+     *   ofByte("1")  ==  (byte)1
      * </pre>
      *
-     * @param number 仅包含字节数字的字符串。
-     * @return 字节数字。
+     * @param number 字符串。
+     * @return 字符串对应的字节数字。如果字符串无效，将默认返回 (byte)0 值。
      */
     public static byte ofByte(String number) {
         return ofByte(number, (byte) 0);
     }
 
     /**
+     * 字符串的字节值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
-     *   ofByte(null, 1) ==  1
-     *   ofByte("", 1)   ==  1
-     *   ofByte("1", 0)  ==  1
+     *   ofByte(null, 1) ==  (byte)1
+     *   ofByte("", 1)   ==  (byte)1
+     *   ofByte("1", 0)  ==  (byte)1
      * </pre>
      *
-     * @param number       仅包含字节数字的字符串。
-     * @param defaultValue 默认返回的字节数字。
-     * @return 字节数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的字节数字。如果字符串无效，将返回默认值。
      */
     public static byte ofByte(String number, byte defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -225,29 +262,35 @@ public enum Numbers {
     }
 
     /**
+     * 字符串的短整型值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *   ofShort(null) ==  0
      *   ofShort("")   ==  0
      *   ofShort("1")  ==  1
      * </pre>
      *
-     * @param number 仅包含短整型数字的字符串。
-     * @return 短整型数字。
+     * @param number 字符串。
+     * @return 字符串对应的短整型数字。如果字符串无效，将返回默认的 0 值。
      */
     public static short ofShort(String number) {
         return ofShort(number, (short) 0);
     }
 
     /**
+     * 字符串的短整型值——支持自定义默认值。
+     * <p>
+     * 简单的示例如下：
      * <pre>
      *   ofShort(null, 1) ==  1
      *   ofShort("", 1)   ==  1
      *   ofShort("1", 0)  ==  1
      * </pre>
      *
-     * @param number       仅包含短整型数字的字符串。
-     * @param defaultValue 默认返回的短整型数字。
-     * @return 短整型数字。
+     * @param number       字符串。
+     * @param defaultValue 默认值。
+     * @return 字符串对应的短整型数字。如果字符串无效，将返回默认值。
      */
     public static short ofShort(String number, short defaultValue) {
         if (Strings.isNullOrEmpty(number)) {
@@ -261,4 +304,3 @@ public enum Numbers {
         }
     }
 }
-

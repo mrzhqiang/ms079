@@ -1,6 +1,7 @@
 package server.life;
 
 import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.google.common.collect.Lists;
@@ -25,32 +26,33 @@ public class MobSkillFactory {
                 .map(WzFile::content)
                 .flatMap(element -> element.findByName(skillId + "/level/" + level))
                 .ifPresent(element -> {
-                    int count = (int) element.childrenStream().count();
+                    WzElement<?> wzElement = (WzElement<?>) element;
+                    int count = (int) wzElement.childrenStream().count();
                     List<Integer> toSummon = Lists.newArrayListWithCapacity(count);
                     for (int i = 0; i < count; i++) {
-                        toSummon.add(Elements.findInt(element, String.valueOf(i)));
+                        toSummon.add(Elements.findInt(wzElement, String.valueOf(i)));
                     }
                     skill.addSummons(toSummon);
-                    int interval = Elements.findInt(element, "interval") * 1000;
+                    int interval = Elements.findInt(wzElement, "interval") * 1000;
                     skill.setCoolTime(interval);
-                    int time = Elements.findInt(element, "time", 1) * 1000;
+                    int time = Elements.findInt(wzElement, "time", 1) * 1000;
                     skill.setDuration(time);
-                    int hp = Elements.findInt(element, "hp", 100);
+                    int hp = Elements.findInt(wzElement, "hp", 100);
                     skill.setHp(hp);
-                    int mpCon = Elements.findInt(element, "mpCon");
+                    int mpCon = Elements.findInt(wzElement, "mpCon");
                     skill.setMpCon(mpCon);
-                    int summonEffect = Elements.findInt(element, "summonEffect");
+                    int summonEffect = Elements.findInt(wzElement, "summonEffect");
                     skill.setSpawnEffect(summonEffect);
-                    int x = Elements.findInt(element, "x", 1);
+                    int x = Elements.findInt(wzElement, "x", 1);
                     skill.setX(x);
-                    int y = Elements.findInt(element, "y", 1);
+                    int y = Elements.findInt(wzElement, "y", 1);
                     skill.setY(y);
-                    float prop = Elements.findInt(element, "prop", 100) / 100f;
+                    float prop = Elements.findInt(wzElement, "prop", 100) / 100f;
                     skill.setProp(prop);
-                    short limit = Elements.findInt(element, "limit").shortValue();
+                    short limit = Elements.findInt(wzElement, "limit").shortValue();
                     skill.setLimit(limit);
-                    skill.setLt(Elements.findVector(element, "lt"));
-                    skill.setRb(Elements.findVector(element, "rb"));
+                    skill.setLt(Elements.findVector(wzElement, "lt"));
+                    skill.setRb(Elements.findVector(wzElement, "rb"));
                     mobSkills.put(new Pair<>(skillId, level), skill);
                 });
         return skill;

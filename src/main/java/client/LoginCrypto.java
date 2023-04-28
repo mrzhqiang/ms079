@@ -3,6 +3,7 @@ package client;
 import tools.HexTool;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -33,13 +34,11 @@ public class LoginCrypto {
     private static String hashWithDigest(final String in, final String digest) {
         try {
             MessageDigest Digester = MessageDigest.getInstance(digest);
-            Digester.update(in.getBytes("UTF-8"), 0, in.length());
+            Digester.update(in.getBytes(StandardCharsets.UTF_8), 0, in.length());
             byte[] sha1Hash = Digester.digest();
             return toSimpleHexString(sha1Hash);
         } catch (NoSuchAlgorithmException ex) {
             throw new RuntimeException("Hashing the password failed", ex);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding the string failed", e);
         }
 
     }

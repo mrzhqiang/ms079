@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,7 +109,7 @@ public enum WzResource {
                     .orElse(out.resolve(filename));
             try {
                 // Jsoup 自动用 body 包装 xml 内容，所以这里要拿 body 的子元素
-                Elements imgDir = Jsoup.parse(stringFile, "UTF-8").body().children();
+                Elements imgDir = Jsoup.parse(stringFile, StandardCharsets.UTF_8.name()).body().children();
                 // select 方法：tag[key=value] 匹配 <tag key="value"></tag>
                 Elements strings = imgDir.select("string[name=name]");
                 strings.forEach(element -> writeElement(target, element));

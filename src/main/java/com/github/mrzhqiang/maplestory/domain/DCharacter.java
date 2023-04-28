@@ -12,10 +12,12 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "characters", indexes = {
@@ -234,6 +236,10 @@ public class DCharacter extends Model {
     @DbForeignKey(noConstraint = true)
     @OneToOne(mappedBy = "owner")
     DBuddy buddy;
+
+    @DbForeignKey(noConstraint = true)
+    @OneToMany(mappedBy = "buddy")
+    List<DBuddy> buddies;
 
     public DCharacter(DAccount account) {
         this.account = account;
@@ -901,5 +907,13 @@ public class DCharacter extends Model {
 
     public void setBuddy(DBuddy buddy) {
         this.buddy = buddy;
+    }
+
+    public List<DBuddy> getBuddies() {
+        return buddies;
+    }
+
+    public void setBuddies(List<DBuddy> buddies) {
+        this.buddies = buddies;
     }
 }

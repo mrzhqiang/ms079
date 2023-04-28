@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -24,7 +25,7 @@ public class WzResourceTest {
     @Test
     public void testJsoupXml() throws IOException {
         File wz = new File(WzResource.WZ_DIR, "/Mob.wz/0100100.img.xml");
-        Elements imgdirs = Jsoup.parse(wz, "UTF-8").body().children();
+        Elements imgdirs = Jsoup.parse(wz, StandardCharsets.UTF_8.name()).body().children();
         assertEquals("0100100.img", imgdirs.attr("name"));
         Elements info = imgdirs.select("imgdir[name=info]");
         assertEquals("info", info.attr("name"));

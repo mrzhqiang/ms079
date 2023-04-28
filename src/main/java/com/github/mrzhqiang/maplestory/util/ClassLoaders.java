@@ -7,8 +7,10 @@ import javax.annotation.Nullable;
  * <p>
  * 这个类的大部分内容从 springframework 复制而来。
  */
-public enum ClassLoaders {
-    ; // no instances
+public final class ClassLoaders {
+    private ClassLoaders() {
+        // no instances.
+    }
 
     /**
      * Return the default ClassLoader to use: typically the thread context
@@ -19,6 +21,7 @@ public enum ClassLoaders {
      * for example, for class path resource loading (but not necessarily for
      * {@code Class.forName}, which accepts a {@code null} ClassLoader
      * reference as well).
+     *
      * @return the default ClassLoader (only {@code null} if even the system
      * ClassLoader isn't accessible)
      * @see Thread#getContextClassLoader()
@@ -29,8 +32,7 @@ public enum ClassLoaders {
         ClassLoader cl = null;
         try {
             cl = Thread.currentThread().getContextClassLoader();
-        }
-        catch (Throwable ex) {
+        } catch (Throwable ex) {
             // Cannot access thread context ClassLoader - falling back...
         }
         if (cl == null) {
@@ -40,8 +42,7 @@ public enum ClassLoaders {
                 // getClassLoader() returning null indicates the bootstrap ClassLoader
                 try {
                     cl = ClassLoader.getSystemClassLoader();
-                }
-                catch (Throwable ex) {
+                } catch (Throwable ex) {
                     // Cannot access system ClassLoader - oh well, maybe the caller can live with null...
                 }
             }

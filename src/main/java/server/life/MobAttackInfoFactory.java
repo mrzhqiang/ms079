@@ -1,6 +1,7 @@
 package server.life;
 
 import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
 import com.google.common.base.Strings;
@@ -36,11 +37,12 @@ public class MobAttackInfoFactory {
                 .flatMap(element -> element.findByName("attack" + (attack + 1) + "/info"))
                 .map(element -> {
                     MobAttackInfo info = new MobAttackInfo();
-                    info.setDeadlyAttack(element.findByName("deadlyAttack").isPresent());
-                    info.setMpBurn(Elements.findInt(element, "mpBurn"));
-                    info.setDiseaseSkill(Elements.findInt(element, "disease"));
-                    info.setDiseaseLevel(Elements.findInt(element, "level"));
-                    info.setMpCon(Elements.findInt(element, "conMP"));
+                    WzElement<?> wzElement = (WzElement<?>) element;
+                    info.setDeadlyAttack(wzElement.findByName("deadlyAttack").isPresent());
+                    info.setMpBurn(Elements.findInt(wzElement, "mpBurn"));
+                    info.setDiseaseSkill(Elements.findInt(wzElement, "disease"));
+                    info.setDiseaseLevel(Elements.findInt(wzElement, "level"));
+                    info.setMpCon(Elements.findInt(wzElement, "conMP"));
                     mobAttacks.put(new Pair<>(mob.getId(), attack), info);
                     return info;
                 }).orElse(null);

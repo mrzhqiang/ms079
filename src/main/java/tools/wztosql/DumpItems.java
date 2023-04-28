@@ -486,7 +486,7 @@ public class DumpItems {
             return data.map(element -> element.find(String.valueOf(itemId))).orElse(null);
         } else {
             String name = cat + "/" + itemId;
-            return data.flatMap(element -> element.findByName(name)).orElse(null);
+            return (WzElement<?>) data.flatMap(element -> element.findByName(name)).orElse(null);
         }
     }
 }

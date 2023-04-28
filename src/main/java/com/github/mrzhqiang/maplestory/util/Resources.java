@@ -14,8 +14,10 @@ import java.util.Properties;
 /**
  * 资源辅助工具。
  */
-public enum Resources {
-    ; // no instances
+public final class Resources {
+    private Resources() {
+        // no instances
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Resources.class);
 
@@ -33,8 +35,8 @@ public enum Resources {
         try (Reader reader = new FileReader(file)) {
             properties.load(reader);
         } catch (Exception e) {
-            // 我们不希望任何异常打断程序运行，所以必须保持对错误日志的关注
-            String message = Strings.lenientFormat("从外部加载 %s 文件出错。", file);
+            // 我们不希望任何异常打断程序运行，所以必须将异常记录下来，以便诊断程序问题
+            String message = Strings.lenientFormat("从外部加载 %s 文件出错", file);
             LOGGER.error(message, e);
         }
         return properties;
@@ -56,7 +58,7 @@ public enum Resources {
         try (InputStream resourceAsStream = classLoader.getResourceAsStream(file)) {
             props.load(resourceAsStream);
         } catch (Exception e) {
-            // 我们不希望任何异常打断程序运行，所以必须保持对错误日志的关注
+            // 我们不希望任何异常打断程序运行，所以必须将异常记录下来，以便诊断程序问题
             String message = Strings.lenientFormat("从类路径加载 %s 文件出错。", file);
             LOGGER.error(message, e);
         }

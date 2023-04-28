@@ -1137,20 +1137,23 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
 
         /*
-         * deleteWhereCharacterId(con, "DELETE FROM buddies WHERE
-         * characterid = ? AND pending = 0"); ps =
-         * con.prepareStatement("INSERT INTO buddies (characterid,
-         * `buddyid`, `pending`) VALUES (?, ?, 0)"); ps.setInt(1, id); for
-         * (BuddylistEntry entry : buddylist.getBuddies()) { if
-         * (entry.isVisible()) { ps.setInt(2, entry.getCharacterId());
-         * ps.execute(); } } ps.close();
+         * deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ? AND pending = 0");
+         * ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`) VALUES (?, ?, 0)");
+         * ps.setInt(1, id);
+         * for (BuddylistEntry entry : buddylist.getBuddies()) {
+         *      if (entry.isVisible()) {
+         *          ps.setInt(2, entry.getCharacterId());
+         *          ps.execute();
+         *      }
+         * }
+         * ps.close();
          */
         // if (buddylist.changed()) {
         new QDBuddy().owner.eq(character).delete();
         for (BuddyEntry entry : buddylist.getBuddies()) {
             if (entry != null) {
                 DBuddy buddy = new DBuddy();
-                buddy.setBuddies(Lists.newArrayList(DB.reference(DCharacter.class, entry.getCharacterId())));
+                buddy.setBuddies(DB.reference(DCharacter.class, entry.getCharacterId()));
                 buddy.setPending(!entry.isVisible());
                 buddy.save();
             }

@@ -64,7 +64,7 @@ public final class SkillFactory {
                 WzData.SKILL.directory().findFile(Jobs.filename(id))
                         .map(WzFile::content)
                         .flatMap(it -> it.findByName("skill/" + Skills.formatId(id)))
-                        .flatMap(Skills::of)
+                        .flatMap(it -> Skills.of(((WzElement<?>) it)))
                         .ifPresent(skill -> SKILL_CACHE.put(id, skill));
                 ret = SKILL_CACHE.get(id);
             }

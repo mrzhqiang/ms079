@@ -17,18 +17,13 @@ public final class CanvasElement extends BaseWzElement<Canvas> {
      */
     static final String TAG = "canvas";
 
-    private static final String WIDTH_KEY = "width";
-    private static final String HEIGHT_KEY = "height";
-
     CanvasElement(@Nullable WzElement<?> parent, Element source) {
         super(parent, source);
     }
 
     @Override
     public Canvas convertValue(Element source) {
-        int width = Numbers.ofInt(source.attr(WIDTH_KEY));
-        int height = Numbers.ofInt(source.attr(HEIGHT_KEY));
-        return new Canvas(width, height);
+        return Canvas.of(source);
     }
 
     @Override

@@ -107,7 +107,7 @@ public class BuddyListHandler {
                         }
 
                         // SELECT pending FROM buddies WHERE characterid = ? AND buddyid = ?
-                        Optional<DBuddy> optional = new QDBuddy().owner.eq(charWithId.character).buddies.id.eq(c.getPlayer().getId()).findOneOrEmpty();
+                        Optional<DBuddy> optional = new QDBuddy().owner.eq(charWithId.character).buddy.id.eq(c.getPlayer().getId()).findOneOrEmpty();
                         if (optional.isPresent()) {
                             buddyAddResult = BuddyAddResult.ALREADY_ON_LIST;
                         }
@@ -123,7 +123,7 @@ public class BuddyListHandler {
                         } else if (buddyAddResult != BuddyAddResult.ALREADY_ON_LIST && channel > 0) {
                             DBuddy buddy = new DBuddy();
                             buddy.setOwner(charWithId.character);
-                            buddy.setBuddies(Lists.newArrayList(DB.reference(DCharacter.class, c.getPlayer().getId())));
+                            buddy.setBuddies(DB.reference(DCharacter.class, c.getPlayer().getId()));
                             buddy.setGroupName(groupName);
                             buddy.setPending(true);
                             buddy.save();

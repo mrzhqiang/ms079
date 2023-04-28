@@ -4,9 +4,12 @@ import io.ebean.Model;
 import io.ebean.annotation.DbForeignKey;
 import io.ebean.annotation.NotNull;
 
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -20,12 +23,13 @@ public class DBuddy extends Model {
     Integer id;
     @NotNull
     @OneToOne
+    @DbForeignKey(noConstraint = true)
     @JoinColumn(name = "character_id")
     DCharacter owner;
-    @OneToMany
+    @ManyToOne(optional = false)
     @DbForeignKey(noConstraint = true)
     @JoinColumn(name = "buddy_id")
-    List<DCharacter> buddies;
+    DCharacter buddy;
     @NotNull
     boolean pending;
     @NotNull
@@ -47,12 +51,12 @@ public class DBuddy extends Model {
         this.owner = owner;
     }
 
-    public List<DCharacter> getBuddies() {
-        return buddies;
+    public DCharacter getBuddies() {
+        return buddy;
     }
 
-    public void setBuddies(List<DCharacter> buddies) {
-        this.buddies = buddies;
+    public void setBuddies(DCharacter buddy) {
+        this.buddy = buddy;
     }
 
     public boolean isPending() {

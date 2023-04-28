@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -78,7 +79,7 @@ public class FileoutputUtil {
             }
             out = new FileOutputStream(file, true);
             if (!out.toString().contains(msg) || !notExists) {
-                OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
+                OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
                 osw.write(msg);
                 osw.flush();
             }
@@ -107,7 +108,7 @@ public class FileoutputUtil {
             }
             out = new FileOutputStream(file, true);
             if (!out.toString().contains(msg) || !notExists) {
-                OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
+                OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
                 osw.write(msg);
                 osw.flush();
             }

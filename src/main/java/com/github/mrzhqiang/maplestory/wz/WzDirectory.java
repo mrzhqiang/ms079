@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -130,7 +131,7 @@ public final class WzDirectory {
                 directory.parse();
                 dirs.put(fileName, directory);
             } else {
-                Elements data = Jsoup.parse(path.toFile(), "UTF-8").body().children();
+                Elements data = Jsoup.parse(path.toFile(), StandardCharsets.UTF_8.name()).body().children();
                 WzFile file = new WzFile(fileName, data);
                 files.put(fileName, file);
             }

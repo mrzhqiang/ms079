@@ -14,9 +14,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public enum Effects {
-    ; // no instances
+/**
+ * 特效辅助工具。
+ */
+public final class Effects {
+    private Effects() {
+        // no instances
+    }
 
+    /**
+     * wz 特效定义。
+     *
+     * @param id    特效编码。
+     * @param level wz 特效信息。
+     * @return 特效定义。
+     */
     public static MapleStatEffect ofItem(int id, WzElement<?> level) {
         MapleStatEffect effect = ofSkill(id, false, level);
         effect.setSkill(false);

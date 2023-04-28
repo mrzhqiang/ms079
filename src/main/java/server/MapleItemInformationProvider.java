@@ -479,7 +479,7 @@ public class MapleItemInformationProvider {
                     .orElse(null);
         } else {
             String finalCat = cat;
-            return data.map(WzFile::content)
+            return (WzElement<?>) data.map(WzFile::content)
                     .flatMap(it -> it.findByName("Eqp/" + finalCat + "/" + itemId))
                     .orElse(null);
         }
@@ -1599,7 +1599,7 @@ public class MapleItemInformationProvider {
 
         Boolean questItem = Optional.ofNullable(itemData)
                 .flatMap(element -> element.findByName("info/quest"))
-                .map(Elements::ofInt)
+                .map(it -> Elements.ofInt((WzElement<?>) it))
                 .map(integer -> integer == 1)
                 .orElse(false);
         isQuestItemCache.put(itemId, questItem);
@@ -1741,20 +1741,21 @@ public class MapleItemInformationProvider {
         Optional.ofNullable(data)
                 .flatMap(element -> element.findByName("info/level/info/" + level))//获取与装备的[道具等级]相应的节点
                 .ifPresent(element -> {
-                    handleItemLevelupStats(element, "incDEX").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incSTR").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incINT").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incLUK").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incMHP").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incMMP").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incPAD").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incMAD").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incPDD").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incMDD").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incACC").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incEVA").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incSpeed").ifPresent(list::add);
-                    handleItemLevelupStats(element, "incJump").ifPresent(list::add);
+                    WzElement<?> wzElement = (WzElement<?>) element;
+                    handleItemLevelupStats(wzElement, "incDEX").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incSTR").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incINT").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incLUK").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incMHP").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incMMP").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incPAD").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incMAD").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incPDD").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incMDD").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incACC").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incEVA").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incSpeed").ifPresent(list::add);
+                    handleItemLevelupStats(wzElement, "incJump").ifPresent(list::add);
                 });
         return list;
     }
