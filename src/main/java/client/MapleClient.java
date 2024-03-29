@@ -179,7 +179,7 @@ public class MapleClient implements Serializable {
 
     private Calendar getTempBanCalendar(ResultSet rs) throws SQLException {
         Calendar lTempban = Calendar.getInstance();
-        if (rs.getLong("tempban") == 0) { // basically if timestamp in db is 0000-00-00
+        if (rs.getTimestamp("tempban") == null) { // basically if timestamp in db is 0000-00-00
             lTempban.setTimeInMillis(0);
             return lTempban;
         }
