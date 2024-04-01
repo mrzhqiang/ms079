@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -46,7 +43,7 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
     /**
      * 子元素列表。
      */
-    private final Map<String, WzElement<?>> children;
+    private final List<WzElement<?>> children;
 
     /**
      * 从 Jsoup 元素生成基础的 wz 元素。
@@ -116,7 +113,7 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
 
     @Override
     public Collection<WzElement<?>> children() {
-        return children.values();
+        return children;
     }
 
     @Override
@@ -127,24 +124,28 @@ public abstract class BaseWzElement<T> implements WzElement<T> {
 
         Preconditions.checkArgument(!name.contains("/"), "查找子元素时，发现不支持的路径符号：/");
         Preconditions.checkArgument(!name.contains(".."), "查找子元素时，发现不支持的父元素符号：..");
-        return children.get(name);
+
+        WzElement<?> node = children.stream()
+                .filter(child -> Objects.equals(child.name(), name))
+                .findFirst().orElse(null);
+
+        return node;
     }
 
-    private Map<String, WzElement<?>> childrenOf(Element source,
-                                                 Predicate<Element> filter,
-                                                 Function<Element, WzElement<?>> mapper) {
+    private List<WzElement<?>> childrenOf(Element source,
+                                          Predicate<Element> filter,
+                                          Function<Element, WzElement<?>> mapper) {
         if (source == null || source.childNodeSize() == 0) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
 
         Elements elements = source.children();
         if (elements.isEmpty()) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
-
         return elements.stream()
                 .filter(filter)
                 .map(mapper)
-                .collect(Collectors.toMap(WzElement::name, it -> it));
+                .collect(Collectors.toList());
     }
 }

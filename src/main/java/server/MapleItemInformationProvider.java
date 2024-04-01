@@ -605,18 +605,29 @@ public class MapleItemInformationProvider {
         String idStr = "0" + itemId;
         Optional<ImgdirElement> first = WzData.ITEM.directory().dirStream()
                 .map(dir -> dir.findFile(idStr.substring(0, 4))
-                        .map(file -> file.content().find(idStr))
-                        .map(element -> ((ImgdirElement) element))
-                        .orElseGet(() -> dir.findFile(idStr.substring(1))
-                                .map(WzFile::content)
-                                .orElse(null)))
-                .findFirst();
-        return first.orElseGet(() -> WzData.CHARACTER.directory().dirStream()
-                .map(dir -> dir.findFile(idStr)
                         .map(WzFile::content)
                         .orElse(null))
-                .findFirst()
-                .orElse(null));
+                .filter(Objects::nonNull)
+                .findFirst();
+
+        if(!first.isPresent()) {
+            first = WzData.ITEM.directory().dirStream()
+                    .map(dir -> dir.findFile(idStr.substring(1))
+                            .map(WzFile::content)
+                            .orElse(null))
+                    .filter(Objects::nonNull)
+                    .findFirst();
+        }
+
+        if(!first.isPresent()){
+            first = WzData.CHARACTER.directory().dirStream()
+                    .map(dir -> dir.findFile(idStr)
+                            .map(WzFile::content)
+                            .orElse(null))
+                    .filter(Objects::nonNull)
+                    .findFirst();
+        }
+        return first.orElse(null);
     }
 
     /**
