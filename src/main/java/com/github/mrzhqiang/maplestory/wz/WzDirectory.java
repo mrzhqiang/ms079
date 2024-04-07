@@ -113,6 +113,7 @@ public final class WzDirectory {
             String fileName = path.getFileName().toString();
             if (Files.isDirectory(path)) {
                 WzDirectory directory = new WzDirectory(path);
+                directory.parse();
                 dirs.put(fileName, directory);
             } else {
                 Elements data = Jsoup.parse(path.toFile(), "UTF-8").body().children();
