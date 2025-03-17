@@ -1,8 +1,8 @@
 /* global cm, Packages, MapleItemInformationProvider, World, MaplePacketCreator */
 
-importPackage(Packages.tools);
-importPackage(Packages.handling.world);
-importPackage(Packages.server);
+//importPackage(Packages.tools);
+//importPackage(Packages.handling.world);
+//importPackage(Packages.server);
 
 var status = -1;
 var selected = 0;

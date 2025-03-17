@@ -26,7 +26,7 @@ public final class AccountService {
         Stopwatch stopwatch = Stopwatch.createStarted();
         int count = qdAccount.asUpdate()
                 .set("state", LoginState.NOT_LOGIN)
-                .set("last_gain_hm", 0)
+                .set("lastGainHm", 0L)
                 .update();
         LOGGER.info("<<< [账号状态] 重置完毕，耗时：{}，影响行数：{}", stopwatch.stop(), count);
     }

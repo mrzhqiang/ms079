@@ -1,4 +1,4 @@
-importPackage(java.lang);
+//importPackage(java.lang);
 
 function init() {
     // After loading, ChannelServer

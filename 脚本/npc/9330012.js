@@ -7,7 +7,7 @@
  64等 650万 10000
  **/
 
-importPackage(java.lang);
+//importPackage(java.lang);
 
 var status = -1;
 var oldWepName;

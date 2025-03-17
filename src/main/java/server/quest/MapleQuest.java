@@ -378,6 +378,9 @@ public class MapleQuest implements Serializable {
     }
 
     public int getId() {
+        if (data == null){
+            return -1;
+        }
         return data.getId();
     }
 

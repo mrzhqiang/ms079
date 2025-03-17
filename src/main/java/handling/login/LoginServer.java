@@ -43,7 +43,7 @@ public final class LoginServer {
     private static int userLimit;
     private static String eventMessage;
 
-    private boolean finishedShutdown = true;
+    private boolean finishedShutdown = false;
     private int usersOn = 0;
 
     @Inject

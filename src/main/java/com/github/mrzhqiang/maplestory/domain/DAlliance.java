@@ -23,15 +23,20 @@ public class DAlliance extends Model {
     DCharacter leader;
     @NotNull
     @OneToOne
+    @JoinColumn(name = "guild1")
     DGuild guild1;
     @NotNull
     @OneToOne
+    @JoinColumn(name = "guild2")
     DGuild guild2;
     @OneToOne
+    @JoinColumn(name = "guild3")
     DGuild guild3;
     @OneToOne
+    @JoinColumn(name = "guild4")
     DGuild guild4;
     @OneToOne
+    @JoinColumn(name = "guild5")
     DGuild guild5;
     @NotNull
     String rank1;

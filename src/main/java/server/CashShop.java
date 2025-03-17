@@ -10,7 +10,9 @@ import client.inventory.MapleInventoryIdentifier;
 import client.inventory.MapleInventoryType;
 import client.inventory.MaplePet;
 import client.inventory.MapleRing;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DGift;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDGift;
 import constants.GameConstants;
 import tools.Pair;
@@ -241,7 +243,7 @@ public class CashShop implements Serializable {
                 .collect(Collectors.toList());
 
         new QDGift().recipient.eq(characterId).delete();
-        save();
+        save(new QDCharacter().id.eq(characterId).findOne());
         return gifts;
     }
 
@@ -259,14 +261,14 @@ public class CashShop implements Serializable {
         }
     }
 
-    public void save() {
+    public void save(DCharacter character) {
         List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<>();
 
         for (IItem item : inventory) {
             itemsWithType.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
 
-        ItemLoader.saveItems(itemsWithType);
+        ItemLoader.saveItems(itemsWithType, character);
     }
 
     public IItem toItem(CashItemInfo cItem, MapleCharacter chr, int uniqueid, String gift) {

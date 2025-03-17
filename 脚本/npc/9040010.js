@@ -6,7 +6,7 @@
  * Guild Quest - end of boss
  */
 
-importPackage(java.lang);
+//importPackage(java.lang);
 
 function start() {
 	action(1, 0, 0);

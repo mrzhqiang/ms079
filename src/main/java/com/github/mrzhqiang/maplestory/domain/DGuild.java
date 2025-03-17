@@ -4,12 +4,7 @@ import io.ebean.Model;
 import io.ebean.annotation.DbForeignKey;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
@@ -21,6 +16,7 @@ public class DGuild extends Model {
 
     @NotNull
     @OneToOne
+    @JoinColumn(name = "leader")  // 指定外键列名为 leader
     @DbForeignKey(noConstraint = true)
     final DCharacter leader;
     @NotNull
@@ -53,6 +49,7 @@ public class DGuild extends Model {
     @NotNull
     Integer signature;
     @OneToOne
+    @JoinColumn(name = "alliance")  // 指定外键列名为 leader
     DAlliance alliance;
 
     @OneToMany(mappedBy = "guild")

@@ -23,7 +23,7 @@
 	Map(s): 		Hidden Street : Free Market Entrance (910000000)
 	Description: 		Takes you back to original location
 */
-importPackage(org.server.maps);
+//importPackage(org.server.maps);
 
 function enter(pi) {
 	var returnMap = pi.getSavedLocation("PVP");

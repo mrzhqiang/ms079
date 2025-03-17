@@ -31,7 +31,7 @@ public class DInventoryItem extends Model {
     Integer position;
     @NotNull
     Integer quantity;
-    String owner;
+    String owner = "";
     String gmLog;
     @NotNull
     Integer uniqueId = -1;
@@ -45,6 +45,7 @@ public class DInventoryItem extends Model {
     String sender = "";
 
     @OneToOne(mappedBy = "item")
+//    @JoinColumn(name = "item_id")
     DInventoryEquipment equipment;
 
     public Integer getId() {

@@ -183,6 +183,9 @@ public class MapleClient implements Serializable {
     }
 
     public boolean isLoggedIn() {
+        if (account == null){
+            return false;
+        }
         return LoginState.LOGGED_IN.equals(account.getState());
     }
 
@@ -438,13 +441,6 @@ public class MapleClient implements Serializable {
             account.setSessionIp(SessionID);
         }
         account.save();
-//        if (newstate == MapleClient.LOGIN_NOTLOGGEDIN || newstate == MapleClient.LOGIN_WAITING) {
-//            loggedIn = false;
-//            serverTransition = false;
-//        } else {
-//            serverTransition = (newstate == MapleClient.LOGIN_SERVER_TRANSITION || newstate == MapleClient.CHANGE_CHANNEL);
-//            loggedIn = !serverTransition;
-//        }
     }
 
     public final void updateSecondPassword() {
@@ -643,7 +639,7 @@ public class MapleClient implements Serializable {
                 }
             }
         }
-        if (account.getState().equals(LoginState.SERVER_TRANSITION) && isLoggedIn()) {
+        if (account.getState().equals(LoginState.SERVER_TRANSITION) || isLoggedIn()) {
             updateLoginState(LoginState.NOT_LOGIN, getSessionIPAddress());
         }
     }
@@ -977,7 +973,7 @@ public class MapleClient implements Serializable {
         }
         qdAccount.asUpdate()
                 .set("banned", 0)
-                .set("banreason", "")
+                .set("banReason", "")
                 .update();
         return 0;
     }

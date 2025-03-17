@@ -3,7 +3,7 @@
  Map(s): 		Mu Lung: Mu Lung(2500000000)
  Description: 		Potion Creator
  */
-        importPackage(Packages.client);
+        //importPackage(Packages.client);
 
 var status = 0;
 var selectedType = -1;

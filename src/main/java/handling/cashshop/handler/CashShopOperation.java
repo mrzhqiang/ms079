@@ -76,7 +76,8 @@ public class CashShopOperation {
         MapleCharacter chr = MapleCharacter.ReconstructChr(transfer, c, false);
 
         c.setPlayer(chr);
-        c.setAccID(chr.getAccountID());
+        c.loadAccountData(chr.getAccountID());
+//        c.setAccID(chr.getAccountID());
 
         if (!c.CheckIPAddress()) { // Remote hack
             c.getSession().close();
@@ -383,7 +384,8 @@ public class CashShopOperation {
                         chr.getInventory(type).addSlot((byte) 8);
                         chr.dropMessage(1, "扩充" + snCS + "成功，当前栏位: " + chr.getInventory(type).getSlotLimit() + " 个。");
                         RefreshCashShop(c);//调用刷新点卷函数
-                        chr.getStorage().saveToDB();
+                        //TODO
+                        chr.getStorage().saveToDB(null);
                     } else {
                         chr.dropMessage(1, "扩充" + snCS + "失败，点卷余额不足或者栏位已超过上限。");
                     }
@@ -395,7 +397,8 @@ public class CashShopOperation {
                         chr.getInventory(type).addSlot((byte) 4);
                         chr.dropMessage(1, "背包已增加到 " + chr.getInventory(type).getSlotLimit() + " 个。");
                         RefreshCashShop(c);//调用刷新点卷函数
-                        chr.getStorage().saveToDB();
+                        //TODO
+                        chr.getStorage().saveToDB(null);
                     } else {
                         chr.dropMessage(1, "扩充失败，点卷余额不足或者栏位已达到上限。");
                         c.getSession().write(MTSCSPacket.sendCSFail(0xA4));
@@ -411,7 +414,8 @@ public class CashShopOperation {
                 if (chr.getCSPoints(余额) >= (优惠价 == 2 ? 1100 : 600) && chr.getStorage().getSlots() < (97 - (4 * 优惠价))) {
                     chr.modifyCSPoints(余额, (优惠价 == 2 ? -1100 : -600), false);
                     chr.getStorage().increaseSlots((byte) (4 * 优惠价));
-                    chr.getStorage().saveToDB();
+                    //TODO
+                    chr.getStorage().saveToDB(null);
                     chr.dropMessage(1, "仓库扩充成功，当前栏位: " + chr.getStorage().getSlots() + " 个。");
                     RefreshCashShop(c);//调用刷新点卷函数
                 } else {

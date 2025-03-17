@@ -16,6 +16,8 @@ import handling.channel.ChannelServer;
 import handling.login.LoginInformationProvider;
 import handling.login.LoginServer;
 import handling.login.LoginWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import server.MapleItemInformationProvider;
 import server.quest.MapleQuest;
 import tools.FileoutputUtil;
@@ -35,6 +37,8 @@ import java.util.stream.IntStream;
 @Singleton
 public final class CharLoginHandler {
 
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CharLoginHandler.class);
     private final AutoRegister autoRegister;
     public final LoginServer loginServer;
 
@@ -161,7 +165,7 @@ public final class CharLoginHandler {
             c.updateSecondPassword();
             c.getSession().write(LoginPacket.getGenderChanged(c));
             c.getSession().write(MaplePacketCreator.licenseRequest());
-//            c.updateLoginState(MapleClient.LOGIN_NOTLOGGEDIN, c.getSessionIPAddress());
+            c.updateLoginState(LoginState.NOT_LOGIN, c.getSessionIPAddress());
         } else {
             c.getSession().close();
         }
@@ -206,7 +210,7 @@ public final class CharLoginHandler {
         slea.readInt();
 
         client.setWorld(server);
-        //LOGGER.debug("Client " + client.getSession().getRemoteAddress().toString().split(":")[0] + " is connecting to server " + server + " channel " + channel + "");
+        LOGGER.debug("Client " + client.getSession().getRemoteAddress().toString().split(":")[0] + " is connecting to server " + server + " channel " + channel + "");
         client.setChannel(channel);
 
         List<MapleCharacter> chars = client.loadCharacters(server);
@@ -446,7 +450,7 @@ public final class CharLoginHandler {
         }
         String ip = c.getSessionIPAddress();
         LoginServer.putLoginAuth(charId, ip.substring(ip.indexOf('/') + 1), c.getTempIP(), c.getChannel());
-        // c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, ip);
+        c.updateLoginState(LoginState.SERVER_TRANSITION, ip);
         /*
          * if (c.getLoginState() == 2) { c.updateLoginState(2, ip);
          * LOGGER.debug("输出登录2"); } else {

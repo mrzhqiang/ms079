@@ -43,7 +43,37 @@
     <!-- ERROR 级别日志交给 ERROR_FILE 记录 -->
     <root level="ERROR">
         <appender-ref ref="ASYNC_ERROR_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
     </root>
+
+    <logger name="handling" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="client" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="KinMS" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="com.github.mrzhqiang.maplestory" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="gui" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="server" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="scripting" level="DEBUG">
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
 
     <!-- TRACE 为开发初期的日志等级，后续将逐渐降为 DEBUG 甚至 INFO 级别 -->
     <logger name="io.ebean.DDL" level="TRACE"/>

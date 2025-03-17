@@ -1,8 +1,8 @@
-importPackage(java.util);
-importPackage(Packages.client);
-importPackage(Packages.server);
-importPackage(Packages.tools);
-importPackage(Packages.tools.packet);
+//importPackage(java.util);
+//importPackage(Packages.client);
+//importPackage(Packages.server);
+//importPackage(Packages.tools);
+//importPackage(Packages.tools.packet);
 
 var aaa = "#fUI/UIWindow.img/Quest/icon9/0#";
 var zzz = "#fUI/UIWindow.img/Quest/icon8/0#";

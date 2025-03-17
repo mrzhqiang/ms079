@@ -1,10 +1,10 @@
 /**
 	Cloto - Hidden Street : 1st Accompaniment
 **/
-importPackage(java.awt);
-importPackage(Packages.tools);
-importPackage(Packages.server);
-importPackage(Packages.handling.world);
+//importPackage(java.awt);
+//importPackage(Packages.tools);
+//importPackage(Packages.server);
+//importPackage(Packages.handling.world);
 
 var status;
 var curMap;

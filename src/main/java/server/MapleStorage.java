@@ -4,6 +4,7 @@ import client.MapleClient;
 import client.inventory.IItem;
 import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
+import com.github.mrzhqiang.maplestory.domain.DCharacter;
 import com.github.mrzhqiang.maplestory.domain.DStorage;
 import com.github.mrzhqiang.maplestory.domain.query.QDAccount;
 import com.github.mrzhqiang.maplestory.domain.query.QDStorage;
@@ -60,7 +61,7 @@ public class MapleStorage implements Serializable {
         return ret;
     }
 
-    public void saveToDB() {
+    public void saveToDB(DCharacter character) {
         if (!changed) {
             return;
         }
@@ -71,7 +72,7 @@ public class MapleStorage implements Serializable {
         for (IItem item : items) {
             listing.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
-        ItemLoader.saveItems(listing);
+        ItemLoader.saveItems(listing,character);
     }
 
     public IItem takeOut(byte slot) {

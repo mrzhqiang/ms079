@@ -29,7 +29,7 @@ public class DDueyEquipment extends Model {
     @NotNull
     Integer dex;
     @NotNull
-    @Column(name = "int")
+    @Column(name = "intelligence")
     Integer intelligence;
     @NotNull
     Integer luk;

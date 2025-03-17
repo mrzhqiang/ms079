@@ -1,4 +1,4 @@
-importPackage(Packages.client);
+//importPackage(Packages.client);
 var status = 0;
 function start() {
     status = -1;

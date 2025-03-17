@@ -3,6 +3,7 @@ package server.maps;
 import com.github.mrzhqiang.maplestory.domain.query.QDWzCustomLife;
 import com.github.mrzhqiang.maplestory.util.Numbers;
 import com.github.mrzhqiang.maplestory.wz.WzData;
+import com.github.mrzhqiang.maplestory.wz.WzDirectory;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
 import com.github.mrzhqiang.maplestory.wz.WzFile;
 import com.github.mrzhqiang.maplestory.wz.element.Elements;
@@ -86,7 +87,10 @@ public class MapleMapFactory {
                 return cachedMap;
             }
 
-            return WzData.MAP.directory().findFile(getMapName(mapid))
+            return WzData.MAP.directory()
+                    .findDir("Map")
+                    .flatMap(dir->dir.findDir( String.format("Map%s", mapid / 100000000)))
+                    .flatMap(dir-> dir.findFile( String.format("%s.img",  getPadingMapName(mapid))))
                     .map(WzFile::content)
                     .map(element -> element.findByName("info/link")
                             .map(Elements::ofInt)
@@ -175,7 +179,9 @@ public class MapleMapFactory {
             return mapleMap;
         }
 
-        return WzData.MAP.directory().findFile(getMapName(mapid))
+        return WzData.MAP.directory().findDir("Map")
+                .flatMap(dir->dir.findDir( String.format("Map%s", mapid / 100000000)))
+                .flatMap(dir-> dir.findFile( String.format("%s.img",  getPadingMapName(mapid))))
                 .map(WzFile::content)
                 .map(mapData -> mapData.findByName("info/link")
                         .map(Elements::ofInt)
@@ -385,8 +391,11 @@ public class MapleMapFactory {
     }
 
     private String getMapName(int mapid) {
-        String mapName = Strings.padStart(String.valueOf(mapid), 9, '0');
-        return String.format("Map/Map%s/%s.img", mapid / 100000000, mapName);
+        return String.format("Map/Map%s/%s.img", mapid / 100000000, getPadingMapName(mapid));
+    }
+
+    private String getPadingMapName(int mapid) {
+        return Strings.padStart(String.valueOf(mapid), 9, '0');
     }
 
     private String getMapStringName(int mapid) {

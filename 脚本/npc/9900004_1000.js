@@ -6,7 +6,7 @@
  */
 
 
-importPackage(net.sf.cherry.client);
+//importPackage(net.sf.cherry.client);
 
 var aaa = "#fUI/UIWindow.img/Quest/icon9/0#";
 var zzz = "#fUI/UIWindow.img/Quest/icon8/0#";

@@ -1,4 +1,4 @@
-importPackage(net.sf.cherry.server.maps);
+//importPackage(net.sf.cherry.server.maps);
 
 var status = 0;
 

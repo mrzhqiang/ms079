@@ -38,6 +38,7 @@ public class DCharacter extends Model {
     @NotNull
     @ManyToOne
     @DbComment("所属账号")
+    @JoinColumn(name = "account_id")
     DAccount account;
 
     @NotNull
@@ -112,6 +113,7 @@ public class DCharacter extends Model {
     Integer party = 0;
     @NotNull
     @DbComment("好友数量上限")
+    @Column(name = "buddy_capacity")
     Integer buddyCapacity = 25;
     @WhenCreated
     @DbComment("创建时间")
@@ -119,6 +121,7 @@ public class DCharacter extends Model {
     @ManyToOne
     @DbComment("所在公会")
     @DbForeignKey(noConstraint = true)
+    @JoinColumn(name = "guild_id")
     DGuild guild;
     @NotNull
     Integer guildRank = 5;
@@ -143,6 +146,7 @@ public class DCharacter extends Model {
     @NotNull
     Integer jaguar = 0;
     @NotNull
+    @Column(name = "rank_")
     Integer rank = 1;
     @NotNull
     Integer moveRank = 0;
@@ -163,9 +167,11 @@ public class DCharacter extends Model {
     DCharacter senior;
     @OneToOne
     @DbForeignKey(noConstraint = true)
+    @JoinColumn(name = "junior1")
     DCharacter junior1;
     @OneToOne
     @DbForeignKey(noConstraint = true)
+    @JoinColumn(name = "junior2")
     DCharacter junior2;
     @NotNull
     Integer currentRep = 0;

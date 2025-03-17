@@ -1,4 +1,4 @@
-importPackage(Packages.tools.packet);
+//importPackage(Packages.tools.packet);
 
 var Petlist = new Array(); //用于存储已装或者说已放出来的宠物对象。为 MaplePet类数据。
 var petname;

@@ -3,6 +3,7 @@ package handling;
 import client.MapleClient;
 import com.github.mrzhqiang.maplestory.config.ServerProperties;
 import com.github.mrzhqiang.maplestory.di.Injectors;
+import com.github.mrzhqiang.maplestory.domain.LoginState;
 import constants.ServerConstants;
 import handling.cashshop.CashShopServer;
 import handling.cashshop.handler.CashShopOperation;
@@ -50,13 +51,13 @@ import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.LoginPacket;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public final class MapleServerHandler extends IoHandlerAdapter {
@@ -64,10 +65,10 @@ public final class MapleServerHandler extends IoHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(MapleServerHandler.class);
 
     //Screw locking. Doesn't matter.
-//    private static final ReentrantReadWriteLock IPLoggingLock = new ReentrantReadWriteLock();
+    private static final ReentrantReadWriteLock IPLoggingLock = new ReentrantReadWriteLock();
     private static final String nl = System.lineSeparator();
-    //    private static final File loggedIPs = new File("日志/logs/LogIPs.txt");
-//    private static final HashMap<String, FileWriter> logIPMap = new HashMap<>();
+        private static final File loggedIPs = new File("logs/LogIPs.txt");
+    private static final HashMap<String, FileWriter> logIPMap = new HashMap<>();
     //零注意事项：使用枚举集。不要遍历数组。
     private static final EnumSet<RecvPacketOpcode> blocked = EnumSet.noneOf(RecvPacketOpcode.class);
 
@@ -98,10 +99,10 @@ public final class MapleServerHandler extends IoHandlerAdapter {
         this.handler = handler;
     }
 
-    /*public static void reloadLoggedIPs() {
+    public static void reloadLoggedIPs() {
 //        IPLoggingLock.writeLock().lock();
 //        try {
-        *//*for (FileWriter fw : logIPMap.values()) {
+        for (FileWriter fw : logIPMap.values()) {
             if (fw != null) {
                 try {
                     fw.write("=== Closing Log ===");
@@ -128,26 +129,26 @@ public final class MapleServerHandler extends IoHandlerAdapter {
             }
         } catch (Exception e) {
             LOGGER.debug("无法重新加载数据包记录的 IP。", e);
-        }*//*
+        }
 //        } finally {
 //            IPLoggingLock.writeLock().unlock();
 //        }
-    }*/
+    }
 
     //Return the Filewriter if the IP is logged. Null otherwise.
-    /*private static FileWriter isLoggedIP(IoSession sess) {
+    private static FileWriter isLoggedIP(IoSession sess) {
         String a = sess.getRemoteAddress().toString();
         String realIP = a.substring(a.indexOf('/') + 1, a.indexOf(':'));
         return logIPMap.get(realIP);
-    }*/
+    }
 
     // <editor-fold defaultstate="collapsed" desc="Packet Log Implementation">
-//    private static final int Log_Size = 10000;
-//    private static final ArrayList<LoggedPacket> Packet_Log = new ArrayList<LoggedPacket>(Log_Size);
-//    private static final ReentrantReadWriteLock Packet_Log_Lock = new ReentrantReadWriteLock();
-//    private static final File Packet_Log_Output = new File("PacketLog.txt");
+    private static final int Log_Size = 10000;
+    private static final ArrayList<LoggedPacket> Packet_Log = new ArrayList<LoggedPacket>(Log_Size);
+    private static final ReentrantReadWriteLock Packet_Log_Lock = new ReentrantReadWriteLock();
+    private static final File Packet_Log_Output = new File("PacketLog.txt");
 
-    /*public static void log(SeekableLittleEndianAccessor packet, RecvPacketOpcode op, MapleClient c, IoSession io) {
+    public static void log(SeekableLittleEndianAccessor packet, RecvPacketOpcode op, MapleClient c, IoSession io) {
         if (blocked.contains(op)) {
             return;
         }
@@ -173,13 +174,14 @@ public final class MapleServerHandler extends IoHandlerAdapter {
         } finally {
             Packet_Log_Lock.writeLock().unlock();
         }
-    }*/
+    }
 
     public void setChannel(int channel) {
+        LOGGER.debug("channel change before" + this.channel + "after" + channel);
         this.channel = channel;
     }
 
-    /*private static class LoggedPacket {
+    private static class LoggedPacket {
 
         private static final String nl = System.getProperty("line.separator");
         private String ip, accName, accId, chrName;
@@ -209,9 +211,9 @@ public final class MapleServerHandler extends IoHandlerAdapter {
             sb.append(" [Data: ").append(packet.toString()).append(']');
             return sb.toString();
         }
-    }*/
+    }
 
-    /*public void writeLog() {
+    public void writeLog() {
         try {
             FileWriter fw = new FileWriter(Packet_Log_Output, true);
             try {
@@ -229,7 +231,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
         } catch (IOException ex) {
             LOGGER.debug("Error writing log to file.");
         }
-    }*/
+    }
 
     public void setCs(boolean cs) {
         this.cs = cs;
@@ -293,7 +295,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
         // End of IP checking.
 
         if (channel > -1) {
-            if (ChannelServer.getInstance(channel).isShutdown()) {
+            if (ChannelServer.getInstance(channel)!= null && ChannelServer.getInstance(channel).isShutdown()) {
                 LOGGER.warn("自动断开连接B");
                 session.close();
                 return;
@@ -324,7 +326,9 @@ public final class MapleServerHandler extends IoHandlerAdapter {
                 new MapleAESOFB(ivSend, (short) (0xFFFF - ServerConstants.MAPLE_VERSION)), // Sent Cypher
                 new MapleAESOFB(ivRecv, ServerConstants.MAPLE_VERSION), // Recv Cypher
                 session, Injectors.get(ServerProperties.class));
-        client.setChannel(channel);
+        LOGGER.debug("channel is " + channel + "");
+
+        client.setChannel(channel+1);
 
         MaplePacketDecoder.DecoderState decoderState = new MaplePacketDecoder.DecoderState();
         session.setAttribute(MaplePacketDecoder.DECODER_STATE_KEY, decoderState);
@@ -419,7 +423,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
                     }
                     // false 表示无需检测是否登录，true 表示要检测登录状态
                     if (recv.checkState()) {
-                        if (!client.isLoggedIn()) {
+                        if (!client.isLoggedIn() && client.getLoginState() != LoginState.SERVER_TRANSITION ) {
                             return;
                         }
                     }

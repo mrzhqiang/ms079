@@ -1,5 +1,5 @@
-importPackage(net.sf.cherry.tools);
-importPackage(net.sf.cherry.client);
+//importPackage(net.sf.cherry.tools);
+//importPackage(net.sf.cherry.client);
 
 var status = 0;
 var ttt ="#fUI/UIWindow.img/Quest/icon9/0#";

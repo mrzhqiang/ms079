@@ -1,4 +1,4 @@
-importPackage(Packages.client);
+//importPackage(Packages.client);
 var status = 0;
 var item = java.lang.Math.floor(Math.random() * 100 + 50);
 var drop = java.lang.Math.floor(Math.random() * 8 + 3);

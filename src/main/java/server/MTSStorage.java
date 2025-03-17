@@ -194,7 +194,7 @@ public class MTSStorage {
             LOGGER.debug("Saving MTS items...");
         }
         for (Entry<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> ite : items.entrySet()) {
-            ItemLoader.saveItems(ite.getValue());
+            ItemLoader.saveItems(ite.getValue(), null);
         }
         if (isShutDown) {
             LOGGER.debug("Saving MTS carts...");

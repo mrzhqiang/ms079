@@ -6,7 +6,7 @@
 Note by Tykian: Minor fixes/additions
 **/
 
-importPackage(java.lang);
+//importPackage(java.lang);
 
 var status = -1;
 var oldWepName;

@@ -75,6 +75,11 @@ public final class ApplicationStarter {
     public void startServer() {
         WzResource.load().subscribe(new WzLoadSubscriber() {
             @Override
+            public void onError(Throwable t) {
+                LOGGER.error(">>> 错误",t);
+            }
+
+            @Override
             public void onComplete() {
                 super.onComplete();
                 accountService.resetAccount();

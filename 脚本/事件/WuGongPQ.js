@@ -1,4 +1,4 @@
-importPackage(Packages.server.life);
+//importPackage(Packages.server.life);
 
 /**
 	蜈蚣 PQ (上海灘)

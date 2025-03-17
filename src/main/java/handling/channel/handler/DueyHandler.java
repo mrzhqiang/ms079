@@ -207,7 +207,8 @@ public class DueyHandler {
         aPackage.setChecked(isOn);
         aPackage.setType(item.getType());
         aPackage.save();
-        ItemLoader.saveItems(Collections.singletonList(new Pair<>(item, GameConstants.getInventoryType(item.getItemId()))));
+        //TODO
+        ItemLoader.saveItems(Collections.singletonList(new Pair<>(item, GameConstants.getInventoryType(item.getItemId()))), null);
         return true;
     }
 

@@ -528,7 +528,7 @@ public class PacketHelper {
                 mplew.writeShort(equip.getSpeed());
                 mplew.writeShort(equip.getJump());
 
-                mplew.writeMapleAsciiString(equip.getOwner());//拥有者名字
+                mplew.writeMapleAsciiString(equip.getOwner() == null ? "":equip.getOwner());//拥有者名字
                 mplew.writeShort(equip.getFlag());//是否可交易
                 if (!hasUniqueId) {
                     mplew.write(0);//是否为锁定物品 equip.getLocked()

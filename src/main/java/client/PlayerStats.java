@@ -330,11 +330,11 @@ public class PlayerStats implements Serializable {
                 if (GameConstants.isMagicWeapon(equip.getItemId())) {
                     final Map<String, Integer> eqstat = MapleItemInformationProvider.getInstance().getEquipStats(equip.getItemId());
 
-                    element_fire = eqstat.get("incRMAF");
-                    element_ice = eqstat.get("incRMAI");
-                    element_light = eqstat.get("incRMAL");
-                    element_psn = eqstat.get("incRMAS");
-                    def = eqstat.get("elemDefault");
+                    element_fire = eqstat.getOrDefault("incRMAF",0);
+                    element_ice = eqstat.getOrDefault("incRMAI",0);
+                    element_light = eqstat.getOrDefault("incRMAL",0);
+                    element_psn = eqstat.getOrDefault("incRMAS",0);
+                    def = eqstat.getOrDefault("elemDefault",0);
                 }
             }
             accuracy += equip.getAcc();

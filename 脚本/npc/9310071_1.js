@@ -1,7 +1,7 @@
-importPackage(java.lang);
-importPackage(Packages.tools);
-importPackage(Packages.client);
-importPackage(Packages.server);
+//importPackage(java.lang);
+//importPackage(Packages.tools);
+//importPackage(Packages.client);
+//importPackage(Packages.server);
 
 var status = 0;
 var ttt ="#fUI/UIWindow.img/Quest/icon9/0#";

@@ -1,4 +1,4 @@
-importPackage(Packages.tools);
+//importPackage(Packages.tools);
 function enter(pi) {
     pi.playPortalSE();
     pi.warp(200090000, 4);

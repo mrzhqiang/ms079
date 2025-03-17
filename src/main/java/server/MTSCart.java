@@ -4,6 +4,7 @@ import client.inventory.IItem;
 import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
 import com.github.mrzhqiang.maplestory.domain.DMtsCart;
+import com.github.mrzhqiang.maplestory.domain.query.QDCharacter;
 import com.github.mrzhqiang.maplestory.domain.query.QDMtsCart;
 import constants.GameConstants;
 import tools.Pair;
@@ -98,7 +99,8 @@ public class MTSCart implements Serializable {
             itemsWithType.add(new Pair<>(item, GameConstants.getInventoryType(item.getItemId())));
         }
 
-        ItemLoader.saveItems(itemsWithType);
+        ItemLoader.saveItems(itemsWithType,
+                new QDCharacter().id.eq(characterId).findOne());
         new QDMtsCart().characterId.eq(characterId).delete();
 
         for (int i : cart) {

@@ -1,7 +1,7 @@
 var status = 0;
 var job;
 
-importPackage(net.sf.odinms.client);
+//importPackage(net.sf.odinms.client);
 
 function start() {
 	status = -1;

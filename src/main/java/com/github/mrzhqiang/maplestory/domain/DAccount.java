@@ -7,13 +7,7 @@ import io.ebean.annotation.NotNull;
 import io.ebean.annotation.WhenCreated;
 import io.ebean.annotation.WhenModified;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,8 +33,10 @@ public class DAccount extends Model {
     @DbComment("密码盐")
     String salt;
     @DbComment("二级密码")
+    @Column(name = "second_password")
     String secondPassword;
     @DbComment("二级密码盐")
+    @Column(name = "second_salt")
     String secondSalt;
 
     @NotNull
@@ -62,6 +58,7 @@ public class DAccount extends Model {
     @DbComment("网卡地址")
     String mac;
     @DbComment("会话IP地址")
+    @Column(name = "session_ip")
     String sessionIp;
 
     @NotNull
@@ -69,16 +66,20 @@ public class DAccount extends Model {
     Integer gm = 0;
     Integer vip;
     Long cash = 0L;
+    @Column(name = "m_points")
     Long mPoints = 0L;
     @NotNull
     Long points = 0L;
     @NotNull
+    @Column(name = "v_points")
     Long vPoints = 0L;
     @NotNull
     Long money = 0L;
     @NotNull
+    @Column(name = "money_b")
     Long moneyB = 0L;
     @NotNull
+    @Column(name = "last_gain_hm")
     Long lastGainHm = 0L;
     Integer paypalNx;
 
@@ -86,10 +87,12 @@ public class DAccount extends Model {
     @DbComment("是否禁用：0-false-未禁用，!0-true-禁用")
     Boolean banned = false;
     @DbComment("禁用原因")
+    @Column(name = "ban_reason")
     String banReason;
     @DbComment("临时禁用时间")
+    @Column(name = "temp_ban")
     LocalDateTime tempBan;
-
+    @Column(name = "g_Reason")
     Integer gReason;
 
     @DbComment("创建时间")

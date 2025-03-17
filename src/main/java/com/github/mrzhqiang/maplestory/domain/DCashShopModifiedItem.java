@@ -17,6 +17,7 @@ public class DCashShopModifiedItem extends Model {
     @NotNull
     String name;
     @NotNull
+    @Column(name = "discount_price")
     Integer discountPrice;
     @NotNull
     Integer mark;
@@ -27,6 +28,7 @@ public class DCashShopModifiedItem extends Model {
     @NotNull
     Integer priority;
     @NotNull
+    @Column(name = "package_field")
     boolean packageField;
     @NotNull
     Integer period;
@@ -37,12 +39,16 @@ public class DCashShopModifiedItem extends Model {
     @NotNull
     Integer meso;
     @NotNull
+    @Column(name = "unk_1")
     Integer unk1;
     @NotNull
+    @Column(name = "unk_2")
     Integer unk2;
     @NotNull
+    @Column(name = "unk_3")
     Integer unk3;
     @NotNull
+    @Column(name = "extra_flags")
     Integer extraFlags;
 
     public Integer getId() {

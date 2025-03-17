@@ -139,8 +139,8 @@ public class InterServerHandler {
         }
 
         c.setPlayer(player);
-        c.setAccID(player.getAccountID());
         c.loadAccountData(player.getAccountID());
+//        c.setAccID(player.getAccountID());
 
         ChannelServer.forceRemovePlayerByAccId(c, c.getAccID());
 
@@ -166,7 +166,7 @@ public class InterServerHandler {
             return;
         }
         c.updateLoginState(LoginState.LOGGED_IN, c.getSessionIPAddress());
-        // c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION, c.getSessionIPAddress());
+//         c.updateLoginState(LoginState.SERVER_TRANSITION, c.getSessionIPAddress());
         channelServer.addPlayer(player);
         c.getSession().write(MaplePacketCreator.getCharInfo(player));
         if (player.isGM()) {

@@ -1,4 +1,4 @@
-importPackage(org.server.maps);
+//importPackage(org.server.maps);
 
 function enter(pi) {
 	var returnMap = pi.getSavedLocation("SLEEP");

@@ -4,9 +4,9 @@
  联系方式：840645183  
  =====================
  */
-importPackage(net.sf.cheryy.tools);
-importPackage(net.sf.cherry.server.life);
-importPackage(java.awt);
+//importPackage(net.sf.cheryy.tools);
+//importPackage(net.sf.cherry.server.life);
+//importPackage(java.awt);
 //任务道具清除 以免玩家刷道具
 var PQItems = new Array(4001022, 4001023);
 var status;

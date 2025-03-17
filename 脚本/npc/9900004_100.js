@@ -1,4 +1,4 @@
-importPackage(Packages.client);
+//importPackage(Packages.client);
 var random = java.lang.Math.floor(Math.random() * 4 + 1);
 var randoma = java.lang.Math.floor(Math.random() * 3 + 1);
 var sgsj = java.lang.Math.floor(Math.random() * 5 + 2);

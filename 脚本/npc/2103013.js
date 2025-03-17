@@ -1,6 +1,6 @@
 var status = 0;
 var section = 0;
-importPackage(java.lang);
+//importPackage(java.lang);
 //questid 29932, infoquest 7760
 function action(mode, type, selection) {
     if (mode == 1) {

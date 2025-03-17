@@ -61,8 +61,8 @@ CREATE TABLE `accounts`  (
 -- ----------------------------
 -- Records of accounts
 -- ----------------------------
-INSERT INTO `accounts` VALUES (1, 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', NULL, '32E8175811197469fc3e95a6d92bccf746d9048f5368812e01fc3580d25ea24773a42f26768b62119c8142fd2fed3a7a260224a6a8bb333006c1e1cf55246783d5ff3c', 'fc0bab141f8895ec20990c200a95659a', 0, '2018-12-11 12:52:05', '2018-12-10 12:49:53', '2016-04-10', 0, NULL, 0, 'autoregister@mail.com', 'C4-34-6B-51-D9-96', '2021-04-25 00:00:00', NULL, 738860, 172500, 1, '/127.0.0.1', 0, 0, '2018-12-11 12:51:54', NULL, NULL, 0, 0, 0, 0, '0000-00-00 00:00:00');
-INSERT INTO `accounts` VALUES (2, '12355', 'a28e5e6bc518468404ebaadf2b31032146fa2c97', NULL, NULL, NULL, 0, '2021-10-31 20:25:49', '2021-10-31 20:25:49', '2021-10-31', 0, NULL, 0, 'autoregister@mail.com', 'B0-25-AA-32-DD-68', '2021-10-30 20:25:49', NULL, 0, 172500, 0, '/127.0.0.1', 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, '0000-00-00 00:00:00');
+INSERT INTO `accounts` VALUES (1, 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', NULL, '32E8175811197469fc3e95a6d92bccf746d9048f5368812e01fc3580d25ea24773a42f26768b62119c8142fd2fed3a7a260224a6a8bb333006c1e1cf55246783d5ff3c', 'fc0bab141f8895ec20990c200a95659a', 0, '2018-12-11 12:52:05', '2018-12-10 12:49:53', '2016-04-10', 0, NULL, 0, 'autoregister@mail.com', 'C4-34-6B-51-D9-96', '2021-04-25 00:00:00', NULL, 738860, 172500, 1, '/127.0.0.1', 0, 0, '2018-12-11 12:51:54', NULL, NULL, 0, 0, 0, 0, '2018-12-11 12:51:54');
+INSERT INTO `accounts` VALUES (2, '12355', 'a28e5e6bc518468404ebaadf2b31032146fa2c97', NULL, NULL, NULL, 0, '2021-10-31 20:25:49', '2021-10-31 20:25:49', '2021-10-31', 0, NULL, 0, 'autoregister@mail.com', 'B0-25-AA-32-DD-68', '2021-10-30 20:25:49', NULL, 0, 172500, 0, '/127.0.0.1', 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, '2018-12-10 12:49:53');
 
 -- ----------------------------
 -- Table structure for accounts_info
@@ -6380,7 +6380,7 @@ CREATE TABLE `csequipment`  (
   `level` int(11) NOT NULL DEFAULT 0,
   `str` int(11) NOT NULL DEFAULT 0,
   `dex` int(11) NOT NULL DEFAULT 0,
-  `int` int(11) NOT NULL DEFAULT 0,
+  `intelligence` int(11) NOT NULL DEFAULT 0,
   `luk` int(11) NOT NULL DEFAULT 0,
   `hp` int(11) NOT NULL DEFAULT 0,
   `mp` int(11) NOT NULL DEFAULT 0,
@@ -37108,7 +37108,7 @@ CREATE TABLE `dueyequipment`  (
   `level` int(11) NOT NULL DEFAULT 0,
   `str` int(11) NOT NULL DEFAULT 0,
   `dex` int(11) NOT NULL DEFAULT 0,
-  `int` int(11) NOT NULL DEFAULT 0,
+  `intelligence` int(11) NOT NULL DEFAULT 0,
   `luk` int(11) NOT NULL DEFAULT 0,
   `hp` int(11) NOT NULL DEFAULT 0,
   `mp` int(11) NOT NULL DEFAULT 0,
@@ -38014,7 +38014,7 @@ CREATE TABLE `hiredmerchequipment`  (
   `level` int(11) NOT NULL DEFAULT 0,
   `str` int(11) NOT NULL DEFAULT 0,
   `dex` int(11) NULL DEFAULT 0,
-  `int` int(11) NOT NULL DEFAULT 0,
+  `intelligence` int(11) NOT NULL DEFAULT 0,
   `luk` int(11) NOT NULL DEFAULT 0,
   `hp` int(11) NOT NULL DEFAULT 0,
   `mp` int(11) NOT NULL DEFAULT 0,
@@ -38123,7 +38123,7 @@ CREATE TABLE `inventoryequipment`  (
   `level` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
   `str` smallint(6) NOT NULL DEFAULT 0,
   `dex` smallint(6) NOT NULL DEFAULT 0,
-  `int` smallint(6) NOT NULL DEFAULT 0,
+  `intelligence` smallint(6) NOT NULL DEFAULT 0,
   `luk` smallint(6) NOT NULL DEFAULT 0,
   `hp` smallint(6) NOT NULL DEFAULT 0,
   `mp` smallint(6) NOT NULL DEFAULT 0,
@@ -38815,8 +38815,8 @@ CREATE TABLE `playernpcs_equip`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `playernpcs_equip_ibfk_1`(`char_id`) USING BTREE,
   INDEX `playernpcs_equip_ibfk_2`(`npc_id`) USING BTREE,
-  CONSTRAINT `playernpcs_equip_ibfk_1` FOREIGN KEY (`char_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `playernpcs_equip_ibfk_2` FOREIGN KEY (`npc_id`) REFERENCES `playernpcs` (`script_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  CONSTRAINT `playernpcs_equip_ibfk_1` FOREIGN KEY (`char_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  -- ,CONSTRAINT `playernpcs_equip_ibfk_2` FOREIGN KEY (`npc_id`) REFERENCES `playernpcs` (`script_id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------

@@ -1,8 +1,8 @@
 //load("nashorn:mozilla_compat.js");
 
-importPackage(Packages.java.util);
-importPackage(Packages.client);
-importPackage(Packages.server);
+//importPackage(Packages.java.util);
+//importPackage(Packages.client);
+//importPackage(Packages.server);
 
 
 var aaa = "#fUI/UIWindow.img/Quest/icon9/0#";
@@ -1957,9 +1957,9 @@ function action(mode, type, selection) {
 }
 //load("nashorn:mozilla_compat.js");
 
-/*importPackage(Packages.java.util);
-importPackage(Packages.client);
-importPackage(Packages.server);
+/*//importPackage(Packages.java.util);
+//importPackage(Packages.client);
+//importPackage(Packages.server);
 
 
 var aaa = "#fUI/UIWindow.img/Quest/icon9/0#";

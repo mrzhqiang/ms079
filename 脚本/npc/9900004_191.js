@@ -1,14 +1,14 @@
-importPackage(java.lang);
-importPackage(Packages.client);
-importPackage(Packages.client.inventory);
-importPackage(Packages.server);
-importPackage(Packages.constants);
-importPackage(Packages.net.channel);
-importPackage(Packages.tools);
-importPackage(Packages.scripting);
-importPackage(Packages.tools.packet);
-importPackage(Packages.tools.data);
-importPackage(Packages.tools);
+//importPackage(java.lang);
+//importPackage(Packages.client);
+//importPackage(Packages.client.inventory);
+//importPackage(Packages.server);
+//importPackage(Packages.constants);
+//importPackage(Packages.net.channel);
+//importPackage(Packages.tools);
+//importPackage(Packages.scripting);
+//importPackage(Packages.tools.packet);
+//importPackage(Packages.tools.data);
+//importPackage(Packages.tools);
 
 var status = -1;
 var itemss;

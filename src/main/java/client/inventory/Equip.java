@@ -29,13 +29,15 @@ public class Equip extends Item implements IEquip, Serializable {
 
     public Equip(int id, int position, int quantity, int flag) {
         super(id, position, quantity, flag);
-        this.equipment = new DInventoryEquipment();
+        this.item.setEquipment(new DInventoryEquipment());
+        this.equipment = this.item.getEquipment();
         this.equipment.setItem(item);
     }
 
     public Equip(int id, int position, int quantity, int flag, int uniqueid) {
         super(id, position, quantity, flag, uniqueid);
-        this.equipment = new DInventoryEquipment();
+        this.item.setEquipment(new DInventoryEquipment());
+        this.equipment = this.item.getEquipment();
         this.equipment.setItem(item);
     }
 

@@ -155,7 +155,7 @@ public class CherryMSLotteryImpl
     public void deletebuff() {
         new QDQuestMonster().zt.notEqualTo(0).asUpdate()
                 .set("name", 0)
-                .set("charid", 0)
+                .set("charId", 0)
                 .set("zt", 0)
                 .update();
     }

@@ -1,4 +1,4 @@
-importPackage(java.lang);
+//importPackage(java.lang);
 
 var monster;
 var mapid = 551030200;

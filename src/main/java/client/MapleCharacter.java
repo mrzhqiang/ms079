@@ -178,6 +178,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Serializable {
 
@@ -645,7 +646,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.getEtc());
             ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.getCash());
 
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, false, charid).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, true, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
                 if (mit.getLeft().getPet() != null) {
                     ret.pets.add(mit.getLeft().getPet());
@@ -974,7 +975,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 listing.add(new Pair<>(item, iv.getType()));
             }
         }
-        ItemLoader.saveItems(listing);
+        ItemLoader.saveItems(listing, character);
 
         for (int i = 0; i < array1.length; i++) {
             DKeyMap keyMap = new DKeyMap();
@@ -994,7 +995,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (character.getHp() < 1) {
             character.setHp(50);
         }
-        character.setSp(Joiner.on(',').join(Lists.newArrayList(remainingSp)));
+        character.setSp(Arrays.stream(remainingSp)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining(",")));
         if (!fromcs && map != null) {
             if (map.getForcedReturnId() != 999999999) {
                 character.setMap(map.getForcedReturnId());
@@ -1056,7 +1059,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         inventorySlot.setCash(getInventory(MapleInventoryType.CASH).getSlotLimit());
         inventorySlot.save();
 
-        saveInventory();
+        saveInventory(character);
 
         new QDQuestInfo().character.eq(character).delete();
 
@@ -1070,6 +1073,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         new QDQuestStatus().character.eq(character).delete();
         for (MapleQuestStatus q : quests.values()) {
+            if (q.getQuest() == null||q.getQuest().getId() < 0){
+                LOGGER.error("保存任務失敗:{}"+q);
+                continue;
+            }
             DQuestStatus questStatus = new DQuestStatus();
             questStatus.setCharacter(character);
             questStatus.setQuest(q.getQuest().getId());
@@ -1161,20 +1168,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         new QDAccount().id.eq(client.getAccID())
                 .asUpdate()
-                .set("ACash", acash)
+                .set("cash", acash)
                 .set("mPoints", maplepoints)
                 .set("points", points)
-                .set("vpoints", vpoints)
-                .set("lastGainHM", lastGainHM)
+                .set("vPoints", vpoints)
+                .set("lastGainHm", lastGainHM)
                 .update();
 
         if (storage != null) {
-            storage.saveToDB();
+            storage.saveToDB(character);
         }
 
         if (cs != null) {
             try {
-                cs.save();
+                cs.save(character);
                 PlayerNPC.updateByCharId(this);
                 keylayout.saveKeys(id);
                 mount.saveMount(id);
@@ -1224,14 +1231,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ps.close();
     }
 
-    public void saveInventory() {
+    public void saveInventory(DCharacter character) {
         List<Pair<IItem, MapleInventoryType>> listing = Lists.newArrayList();
         for (MapleInventory iv : inventory) {
             for (IItem item : iv.list()) {
                 listing.add(new Pair<>(item, iv.getType()));
             }
         }
-        ItemLoader.saveItems(listing);
+        ItemLoader.saveItems(listing, character);
     }
 
     public final PlayerStats getStat() {
@@ -3591,7 +3598,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             new QDAccount().email.eq(account.getEmail())
                     .asUpdate()
                     .set("banned", autoban ? 2 : 1)
-                    .set("banreason", reason)
+                    .set("banReason", reason)
                     .update();
         }
 
@@ -3643,7 +3650,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                     qdAccount.asUpdate()
                             .set("banned", 1)
-                            .set("banreason", reason)
+                            .set("banReason", reason)
                             .update();
                 }
             }
@@ -4048,6 +4055,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGuildId() {
+        if (character.getGuild() ==null){
+            return 0;
+        }
         return character.getGuild().getId();
     }
 
@@ -6266,7 +6276,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void updateGamePointsPD(int amount) {
         new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld()).asUpdate()
-                .set("gamePointspd", amount)
+                .set("gamePointsPd", amount)
                 .set("updated", LocalDate.now())
                 .update();
     }
@@ -6311,7 +6321,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void updateGamePointsRQ(int amount) {
         new QDAccountInfo().account.id.eq(getClient().getAccID()).worldId.eq(getWorld())
                 .asUpdate()
-                .set("gamePointspd", amount)
+                .set("gamePointsPd", amount)
                 .update();
     }
 
