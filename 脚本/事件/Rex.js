@@ -1,5 +1,5 @@
 var minPlayers = 3;
-
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 	em.setProperty("instanceId", "1");
 }
@@ -25,7 +25,7 @@ function talkMob(eim) {
 	var map = eim.getMapInstance(0);
 	var mob = em.getMonster(9300275);
 	eim.registerMonster(mob);
-	map.spawnMonsterWithEffectBelow(mob, new java.awt.Point(-451, 154), 12);
+	map.spawnMonsterWithEffectBelow(mob, Vector.of(-451, 154), 12);
 } 
 
 function playerEntry(eim, player) {

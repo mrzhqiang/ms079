@@ -26,6 +26,10 @@ public final class MaplePacketDecoder extends CumulativeProtocolDecoder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaplePacketDecoder.class);
 
+    private static final Logger CLIENT_PACKET_LOGGER = LoggerFactory.getLogger("CLIENT_PACKET");
+
+
+
     public static final String DECODER_STATE_KEY = MaplePacketDecoder.class.getName() + ".STATE";
 
     private final ServerProperties properties;
@@ -68,7 +72,9 @@ public final class MaplePacketDecoder extends CumulativeProtocolDecoder {
             out.write(decryptedPacket);
             if (properties.isPacketLogger()) {
                 int packetLen = decryptedPacket.length;
+                // opCode
                 int pHeader = readFirstShort(decryptedPacket);
+                // opCode转16进制
                 String pHeaderStr = Integer.toHexString(pHeader).toUpperCase();
                 String op = lookupSend(pHeader);
                 boolean show = true;
@@ -83,6 +89,7 @@ public final class MaplePacketDecoder extends CumulativeProtocolDecoder {
                     case "HEAL_OVER_TIME":
                     case "BUTTON_PRESSED":
                     case "STRANGE_DATA":
+                    case "ERROR_LOG":
                         show = false;
                 }
                 String Send = "客户端发送 " + op + " [" + pHeaderStr + "] (" + packetLen + ")\r\n";
@@ -90,12 +97,12 @@ public final class MaplePacketDecoder extends CumulativeProtocolDecoder {
                     String SendTo = Send + HexTool.toString(decryptedPacket) + "\r\n" + HexTool.toStringFromAscii(decryptedPacket);
                     //log.info(HexTool.toString(decryptedPacket) + "客户端发送");
                     if (show) {
-                        FileoutputUtil.packetLog("日志\\log\\客户端封包.log", SendTo);
+                        CLIENT_PACKET_LOGGER.info(SendTo);
                         LOGGER.debug(SendTo);
                     }
                     String SendTos = "\r\n时间：" + FileoutputUtil.CurrentReadable_Time() + "  ";
                     if (op.equals("UNKNOWN")) {
-                        FileoutputUtil.packetLog("日志\\log\\未知客服端封包.log", SendTos + SendTo);
+                        CLIENT_PACKET_LOGGER.info(SendTos + SendTo);
                     }
                 } else {
                     LOGGER.info(HexTool.toString(new byte[]{decryptedPacket[0], decryptedPacket[1]}) + "...");

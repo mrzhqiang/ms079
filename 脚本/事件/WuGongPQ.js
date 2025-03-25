@@ -1,5 +1,6 @@
 //importPackage(Packages.server.life);
-
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
+var MapleLifeFactory = Java.type("server.life.MapleLifeFactory");
 /**
 	蜈蚣 PQ (上海灘)
 */
@@ -22,7 +23,7 @@ function setup() {
     var map = eim.setInstanceMap(701010323);
     map.resetFully(false);
     eim.startEventTimer(600000); //10 分
-	map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(2261, 823));
+	map.spawnMonsterOnGroundBelow(mob, Vector.of(2261, 823));
     return eim;
 }
 

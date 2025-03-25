@@ -5,12 +5,21 @@ import java.io.InputStream;
 import java.util.Properties;
 
 
+/**
+ * 冒险岛网络协议
+ * | Opcode (2B) | Length (2B) | Payload (N Bytes) |
+ */
 public enum RecvPacketOpcode implements WritableIntValueHolder {
 
     /**
      * Ping-Pong 0x13
      */
     PONG(false),
+
+    /****
+     *  客户端崩溃时的详细调试信息 0x14
+     */
+    ERROR_LOG(false),
     /**
      * 登录密码 0x01
      */
@@ -518,7 +527,7 @@ public enum RecvPacketOpcode implements WritableIntValueHolder {
      */
     SHIP_OBJECT,
     /**
-     * 商场更新？？
+     * 商场更新 0x161
      */
     CS_UPDATE,
     /**

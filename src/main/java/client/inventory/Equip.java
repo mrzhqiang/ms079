@@ -25,6 +25,7 @@ public class Equip extends Item implements IEquip, Serializable {
     public Equip(DInventoryItem item) {
         super(item);
         this.equipment = item.getEquipment();
+        this.equipment.setItem(item);
     }
 
     public Equip(int id, int position, int quantity, int flag) {

@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
     em.setProperty("state", "0");
 }
@@ -12,7 +13,7 @@ function setup(eim, leaderid) {
 
     var mob = em.getMonster(9300093); // Tylus
     eim.registerMonster(mob);
-    map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(-358, -86));
+    map.spawnMonsterOnGroundBelow(mob, Vector.of(-358, -86));
 
     eim.startEventTimer(600000);
     return eim;

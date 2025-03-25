@@ -77,6 +77,7 @@ public final class ChannelServer implements Serializable {
 
     private EventScriptManager eventSM;
     private static final Map<Integer, ChannelServer> INSTANCE_CACHED = new ConcurrentHashMap<>();
+    private static final Map<Integer, Integer> PORT_CHANNEL_CACHED = new ConcurrentHashMap<>();
     private final Map<MapleSquadType, MapleSquad> mapleSquads = new ConcurrentEnumMap<MapleSquadType, MapleSquad>(MapleSquadType.class);
     private final Map<Integer, HiredMerchant> merchants = new HashMap<Integer, HiredMerchant>();
     private final Map<Integer, PlayerNPC> playerNPCs = new HashMap<Integer, PlayerNPC>();
@@ -154,6 +155,7 @@ public final class ChannelServer implements Serializable {
             acceptor.setHandler(serverHandler);
             acceptor.bind(new InetSocketAddress(port));
             ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
+            PORT_CHANNEL_CACHED.put(port,channel);
 
             LOGGER.info("频道 {}: 绑定端口 {}: 服务器IP {}", channel, port, ip);
             eventSM.init();
@@ -198,6 +200,15 @@ public final class ChannelServer implements Serializable {
 
     public static ChannelServer getInstance(Integer channel) {
         return INSTANCE_CACHED.get(channel);
+    }
+
+    public static ChannelServer getInstanceByPort(Integer port) {
+        Integer channel = PORT_CHANNEL_CACHED.getOrDefault(port,0);
+        return getInstance(channel);
+    }
+
+    public static int getChannelByPort(Integer port) {
+        return PORT_CHANNEL_CACHED.getOrDefault(port,-1);
     }
 
     public static boolean container(Integer channel) {

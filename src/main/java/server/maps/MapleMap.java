@@ -2456,22 +2456,28 @@ public final class MapleMap {
     }
 
     private void broadcastMessage(final MapleCharacter source, final MaplePacket packet, final double rangeSq, final Vector rangedFrom) {
+        List<MapleCharacter> copyChars;
+        // 快速拷贝玩家列表以减少锁持有时间
         charactersLock.readLock().lock();
         try {
-            for (MapleCharacter chr : characters) {
-                if (chr != source) {
-                    if (rangeSq < Double.POSITIVE_INFINITY) {
-                        if (rangedFrom.distanceSq(chr.getPosition()) <= rangeSq) {
-                            chr.getClient().getSession().write(packet);
-                        }
-                    } else {
-                        chr.getClient().getSession().write(packet);
-                    }
-                }
-            }
+            copyChars = new ArrayList<>(characters);
         } finally {
             charactersLock.readLock().unlock();
         }
+
+        for (MapleCharacter chr : copyChars) {
+            if (chr != source) {
+                boolean isGlobalBroadcast = Double.isInfinite(rangeSq) || Double.isNaN(rangeSq);
+                if (!isGlobalBroadcast) {
+                    if (rangedFrom.distanceSq(chr.getPosition()) <= rangeSq) {
+                        chr.getClient().getSession().write(packet);
+                    }
+                } else {
+                    chr.getClient().getSession().write(packet);
+                }
+            }
+        }
+
     }
 
     private void sendObjectPlacement(final MapleCharacter c) {

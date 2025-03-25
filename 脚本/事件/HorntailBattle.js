@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
     // 0 = Not started, 1 = started, 2 = first head defeated, 3 = second head defeated
     em.setProperty("state", "0");
@@ -37,7 +38,7 @@ function CheckHorntailHead(eim) {
 
 	var mob = em.getMonster(8810024); // First HT Head
 	eim.registerMonster(mob);
-	eim.getMapFactory().getMap(240060000).spawnMonsterOnGroundBelow(mob, new java.awt.Point(890, 230));
+	eim.getMapFactory().getMap(240060000).spawnMonsterOnGroundBelow(mob, Vector.of(890, 230));
 
 	eim.schedule("CheckHorntailHead", 3000);
     }
@@ -49,7 +50,7 @@ function CheckHorntailHead(eim) {
 
 	var mob = em.getMonster(8810025); // Second HT Head
 	eim.registerMonster(mob);
-	eim.getMapFactory().getMap(240060100).spawnMonsterOnGroundBelow(mob, new java.awt.Point(-360, 230));
+	eim.getMapFactory().getMap(240060100).spawnMonsterOnGroundBelow(mob, Vector.of(-360, 230));
     }
 }
 

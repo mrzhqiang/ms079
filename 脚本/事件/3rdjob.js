@@ -1,4 +1,5 @@
 
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 }
 
@@ -51,7 +52,7 @@ function playerEntry(eim, player) {
     player.changeMap(map, map.getPortal(0));
     var mob = em.getMonster(monsterId);
 //    eim.registerMonster(mob);
-    map.spawnMonsterOnGroudBelow(mob, new java.awt.Point(200, 20));
+    map.spawnMonsterOnGroudBelow(mob, Vector.of(200, 20));
 }
 
 function playerDead(eim, player) {

@@ -71,19 +71,20 @@ public enum ItemLoader {
     public static Map<Integer, Pair<IItem, MapleInventoryType>> loadItems(int value, boolean login, int... id) {
         Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<>();
         QDInventoryItem select = new QDInventoryItem().type.eq(value);
-        switch (value) {
-            case 0:
+
+        switch (InventoryItemType.getByType(value)) {
+            case INVENTORY:
                 // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id")
                 return loadInventoryItemByCharacter(login, id[0]);
-            case 1:
+            case STORAGE:
                 // 1 STORAGE("inventoryitems", "inventoryequipment", 1, "accountid")
                 return loadInventoryItemByAccount(login, id[0]);
-            case 2:
-            case 3:
-            case 4:
-            case 7:
-            case 10:
-            case 11:
+            case CASHSHOP_EXPLORER:
+            case CASHSHOP_CYGNUS:
+            case CASHSHOP_ARAN:
+            case CASHSHOP_EVAN:
+            case CASHSHOP_DB:
+            case CASHSHOP_RESIST:
                 // 2 CASHSHOP_EXPLORER("csitems", "csequipment", 2, "accountid")
                 // 3 CASHSHOP_CYGNUS("csitems", "csequipment", 3, "accountid")
                 // 4 CASHSHOP_ARAN("csitems", "csequipment", 4, "accountid")
@@ -91,16 +92,16 @@ public enum ItemLoader {
                 // 10 CASHSHOP_DB("csitems", "csequipment", 10, "accountid")
                 // 11 CASHSHOP_RESIST("csitems", "csequipment", 11, "accountid")
                 return loadCsItem(value, login, id[0]);
-            case 5:
+            case HIRED_MERCHANT:
                 // 5 HIRED_MERCHANT("hiredmerchitems", "hiredmerchequipment", 5, "packageid", "accountid", "character_id")
                 return loadHiredMerchItem(login, id[0], id[1], id[2]);
-            case 6:
+            case DUEY:
                 // 6 DUEY("dueyitems", "dueyequipment", 6, "packageid")
                 return loadDueyItem(login, id[0]);
-            case 8:
+            case MTS:
                 // 8 MTS("mtsitems", "mtsequipment", 8, "packageid")
                 return loadMtsItem(login, id[0]);
-            case 9:
+            case MTS_TRANSFER:
                 // 9 MTS_TRANSFER("mtstransfer", "mtstransferequipment", 9, "character_id")
                 return loadMtsTransfer(login, id[0]);
         }
@@ -528,7 +529,7 @@ public enum ItemLoader {
     public static void deleteItems(int value, int... id) {
         switch (value) {
             case 0:
-                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id")
+                // 0 INVENTORY("inventoryitems", "inventoryequipment", 0, "character_id") 背包
                 new QDInventoryItem().type.eq(value).character.id.eq(id[0]).delete();
                 break;
             case 1:

@@ -24,6 +24,10 @@ public final class MaplePacketEncoder implements ProtocolEncoder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaplePacketEncoder.class);
 
+
+
+    private static final Logger SERVER_PACKET_LOGGER = LoggerFactory.getLogger("SERVER_PACKET");
+
     private final ServerProperties properties;
 
     @Inject
@@ -63,10 +67,10 @@ public final class MaplePacketEncoder implements ProtocolEncoder {
                 }*/
                 String Recv = "服务端发送 " + op + " [" + pHeaderStr + "] (" + packetLen + ")\r\n";
                 if (packetLen <= 50000) {
-                    String RecvTo = Recv + HexTool.toString(inputInitialPacket) + "\r\n" + HexTool.toStringFromAscii(inputInitialPacket);
+                    String recvTo = Recv + HexTool.toString(inputInitialPacket) + "\r\n" + HexTool.toStringFromAscii(inputInitialPacket);
                     if (show) {
-                        FileoutputUtil.packetLog("日志\\log\\服务端封包.log", RecvTo);
-                        LOGGER.debug(RecvTo);
+                        SERVER_PACKET_LOGGER.info(recvTo);
+                        LOGGER.debug(recvTo);
                     } //log.info("服务端发送" + "\r\n" + HexTool.toString(inputInitialPacket));
                 } else {
                     LOGGER.info(HexTool.toString(new byte[]{inputInitialPacket[0], inputInitialPacket[1]}) + " ...");

@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var minPlayers = 3;
 
 function init() {
@@ -17,7 +18,7 @@ em.setProperty("state", "1");
 	eim.setInstanceMap(240080040);
     var mob3 = em.getMonster(8300007);
     eim.registerMonster(mob3);
-    map3.spawnMonsterOnGroundBelow(mob3, new java.awt.Point(700, -10));
+    map3.spawnMonsterOnGroundBelow(mob3, Vector.of(700, -10));
 
     eim.startEventTimer(3600000); //1 hr
     return eim;
@@ -81,7 +82,7 @@ function clearPQ(eim) {
 
 function allMonstersDead(eim) {
 	if (eim.getMapInstance(2).getAllMonstersThreadsafe().size() == 0) {
-		eim.getMapInstance(2).spawnNpc(2085003, new java.awt.Point(700, -10));
+		eim.getMapInstance(2).spawnNpc(2085003, Vector.of(700, -10));
 		eim.broadcastPlayerMsg(6, "Dragonica has been beaten! Have the leader go in the Portal to finish!");
 	}
 }

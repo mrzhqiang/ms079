@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var minPlayers = 4;
 
 function init() {
@@ -68,7 +69,7 @@ em.setProperty("state", "1");
 	map = eim.setInstanceMap(926110203);
 	map.resetFully();
         map.setSpawns(false);
-	map.spawnNpc(2112010, new java.awt.Point(200, 188)); //urete MADMAN
+	map.spawnNpc(2112010, Vector.of(200, 188)); //urete MADMAN
 	eim.setInstanceMap(926110300).resetFully();
 	eim.setInstanceMap(926110301).resetFully();
 	eim.setInstanceMap(926110302).resetFully();
@@ -113,7 +114,7 @@ function changedMap(eim, player, mapid) {
 	var mob = em.getMonster(mobId);
 	eim.registerMonster(mob);
 	em.setProperty("summoned", "1");
-	eim.getMapInstance(mapid).spawnMonsterOnGroundBelow(mob, new java.awt.Point(240,150));
+	eim.getMapInstance(mapid).spawnMonsterOnGroundBelow(mob, Vector.of(240,150));
     }
 }
 
@@ -127,15 +128,15 @@ function monsterValue(eim, mobId) {
 	eim.broadcastPlayerMsg(5, "The one you were protecting has been killed.");
     } else if (mobId == 9300139 || mobId == 9300140) { //boss
 	//13 = boss, 14 = urete, 15 = romeo&juliet
-	eim.getMapInstance(13).spawnNpc(2112003, new java.awt.Point(-416, -126));
+	eim.getMapInstance(13).spawnNpc(2112003, Vector.of(-416, -126));
 	if (em.getProperty("stage7").equals("0")) {
-		eim.getMapInstance(14).spawnNpc(2112012, new java.awt.Point(232, 150));
-		eim.getMapInstance(15).spawnNpc(2112018, new java.awt.Point(111, 128));
-		eim.getMapInstance(15).spawnNpc(2112012, new java.awt.Point(320, 128));
+		eim.getMapInstance(14).spawnNpc(2112012, Vector.of(232, 150));
+		eim.getMapInstance(15).spawnNpc(2112018, Vector.of(111, 128));
+		eim.getMapInstance(15).spawnNpc(2112012, Vector.of(320, 128));
 	} else {
-		eim.getMapInstance(14).spawnNpc(2112011, new java.awt.Point(232, 150));
-		eim.getMapInstance(15).spawnNpc(2112009, new java.awt.Point(111, 128));
-		eim.getMapInstance(15).spawnNpc(2112008, new java.awt.Point(211, 128));
+		eim.getMapInstance(14).spawnNpc(2112011, Vector.of(232, 150));
+		eim.getMapInstance(15).spawnNpc(2112009, Vector.of(111, 128));
+		eim.getMapInstance(15).spawnNpc(2112008, Vector.of(211, 128));
 	}
     }
     return 1;

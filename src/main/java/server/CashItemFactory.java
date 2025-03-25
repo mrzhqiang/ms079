@@ -1,5 +1,6 @@
 package server;
 
+import com.github.mrzhqiang.maplestory.domain.DCashShopModifiedItem;
 import com.github.mrzhqiang.maplestory.domain.query.QDCashShopModifiedItem;
 import com.github.mrzhqiang.maplestory.wz.WzData;
 import com.github.mrzhqiang.maplestory.wz.WzElement;
@@ -134,10 +135,16 @@ public class CashItemFactory {
                     .findOneOrEmpty()
                     .map(item -> new CashModInfo(sn, item))
                     .orElse(null);
+            CashItemInfo cashItemInfo =itemStats.get(sn);
+            // 数据库里面itemid不对导致购买不了东西
+            if (cashItemInfo != null && ret != null) {
+                ret.setItemId(cashItemInfo.getId());
+            }
             itemMods.put(sn, ret);
         }
         return ret;
     }
+
 
     public final Collection<CashModInfo> getAllModInfo() {
         if (!initialized) {

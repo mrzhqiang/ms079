@@ -262,6 +262,8 @@ public final class MapleServerHandler extends IoHandlerAdapter {
     public void sessionOpened(IoSession session) {
         // Start of IP checking
         String address = session.getRemoteAddress().toString().split(":")[0];
+        String portStr = session.getLocalAddress().toString().split(":")[1];
+        channel = ChannelServer.getChannelByPort(Integer.valueOf(portStr));
 
         if (BlockedIP.contains(address)) {
 //            System.out.print("自动断开连接A");
@@ -328,7 +330,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
                 session, Injectors.get(ServerProperties.class));
         LOGGER.debug("channel is " + channel + "");
 
-        client.setChannel(channel+1);
+        client.setChannel(channel);
 
         MaplePacketDecoder.DecoderState decoderState = new MaplePacketDecoder.DecoderState();
         session.setAttribute(MaplePacketDecoder.DECODER_STATE_KEY, decoderState);
@@ -390,7 +392,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
                     fw.write(nl);
                     fw.flush();
                 }*/
-                LOGGER.info("session {} closed", client.getSession().getRemoteAddress());
+                LOGGER.info("IoSession session {} closed", client.getSession().getRemoteAddress());
                 client.disconnect(true, cs);
             } finally {
                 session.close();
@@ -407,6 +409,7 @@ public final class MapleServerHandler extends IoHandlerAdapter {
             if (slea.available() < 2) {
                 return;
             }
+            // opCode
             short header_num = slea.readShort();
             // Console output part
             for (RecvPacketOpcode recv : RecvPacketOpcode.values()) {
@@ -499,6 +502,9 @@ public final class MapleServerHandler extends IoHandlerAdapter {
         switch (header) {
             case PONG:
                 client.pongReceived();
+                break;
+            case ERROR_LOG:
+                client.errorLogReceived(slea);
                 break;
             case STRANGE_DATA:
                 // 现在什么都不做，HackShield 的心跳

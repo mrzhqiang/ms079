@@ -1,3 +1,5 @@
+
+var MaplePacketCreator = Java.type("tools.MaplePacketCreator");
 var status = 0;
 var victim;
 var ring = 1112001;
@@ -67,7 +69,7 @@ function action(mode, type, selection){
 			victim.setMarriageId(cm.getPlayer().getId());
 			cm.givePartyItems(1112804, 1, false);
 			cm.getPlayer().saveToDB(false, false);
-			Packages.handling.world.World.Broadcast.broadcastMessage(Packages.tools.MaplePacketCreator.serverNotice(11, cm.getClient().getChannel(), "『月下老人』" + " : " + "[" + cm.getChar().getName() + "]和他的伴侣["+victim.getName()+"]结为夫妻。小姐珠圆玉润旺夫之相、宜室宜家,先生才高八斗、学富五车。现福禄鸳鸯缘定三生，佳偶天成，珠联壁合。祝二人：永结同心，百年好合、百子千孙,无论富贵贫穷同德同心、琴瑟合鸣、相敬如宾。结此终身之盟,守此终身之誓,不离不弃、白头偕老。大家祝福他[她]！我们祝他/她们从游戏走到现实婚姻的殿堂。"));
+			Packages.handling.world.World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(11, cm.getClient().getChannel(), "『月下老人』" + " : " + "[" + cm.getChar().getName() + "]和他的伴侣["+victim.getName()+"]结为夫妻。小姐珠圆玉润旺夫之相、宜室宜家,先生才高八斗、学富五车。现福禄鸳鸯缘定三生，佳偶天成，珠联壁合。祝二人：永结同心，百年好合、百子千孙,无论富贵贫穷同德同心、琴瑟合鸣、相敬如宾。结此终身之盟,守此终身之誓,不离不弃、白头偕老。大家祝福他[她]！我们祝他/她们从游戏走到现实婚姻的殿堂。"));
 			//cm.worldMessage(11, "『月下老人』" + " : " + "[" + cm.getChar().getName() + "]和他的伴侣["+victim.getName()+"]结为夫妻。小姐珠圆玉润旺夫之相、宜室宜家,先生才高八斗、学富五车。现福禄鸳鸯缘定三生，佳偶天成，珠联壁合。祝二人：永结同心，百年好合、百子千孙,无论富贵贫穷同德同心、琴瑟合鸣、相敬如宾。结此终身之盟,守此终身之誓,不离不弃、白头偕老。大家祝福他[她]！我们祝他/她们从游戏走到现实婚姻的殿堂。");
 			victim.saveToDB(false, false);
 			//cm.warpMapWithClock(700000200, 300);

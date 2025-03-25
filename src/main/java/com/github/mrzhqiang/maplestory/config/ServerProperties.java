@@ -49,6 +49,7 @@ public final class ServerProperties {
     private final boolean adventurer;
     private final boolean knights;
     private final boolean warGod;
+    private final boolean banSwitch;
 
     private final String[] events;
     private final String[] mallDisabled;
@@ -84,6 +85,7 @@ public final class ServerProperties {
         this.adventurer = Boolean.parseBoolean(properties.getProperty("server.job.adventurer", "true"));
         this.knights = Boolean.parseBoolean(properties.getProperty("server.job.knights", "false"));
         this.warGod = Boolean.parseBoolean(properties.getProperty("server.job.war-god", "false"));
+        this.banSwitch = Boolean.parseBoolean(properties.getProperty("server.ban.switch", "false"));
         this.events = properties.getProperty("server.events", "").split(",");
         this.mallDisabled = properties.getProperty("server.mall.disabled", "").split(",");
         this.cashJy = properties.getProperty("server.cashjy", "").split(",");
@@ -212,5 +214,9 @@ public final class ServerProperties {
 
     public String[] getGysj() {
         return Arrays.copyOf(gysj, gysj.length);
+    }
+
+    public boolean isBanSwitch() {
+        return banSwitch;
     }
 }

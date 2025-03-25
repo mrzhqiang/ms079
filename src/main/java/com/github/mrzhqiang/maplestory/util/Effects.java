@@ -43,8 +43,7 @@ public final class Effects {
         MapleStatEffect effect = new MapleStatEffect();
         effect.setSourceId(id);
         effect.setSkill(true);
-        byte lv = Byte.parseByte(level.name());
-        effect.setLevel(lv);
+        effect.setLevel(Elements.findInt(level, "level"));
         effect.setDuration(Elements.findInt(level, "time", -1));
         effect.setHp(Elements.findInt(level, "hp").shortValue());
         effect.setMp(Elements.findInt(level, "mp").shortValue());

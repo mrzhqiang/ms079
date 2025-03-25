@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var i = 5;
 var mapId = 270050100;
 var returnMap;
@@ -105,7 +106,7 @@ function startInstance(eim) {
 		mob.setHp(mob.getHp() * 3);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	    for (var x = 0; x < 10; x++) {
 		var mob = em.getMonster(9300136);
@@ -117,7 +118,7 @@ function startInstance(eim) {
 		mob.setHp(15000);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	} else if (eim.getName().equals("lolcastle2")) {
 	    for (var x = 0; x < 100; x++) {
@@ -130,7 +131,7 @@ function startInstance(eim) {
 		mob.setHp(30000);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	    for (var x = 0; x < 3; x++) {
 		var mob = em.getMonster(9300012);
@@ -141,7 +142,7 @@ function startInstance(eim) {
 		mob.setOverrideStats(overrideStats);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	} else if (eim.getName().equals("lolcastle3")) {
 	    for (var x = 0; x < 100; x++) {
@@ -161,7 +162,7 @@ function startInstance(eim) {
 		mob.setOverrideStats(overrideStats);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	    for (var x = 0; x < 3; x++) {
 		var mob = em.getMonster(9300105);
@@ -172,7 +173,7 @@ function startInstance(eim) {
 		mob.setOverrideStats(overrideStats);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	} else if (eim.getName().equals("lolcastle4")) {
 	    for (var x = 0; x < 78; x++) {
@@ -204,7 +205,7 @@ function startInstance(eim) {
 		}
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	} else if (eim.getName().equals("lolcastle5")) {
 	    for (var x = 0; x < 90; x++) {
@@ -224,7 +225,7 @@ function startInstance(eim) {
 		mob.setOverrideStats(overrideStats);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	    for (var x = 0; x < 3; x++) {
 		var mob = em.getMonster(9300152);
@@ -236,7 +237,7 @@ function startInstance(eim) {
 		mob.setHp(2000000);
 		eim.registerMonster(mob);
 
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(randX(), 100));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(randX(), 100));
 	    }
 	}
 

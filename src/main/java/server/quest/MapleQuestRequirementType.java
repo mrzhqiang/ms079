@@ -47,7 +47,7 @@ public enum MapleQuestRequirementType {
 
     public static MapleQuestRequirementType getByWZName(String name) {
         try {
-            return valueOf(name);
+            return valueOf(name.toUpperCase());
         } catch (IllegalArgumentException ex) {
             return UNDEFINED;
         }

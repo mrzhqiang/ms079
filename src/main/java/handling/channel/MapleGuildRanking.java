@@ -81,7 +81,7 @@ public class MapleGuildRanking {
         ranks2.clear();
 
         List<mesoRankingInfo> infos = DB.findNative(mesoRankingInfo.class,
-                        "SELECT *, ( chr.meso + s.meso ) as money " +
+                        "SELECT chr.name,chr.str,chr.dex,chr,int_ as intelligence,chr.luk, ( chr.meso + s.meso ) as money " +
                                 "FROM `characters` as chr , `storages` as s " +
                                 "WHERE chr.gm < 1 AND s.account_id = chr.account_id " +
                                 "ORDER BY money DESC LIMIT 20")
@@ -92,15 +92,15 @@ public class MapleGuildRanking {
     public static class mesoRankingInfo {
 
         private final String name;
-        private final long meso;
-        private final int str, dex, _int, luk;
+        private final long money;
+        private final int str, dex, intelligence, luk;
 
-        public mesoRankingInfo(String name, long meso, int str, int dex, int intt, int luk) {
+        public mesoRankingInfo(String name, long money, int str, int dex, int intelligence, int luk) {
             this.name = name;
-            this.meso = meso;
+            this.money = money;
             this.str = str;
             this.dex = dex;
-            this._int = intt;
+            this.intelligence = intelligence;
             this.luk = luk;
         }
 
@@ -109,7 +109,7 @@ public class MapleGuildRanking {
         }
 
         public long getMeso() {
-            return meso;
+            return money;
         }
 
         public int getStr() {
@@ -121,7 +121,7 @@ public class MapleGuildRanking {
         }
 
         public int getInt() {
-            return _int;
+            return intelligence;
         }
 
         public int getLuk() {

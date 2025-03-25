@@ -161,11 +161,10 @@ public class MapleReactor extends AbstractMapleMapObject {
                 }
             } else {
             }
-            /*
-             * } else { state++;
-             * map.broadcastMessage(MaplePacketCreator.triggerReactor(this,
-             * stance)); ReactorScriptManager.getInstance().act(c, this);
-             */
+        } else {
+            state++;
+            map.broadcastMessage(MaplePacketCreator.triggerReactor(this,stance));
+            ReactorScriptManager.getInstance().act(c, this);
         }
     }
 

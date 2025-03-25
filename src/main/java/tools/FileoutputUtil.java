@@ -30,12 +30,17 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
 public class FileoutputUtil {
 
-    private static final SimpleDateFormat sdfT = new SimpleDateFormat("yyyy年MM月dd日HH時mm分ss秒");
+//    private static final SimpleDateFormat sdfT = new SimpleDateFormat("yyyy年MM月dd日HH時mm分ss秒");
+    private static final DateTimeFormatter sdfT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+
     // Logging output file
     public static final String fixdam_mg = "日志/logs/魔法伤害修正.rtf",
             fixdam_ph = "日志/logs/物理伤害修正.rtf",
@@ -71,7 +76,7 @@ public class FileoutputUtil {
         try {
             File outputFile = new File(file);
             if (outputFile.exists() && outputFile.isFile() && outputFile.length() >= 10 * 1024 * 1000) {
-                outputFile.renameTo(new File(file.substring(0, file.length() - 4) + "_" + sdfT.format(Calendar.getInstance().getTime()) + file.substring(file.length() - 4, file.length())));
+                outputFile.renameTo(new File(file.substring(0, file.length() - 4) + "_" +  sdf.format(LocalDateTime.now()) + file.substring(file.length() - 4, file.length())));
                 outputFile = new File(file);
             }
             if (outputFile.getParentFile() != null) {
@@ -100,7 +105,7 @@ public class FileoutputUtil {
         try {
             File outputFile = new File(file);
             if (outputFile.exists() && outputFile.isFile() && outputFile.length() >= 1024 * 1000) {
-                outputFile.renameTo(new File(file.substring(0, file.length() - 4) + "_" + sdfT.format(Calendar.getInstance().getTime()) + file.substring(file.length() - 4, file.length())));
+                outputFile.renameTo(new File(file.substring(0, file.length() - 4) + "_" + sdfT.format(LocalDateTime.now()) + file.substring(file.length() - 4, file.length())));
                 outputFile = new File(file);
             }
             if (outputFile.getParentFile() != null) {

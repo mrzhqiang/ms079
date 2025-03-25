@@ -68,21 +68,25 @@ public class MapleInventoryIdentifier implements Serializable {
         ids[0] = new QVInventoryItemAggregate()
                 .select(QVInventoryItemAggregate.alias().uniqueId)
                 .findOneOrEmpty()
+                .filter(it -> it.getUniqueId() != null)
                 .map(it -> it.getUniqueId() + 1)
                 .orElse(0);
         ids[1] = new QVPetAggregate()
                 .select(QVPetAggregate.alias().petId)
                 .findOneOrEmpty()
+                .filter(it -> it.getPetId() != null)
                 .map(it -> it.getPetId() + 1)
                 .orElse(0);
         ids[2] = new QVRingAggregate()
                 .select(QVRingAggregate.alias().ringId)
                 .findOneOrEmpty()
+                .filter(it -> it.getRingId() != null)
                 .map(it -> it.getRingId() + 1)
                 .orElse(0);
         ids[3] = new QVRingAggregate()
                 .select(QVRingAggregate.alias().partnerRingId)
                 .findOneOrEmpty()
+                .filter(it -> it.getPartnerRingId() != null)
                 .map(it -> it.getPartnerRingId() + 1)
                 .orElse(0);
         for (int i = 0; i < 4; i++) {

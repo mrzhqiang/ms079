@@ -1,4 +1,6 @@
 //importPackage(Packages.tools);
+var MaplePacketCreator = Java.type("tools.MaplePacketCreator");
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 //importPackage(Packages.tools.packet);
 
 //pvp mode: 12 = "1.5 event", 13 = "2x event"
@@ -129,7 +131,7 @@ function doItemDrop(eim) {
 	for (var i = 0; i < num; i++) {
 		var r = java.lang.Math.floor(java.lang.Math.random() * 50) + 2900000;
 		if (r != 2900049 && r != 2900043 && r != 2900042 && r != 2900039 && r != 2900038 && r != 2900037 && r != 2900029 && r != 2900016 && r != 2900015) {
-			map.spawnAutoDrop(r, new java.awt.Point(d.get(java.lang.Math.floor(java.lang.Math.random() * d.size())).getPoint1()));
+			map.spawnAutoDrop(r, Vector.of(d.get(java.lang.Math.floor(java.lang.Math.random() * d.size())).getPoint1()));
 		}
 	}
 	eim.schedule("doItemDrop", 60000);

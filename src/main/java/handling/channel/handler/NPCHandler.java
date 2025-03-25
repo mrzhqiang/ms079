@@ -264,6 +264,7 @@ public class NPCHandler {
                 break;
             }
         }
+//        chr.saveToDB(false, false);
     }
 
     public static final void Storage(final SeekableLittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {

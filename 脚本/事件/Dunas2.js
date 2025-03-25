@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 em.setProperty("state", "0");
 	em.setProperty("leader", "true");
@@ -15,7 +16,7 @@ function setup(eim, leaderid) {
 
     var mob = em.getMonster(9400293); // Dunas Unit
     eim.registerMonster(mob);
-    map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(-829, 43));
+    map.spawnMonsterOnGroundBelow(mob, Vector.of(-829, 43));
 
     eim.startEventTimer(14400000); // 4 hrs
     return eim;
@@ -80,9 +81,9 @@ function allMonstersDead(eim) {
 	eim.setProperty("dunas_summoned", "true");
 	var mob = em.getMonster(9400294);
 	eim.registerMonster(mob);
-	eim.getMapInstance(0).spawnMonsterOnGroundBelow(mob, new java.awt.Point(-1787, 335));
+	eim.getMapInstance(0).spawnMonsterOnGroundBelow(mob, Vector.of(-1787, 335));
     } else {
-	eim.getMapInstance(0).spawnNpc(9120026, new java.awt.Point(-405, 335));
+	eim.getMapInstance(0).spawnNpc(9120026, Vector.of(-405, 335));
     }
 }
 

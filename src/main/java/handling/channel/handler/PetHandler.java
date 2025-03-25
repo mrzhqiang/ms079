@@ -151,6 +151,10 @@ public class PetHandler {
             }
         }
         MaplePet pet = c.getPlayer().getPet(slot);
+        if (pet == null) {
+            c.getSession().write(MaplePacketCreator.enableActions());
+            return;
+        }
         slea.readInt();
         slea.readShort();
         int itemId = slea.readInt();
@@ -204,7 +208,7 @@ public class PetHandler {
 
         if (res != null && chr != null && res.size() != 0) { // map crash hack
             final byte slot = chr.getPetIndex(petId);
-            if (slot == -1) {
+            if (slot == -1 || chr.getPet(slot) == null) {
                 return;
             }
             chr.getPet(slot).updatePosition(res);

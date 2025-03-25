@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 }
 
@@ -13,7 +14,7 @@ function setup(mapid) {
 
     var mob = em.getMonster(9400326 + (parseInt(mapid) * 5)); // Tylus
     eim.registerMonster(mob);
-    map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(-189, 30));
+    map.spawnMonsterOnGroundBelow(mob, Vector.of(-189, 30));
 
     eim.startEventTimer(600000);
     return eim;
@@ -45,7 +46,7 @@ function scheduledTimeout(eim) {
 		eim.restartEventTimer(600000);
 		eim.registerMonster(mob);
 		var map = eim.setInstanceMap(889100001 + parseInt(eim.getProperty("mode") * 10));
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(-189, 30));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(-189, 30));
 		eim.setProperty("ok", "0");
 	}
 }

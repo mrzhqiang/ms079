@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var minPlayers = 2;
 
 function init() {
@@ -15,22 +16,22 @@ em.setProperty("state", "1");
 	map.resetFully(false);
 	map.setSpawns(false);
 	map.resetSpawnLevel(level);
-	map.spawnNpc(9020004, new java.awt.Point(68, 598));
+	map.spawnNpc(9020004, Vector.of(68, 598));
 		var mob0 = em.getMonster(9300460);
 		eim.registerMonster(mob0);
-		map.spawnMonsterOnGroundBelow(mob0, new java.awt.Point(68, 598));
+		map.spawnMonsterOnGroundBelow(mob0, Vector.of(68, 598));
 
 		map = eim.setInstanceMap(923040400);
 		map.resetPQ(level);
-		map.spawnNpc(9020004, new java.awt.Point(-161, 123));
+		map.spawnNpc(9020004, Vector.of(-161, 123));
 		var mob1 = em.getMonster(9300461);
 		eim.registerMonster(mob1);
 		mob1.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob1, new java.awt.Point(400, 123));
+		map.spawnMonsterOnGroundBelow(mob1, Vector.of(400, 123));
 		var mob2 = em.getMonster(9300468);
 		eim.registerMonster(mob2);
 		mob2.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(-1000, 123)); //TODOO: find out REAL positions
+		map.spawnMonsterOnGroundBelow(mob2, Vector.of(-1000, 123)); //TODOO: find out REAL positions
     eim.startEventTimer(1200000); //30 mins
 	eim.setProperty("entryTimestamp", "" + java.lang.System.currentTimeMillis());
     return eim;

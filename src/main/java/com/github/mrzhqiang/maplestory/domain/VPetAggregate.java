@@ -3,6 +3,7 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.annotation.Max;
 import io.ebean.annotation.View;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @SuppressWarnings("EntityIdMissingInspection")
@@ -11,6 +12,7 @@ import javax.persistence.Entity;
 public class VPetAggregate {
 
     @Max
+    @Column(name = "id")
     Integer petId;
 
     public Integer getPetId() {

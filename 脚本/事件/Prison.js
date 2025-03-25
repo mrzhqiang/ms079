@@ -22,11 +22,11 @@ em.setProperty("state", "1");
 		eim.setInstanceMap(921160600).resetPQ(level);
 		var map = eim.setInstanceMap(921160700);
 		map.resetPQ(level);
-		map.spawnNpc(9020006, new java.awt.Point(-2161, -186));
+		map.spawnNpc(9020006, Vector.of(-2161, -186));
 		var mob1 = em.getMonster(9300454);
 		eim.registerMonster(mob1);
 		mob1.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob1, new java.awt.Point(-2161, -186));
+		map.spawnMonsterOnGroundBelow(mob1, Vector.of(-2161, -186));
     eim.startEventTimer(1200000); //20 mins
 	eim.setProperty("entryTimestamp", "" + java.lang.System.currentTimeMillis());
     return eim;

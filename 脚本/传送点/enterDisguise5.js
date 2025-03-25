@@ -9,7 +9,7 @@ function enter(pi) {
 		pi.removeNpc(108010640, 1104104);
 		var map = pi.getMap(108010640);
 		map.killAllMonsters(false);
-		map.spawnNpc(1104104, new java.awt.Point(542, 88));
+		map.spawnNpc(1104104, Vector.of(542, 88));
 		pi.warp(108010640, 0);
 	    } else {
 		pi.playerMessage("You do not have the Erev Search Warrent to do so, please get it from Nineheart.");

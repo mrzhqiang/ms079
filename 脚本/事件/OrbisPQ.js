@@ -5,7 +5,7 @@ var stg2_combo2 = Array("0", "1", "1", "2", "2");
 var stg6_combo = Array("00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16");
 var cx = Array(200, -300, -300, -300, 200, 200, 200, -300, -300, 200, 200, -300, -300, 200); //even = 200 odd = -300
 var cy = Array(-2321, -2114, -2910, -2510, -1526, -2716, -717, -1310, -3357, -1912, -1122, -1736, -915, -3116);
-
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
     em.setProperty("state", "0");
     em.setProperty("leader", "true");
@@ -157,7 +157,7 @@ function monsterValue(eim, mobId) {
         var mob = em.getMonster(9300039);
         eim.registerMonster(mob);
         em.setProperty("stage7", "0");
-        eim.getMapInstance(12).spawnMonsterOnGroundBelow(mob, new java.awt.Point(-830, 563));
+        eim.getMapInstance(12).spawnMonsterOnGroundBelow(mob, Vector.of(-830, 563));
     } else if (mobId == 9300040) {
         var st = parseInt(em.getProperty("stage2"));
         if (st < 14) {
@@ -165,7 +165,7 @@ function monsterValue(eim, mobId) {
             var mob = em.getMonster(9300040);
             em.setProperty("stage2", st + 1);
             eim.registerMonster(mob);
-            eim.getMapInstance(3).spawnMonsterOnGroundBelow(mob, new java.awt.Point(cx[st], cy[st]));
+            eim.getMapInstance(3).spawnMonsterOnGroundBelow(mob, Vector.of(cx[st], cy[st]));
         }
     }
     return 1;

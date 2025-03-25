@@ -52,7 +52,7 @@ public class MapleStatEffect implements Serializable {
     private Map<MonsterStatus, Integer> monsterStatus;
     private Vector lt, rb;
     private int expBuff, itemup, mesoup, cashup, berserk, illusion, booster, berserk2, cp, nuffSkill;
-    private byte level;
+    private int level;
     public Map<MapleStatInfo, Integer> info;
     private List<MapleDisease> cureDebuffs;
 
@@ -1560,11 +1560,11 @@ public class MapleStatEffect implements Serializable {
         return morph;
     }
 
-    public final byte getLevel() {
+    public final int getLevel() {
         return level;
     }
 
-    public void setLevel(byte level) {
+    public void setLevel(int level) {
         this.level = level;
     }
 

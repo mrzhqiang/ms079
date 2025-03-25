@@ -405,6 +405,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.mount_id = ct.mount_id;
         ret.DebugMessage = ct.DebugMessage;
         ret.id = ct.characterid;
+        ret.setCharacter(new QDCharacter().id.eq(ct.characterid).findOne());
         ret.name = ct.name;
         ret.level = ct.level;
         ret.fame = ct.fame;
@@ -646,7 +647,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ret.getInventory(MapleInventoryType.ETC).setSlotLimit(slot.getEtc());
             ret.getInventory(MapleInventoryType.CASH).setSlotLimit(slot.getCash());
 
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, true, charid).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, false, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
                 if (mit.getLeft().getPet() != null) {
                     ret.pets.add(mit.getLeft().getPet());
@@ -790,7 +791,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     mountData.getFatigue(), mountData.getLevel(), mountData.getExp());
             ret.stats.recalcLocalStats(true);
         } else { // Not channel server
-            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, true, charid).values()) {
+            for (Pair<IItem, MapleInventoryType> mit : ItemLoader.loadItems(0, false, charid).values()) {
                 ret.getInventory(mit.getRight()).addFromDB(mit.getLeft());
             }
         }
@@ -995,6 +996,38 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (character.getHp() < 1) {
             character.setHp(50);
         }
+        character.setLevel(level);
+        character.setExp(exp);
+        if (stats != null && stats.str > 0) {
+            character.setStr(stats.str);
+        }
+        if (stats != null && stats.dex > 0) {
+            character.setDex(stats.dex);
+        }
+        if (stats != null && stats.luk > 0) {
+            character.setLuk(stats.luk);
+        }
+        if (stats != null && stats.int_ > 0) {
+            character.setIntelligence(stats.int_);
+        }
+        if (stats != null && stats.hp > 0) {
+            character.setHp(stats.hp);
+        }
+        if (stats != null && stats.mp > 0) {
+            character.setMp(stats.mp);
+        }
+        if (stats != null && stats.maxhp > 0) {
+            character.setMaxHp(stats.maxhp);
+        }
+        if (stats != null && stats.maxmp > 0) {
+            character.setMaxMp(stats.maxmp);
+        }
+        if (job != 0) {
+            character.setJob(job);
+        }
+        character.setAp(remainingAp);
+        character.setHair(hair);
+        character.setFace(face);
         character.setSp(Arrays.stream(remainingSp)
                 .mapToObj(String::valueOf)
                 .collect(Collectors.joining(",")));
@@ -1118,6 +1151,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 skillCooldown.setSkillId(cooling.skillId);
                 skillCooldown.setStartTime(cooling.startTime);
                 skillCooldown.setLength(cooling.length);
+                skillCooldown.setCharacter(character);
                 skillCooldown.save();
             }
         }
@@ -1162,6 +1196,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 DBuddy buddy = new DBuddy();
                 buddy.setBuddies(DB.reference(DCharacter.class, entry.getCharacterId()));
                 buddy.setPending(!entry.isVisible());
+                buddy.setOwner(character);
                 buddy.save();
             }
         }
@@ -2133,7 +2168,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getId() {
-        return character.getId();
+        return id;
     }
 
     public String getName() {
@@ -3768,7 +3803,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (getMessenger() != null) {
             World.Messenger.updateMessenger(getMessenger().getId(), getName(), client.getChannel());
         }
-        //saveToDB(false, false);
+        saveToDB(false, false);
     }
 
     public final MaplePet getPet(final int index) {
@@ -3778,8 +3813,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 if (count == index) {
                     return pet;
                 }
-                count++;
             }
+            count++;
         }
         return null;
     }
@@ -4055,10 +4090,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getGuildId() {
-        if (character.getGuild() ==null){
-            return 0;
-        }
-        return character.getGuild().getId();
+        return this.guildid;
     }
 
     public byte getGuildRank() {
@@ -5426,7 +5458,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         client.getSession().write(PetPacket.petStatUpdate(this));
-        petStore = new byte[]{-1, -1, -1};
+//        petStore = new byte[]{-1, -1, -1};
     }
 
     public final byte[] getPetStores() {

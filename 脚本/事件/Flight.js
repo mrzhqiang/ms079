@@ -1,5 +1,5 @@
 //importPackage(Packages.tools);
-
+var MaplePacketCreator = Java.type("tools.MaplePacketCreator");
 var Orbis_btf;
 var Boat_to_Orbis;
 var Orbis_docked;

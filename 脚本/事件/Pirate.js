@@ -1,5 +1,5 @@
 var minPlayers = 3;
-
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 em.setProperty("state", "0");
 	em.setProperty("leader", "true");
@@ -31,10 +31,10 @@ em.setProperty("state", "1");
 //		mob2.changeLevel(level);
 //		mob3.changeLevel(level);
 //		mob4.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(430, 75));
-		map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(1600, 75));
-		map.spawnMonsterOnGroundBelow(mob3, new java.awt.Point(430, 238));
-		map.spawnMonsterOnGroundBelow(mob4, new java.awt.Point(1600, 238));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(430, 75));
+		map.spawnMonsterOnGroundBelow(mob2, Vector.of(1600, 75));
+		map.spawnMonsterOnGroundBelow(mob3, Vector.of(430, 238));
+		map.spawnMonsterOnGroundBelow(mob4, Vector.of(1600, 238));
 	}
 	map = eim.setInstanceMap(925100201);
 	map.resetFully();
@@ -45,8 +45,8 @@ em.setProperty("state", "1");
 		eim.registerMonster(mob2);
 //		mob.changeLevel(level);
 //		mob2.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(0, 238));
-		map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(1700, 238));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(0, 238));
+		map.spawnMonsterOnGroundBelow(mob2, Vector.of(1700, 238));
 	}
 	eim.setInstanceMap(925100202).resetFully();
 	map = eim.setInstanceMap(925100300);
@@ -64,10 +64,10 @@ em.setProperty("state", "1");
 //		mob2.changeLevel(level);
 //		mob3.changeLevel(level);
 //		mob4.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(430, 75));
-		map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(1600, 75));
-		map.spawnMonsterOnGroundBelow(mob3, new java.awt.Point(430, 238));
-		map.spawnMonsterOnGroundBelow(mob4, new java.awt.Point(1600, 238));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(430, 75));
+		map.spawnMonsterOnGroundBelow(mob2, Vector.of(1600, 75));
+		map.spawnMonsterOnGroundBelow(mob3, Vector.of(430, 238));
+		map.spawnMonsterOnGroundBelow(mob4, Vector.of(1600, 238));
 	}
 	map = eim.setInstanceMap(925100301);
 	map.resetFully();
@@ -78,8 +78,8 @@ em.setProperty("state", "1");
 		eim.registerMonster(mob2);
 //		mob.changeLevel(level);
 //		mob2.changeLevel(level);
-		map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(0, 238));
-		map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(1700, 238));
+		map.spawnMonsterOnGroundBelow(mob, Vector.of(0, 238));
+		map.spawnMonsterOnGroundBelow(mob2, Vector.of(1700, 238));
 	}
 	eim.setInstanceMap(925100302).resetFully();
 	eim.setInstanceMap(925100400).resetFully();

@@ -35,6 +35,7 @@ import server.quest.MapleQuest;
 import server.shops.IMaplePlayerShop;
 import tools.FileoutputUtil;
 import tools.MapleAESOFB;
+import tools.data.input.SeekableLittleEndianAccessor;
 import tools.packet.LoginPacket;
 
 import javax.script.ScriptEngine;
@@ -454,6 +455,9 @@ public class MapleClient implements Serializable {
     }
 
     public LoginState getLoginState() {
+        if (account == null){
+            return LoginState.NOT_LOGIN;
+        }
         LoginState state = account.getState();
 
         if (LoginState.SERVER_TRANSITION.equals(state) || LoginState.CHANGE_CHANNEL.equals(state)) {
@@ -638,6 +642,9 @@ public class MapleClient implements Serializable {
                     player = null;
                 }
             }
+        }
+        if (account == null){
+            return;
         }
         if (account.getState().equals(LoginState.SERVER_TRANSITION) || isLoggedIn()) {
             updateLoginState(LoginState.NOT_LOGIN, getSessionIPAddress());
@@ -878,6 +885,13 @@ public class MapleClient implements Serializable {
 
     public final void setIdleTask(final ScheduledFuture<?> idleTask) {
         this.idleTask = idleTask;
+    }
+
+    public void errorLogReceived(SeekableLittleEndianAccessor slea) {
+        int length = slea.readShort();
+        String log = slea.readAsciiString(length);
+        LOGGER.debug("客户端崩溃日志："+log);
+
     }
 
     protected static final class CharNameAndId {

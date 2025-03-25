@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 	em.setProperty("leader", "true");
     em.setProperty("state", "0");
@@ -11,7 +12,7 @@ function setup(eim, leaderid) {
 
     var mob1 = em.getMonster(8850000);
     eim.registerMonster(mob1);
-    map.spawnMonsterOnGroundBelow(mob1, new java.awt.Point(-363, 100));
+    map.spawnMonsterOnGroundBelow(mob1, Vector.of(-363, 100));
 
     em.setProperty("state", "1");
 
@@ -53,11 +54,11 @@ function monsterValue(eim, mobId) {
 	if (mobId == 8850000 || mobId == 8850001  || mobId == 8850002 || mobId == 8850003) {
 		var mob5 = em.getMonster(mobId + 1);
 		eim.registerMonster(mob5);
-		map.spawnMonsterOnGroundBelow(mob5, new java.awt.Point(-363, 100));
+		map.spawnMonsterOnGroundBelow(mob5, Vector.of(-363, 100));
 	} else if (mobId == 8850004) {
 		var mob5 = em.getMonster(8850012);
 		eim.registerMonster(mob5);
-		map.spawnMonsterOnGroundBelow(mob5, new java.awt.Point(-363, 100));
+		map.spawnMonsterOnGroundBelow(mob5, Vector.of(-363, 100));
 	}
     return 1;
 }

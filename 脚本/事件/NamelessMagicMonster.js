@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
     em.setProperty("state", "0");
     em.setProperty("leader", "true");
@@ -15,7 +16,7 @@ function setup(eim, leaderid) {
 
     var mob = em.getMonster(9400279);
     eim.registerMonster(mob);
-    map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(334, 45));
+    map.spawnMonsterOnGroundBelow(mob, Vector.of(334, 45));
 
     eim.startEventTimer(14400000); // 4 hrs
     return eim;
@@ -85,10 +86,10 @@ function allMonstersDead(eim) {
         var map = eim.getMapInstance(0);
         var mob = em.getMonster(9400266);
         eim.registerMonster(mob);
-        map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(334, 45));
+        map.spawnMonsterOnGroundBelow(mob, Vector.of(334, 45));
     } else {
         var map = eim.getMapInstance(0);
-        map.spawnNpc(9120026, new java.awt.Point(-472, -32));
+        map.spawnNpc(9120026, Vector.of(-472, -32));
     }
 }
 

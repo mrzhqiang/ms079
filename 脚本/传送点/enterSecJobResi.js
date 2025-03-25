@@ -1,3 +1,5 @@
+
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function enter(pi) {
     if (pi.getQuestStatus(23120) == 1) {
 	if (pi.getPlayerCount(931000420) == 0) {
@@ -12,7 +14,7 @@ function enter(pi) {
 		pi.removeNpc(931000100, 2159100);
 		var map = pi.getMap(931000100);
 		map.killAllMonsters(false);
-		map.spawnNpc(2159100, new java.awt.Point(-157, -23));
+		map.spawnNpc(2159100, Vector.of(-157, -23));
 		pi.warp(931000100, 0);
 	} else {
 	    pi.playerMessage("Being searched by someone else. Better come back later.");

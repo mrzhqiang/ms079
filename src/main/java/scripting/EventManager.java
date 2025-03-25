@@ -161,7 +161,7 @@ public class EventManager {
     }
 
     public String getProperty(String key) {
-        return props.getProperty(key);
+        return props.getProperty(key) == null ? "" : props.getProperty(key);
     }
 
     public final Properties getProperties() {

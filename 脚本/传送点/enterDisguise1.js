@@ -1,3 +1,5 @@
+
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function enter(pi) {
     if (pi.getQuestStatus(20301) == 1 ||
 	pi.getQuestStatus(20302) == 1 ||
@@ -9,7 +11,7 @@ function enter(pi) {
 		pi.removeNpc(108010600, 1104101);
 		var map = pi.getMap(108010600);
 		map.killAllMonsters(false);
-		map.spawnNpc(1104101, new java.awt.Point(2517, 88));
+		map.spawnNpc(1104101, Vector.of(2517, 88));
 		pi.warp(108010600, 0);
 	    } else {
 		pi.playerMessage("You do not have the Erev Search Warrent to do so, please get it from Nineheart.");

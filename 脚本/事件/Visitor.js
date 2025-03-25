@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 }
 
@@ -13,53 +14,53 @@ function setup(mapid) {
 		map.resetFully();
 		if (i == 1) { //dimensional cube
 			for (var x = 0; x < 3; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420024 + (parseInt(mapid) * 6)), new java.awt.Point(94, 0));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420024 + (parseInt(mapid) * 6)), new java.awt.Point(-67, -140));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420027 + (parseInt(mapid) * 6)), new java.awt.Point(-67, -140));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420027 + (parseInt(mapid) * 6)), new java.awt.Point(-287, 50));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420024 + (parseInt(mapid) * 6)), Vector.of(94, 0));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420024 + (parseInt(mapid) * 6)), Vector.of(-67, -140));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420027 + (parseInt(mapid) * 6)), Vector.of(-67, -140));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420027 + (parseInt(mapid) * 6)), Vector.of(-287, 50));
 			}
 		} else if (i == 2) {
 			for (var x = 0; x < 3; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), new java.awt.Point(177, 110));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), new java.awt.Point(177, -160));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), new java.awt.Point(-237, -20));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), Vector.of(177, 110));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), Vector.of(177, -160));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420029 + (parseInt(mapid) * 6)), Vector.of(-237, -20));
 			}
 		} else if (i == 3) {
 			for (var x = 0; x < 3; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420025 + (parseInt(mapid) * 6)), new java.awt.Point(160, 50));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420026 + (parseInt(mapid) * 6)), new java.awt.Point(0, 50));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420028 + (parseInt(mapid) * 6)), new java.awt.Point(-160, 50));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420025 + (parseInt(mapid) * 6)), Vector.of(160, 50));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420026 + (parseInt(mapid) * 6)), Vector.of(0, 50));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420028 + (parseInt(mapid) * 6)), Vector.of(-160, 50));
 			}
 		} else if (i == 4) {
 			for (var x = 0; x < 6; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420042 + parseInt(mapid)), new java.awt.Point(-50, -160));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420045 + parseInt(mapid)), new java.awt.Point(-50, 100));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420048 + parseInt(mapid)), new java.awt.Point(-50, 320));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420042 + parseInt(mapid)), Vector.of(-50, -160));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420045 + parseInt(mapid)), Vector.of(-50, 100));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420048 + parseInt(mapid)), Vector.of(-50, 320));
 			}
 
 		} else if (i == 5) { //choice
-			map.spawnReactorOnGroundBelow(em.getReactor(5029000), new java.awt.Point(-140, 70));
-			map.spawnReactorOnGroundBelow(em.getReactor(5029000), new java.awt.Point(0, 70));
-			map.spawnReactorOnGroundBelow(em.getReactor(5029000), new java.awt.Point(140, 70));
+			map.spawnReactorOnGroundBelow(em.getReactor(5029000), Vector.of(-140, 70));
+			map.spawnReactorOnGroundBelow(em.getReactor(5029000), Vector.of(0, 70));
+			map.spawnReactorOnGroundBelow(em.getReactor(5029000), Vector.of(140, 70));
 			eim.setProperty("stage5", (java.lang.Math.floor(java.lang.Math.random() * 3) + 1) + "");
 		} else if (i == 6) {
 			for (var x = 0; x < 6; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420051 + (parseInt(mapid))), new java.awt.Point(0, -50));
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420051 + (parseInt(mapid))), new java.awt.Point(0, 320));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420051 + (parseInt(mapid))), Vector.of(0, -50));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420051 + (parseInt(mapid))), Vector.of(0, 320));
 			}
 		} else if (i == 7) {
 			for (var x = 0; x < 6; x++) {
-				map.spawnMonsterOnGroundBelow(em.getMonster(9420054 + (parseInt(mapid))), new java.awt.Point(0, 0));
+				map.spawnMonsterOnGroundBelow(em.getMonster(9420054 + (parseInt(mapid))), Vector.of(0, 0));
 			}
 		} else if (i == 8) { //control cube: npc!
-			map.spawnNpc(9250139, new java.awt.Point(-5, -150));
+			map.spawnNpc(9250139, Vector.of(-5, -150));
 			eim.setProperty("stage8", "1");
 		} else if (i == 9) {
-			map.spawnMonsterOnGroundBelow(em.getMonster(9420057 + (parseInt(mapid))), new java.awt.Point(0, 0));
+			map.spawnMonsterOnGroundBelow(em.getMonster(9420057 + (parseInt(mapid))), Vector.of(0, 0));
 		} else if (i == 10) {
-			map.spawnMonsterOnGroundBelow(em.getMonster(9420060 + (parseInt(mapid))), new java.awt.Point(0, 0));
+			map.spawnMonsterOnGroundBelow(em.getMonster(9420060 + (parseInt(mapid))), Vector.of(0, 0));
 		} else if (i == 11) {
-			map.spawnMonsterOnGroundBelow(em.getMonster(9420065 + (parseInt(mapid))), new java.awt.Point(0, 0));
+			map.spawnMonsterOnGroundBelow(em.getMonster(9420065 + (parseInt(mapid))), Vector.of(0, 0));
 		}
 
 		

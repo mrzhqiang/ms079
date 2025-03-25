@@ -1,4 +1,7 @@
-var status = -1;function action(mode, type, selection) {
+
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
+var status = -1;
+function action(mode, type, selection) {
     if (mode == 1) {
 	status++;
     } else {
@@ -21,11 +24,11 @@ var status = -1;function action(mode, type, selection) {
 				cm.mapMessage(6, "Engarde! Master Guardians approach!");
 				for (var i = 0; i < 10; i++) {
 					var mob = em.getMonster(9400594);
-					cm.getMap().spawnMonsterOnGroundBelow(mob, new java.awt.Point(-1337 + (java.lang.Math.random() * 1337), 276));
+					cm.getMap().spawnMonsterOnGroundBelow(mob, Vector.of(-1337 + (java.lang.Math.random() * 1337), 276));
 				}
 				for (var i = 0; i < 20; i++) {
 					var mob = em.getMonster(9400582);
-					cm.getMap().spawnMonsterOnGroundBelow(mob, new java.awt.Point(-1337 + (java.lang.Math.random() * 1337), 276));
+					cm.getMap().spawnMonsterOnGroundBelow(mob, Vector.of(-1337 + (java.lang.Math.random() * 1337), 276));
 				}
 				em.setProperty("glpq6", "1");
 				cm.dispose();
@@ -40,19 +43,19 @@ var status = -1;function action(mode, type, selection) {
 
 					//Margana
 					var mob = em.getMonster(9400590);
-					cm.getMap().spawnMonsterOnGroundBelow(mob, new java.awt.Point(-22, 1));
+					cm.getMap().spawnMonsterOnGroundBelow(mob, Vector.of(-22, 1));
 
 					//Red Nirg
 					var mob2 = em.getMonster(9400591);
-					cm.getMap().spawnMonsterOnGroundBelow(mob2, new java.awt.Point(-22, 276));
+					cm.getMap().spawnMonsterOnGroundBelow(mob2, Vector.of(-22, 276));
 
 					//Hsalf
 					var mob4 = em.getMonster(9400593);
-					cm.getMap().spawnMonsterOnGroundBelow(mob4, new java.awt.Point(496, 276));
+					cm.getMap().spawnMonsterOnGroundBelow(mob4, Vector.of(496, 276));
 
 					//Rellik
 					var mob3 = em.getMonster(9400592);
-					cm.getMap().spawnMonsterOnGroundBelow(mob3, new java.awt.Point(-496, 276));
+					cm.getMap().spawnMonsterOnGroundBelow(mob3, Vector.of(-496, 276));
 
 					em.setProperty("glpq6", "2");
 					cm.dispose();

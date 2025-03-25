@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 em.setProperty("state", "0");
 	em.setProperty("leader", "true");
@@ -69,7 +70,7 @@ function clearPQ(eim) {
 }
 
 function allMonstersDead(eim) {
-	eim.getMapInstance(0).spawnNpc(9120026, new java.awt.Point(1478, 326));
+	eim.getMapInstance(0).spawnNpc(9120026, Vector.of(1478, 326));
 }
 
 function leftParty (eim, player) {}

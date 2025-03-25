@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 function init() {
 em.setProperty("state", "0");
 }
@@ -10,7 +11,7 @@ em.setProperty("state", "1");
     map.resetFully();
     var mob = em.getMonster(9500391);
     eim.registerMonster(mob);
-    map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(1000, 513));
+    map.spawnMonsterOnGroundBelow(mob, Vector.of(1000, 513));
 
     eim.startEventTimer(3600000); // 1 hr
     return eim;

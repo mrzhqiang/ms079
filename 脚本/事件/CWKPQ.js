@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var mapz = Array(100, 200, 300, 400, 500, 510, 520, 521, 522, 530, 540, 550, 600, 700, 800);
 var a = Array("a", "b", "c", "d", "e", "f", "g", "h", "i");
 /*
@@ -62,14 +63,14 @@ em.setProperty("state", "1");
 				for (var z = 0; z < pos_y2.length; z++) {
 					var mob = em.getMonster(9400582);
 					eim.registerMonster(mob);
-					map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(0, pos_y2[z]));
+					map.spawnMonsterOnGroundBelow(mob, Vector.of(0, pos_y2[z]));
 				}
 			//skipping mage room, ehh
 			} else if (map.getId() == 610030540) { //bowman room, spawn master guardians
 				for (var z = 0; z < pos_x.length; z++) {
 					var mob = em.getMonster(9400594);
 					eim.registerMonster(mob);
-					map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(pos_x[z], pos_y[z]));
+					map.spawnMonsterOnGroundBelow(mob, Vector.of(pos_x[z], pos_y[z]));
 				}
 			} else if (map.getId() == 610030550) {
 				map.shuffleReactors(); //pirate room
@@ -96,7 +97,7 @@ function spawnGuardians(eim) {
     for (var i = 0; i < 20; i++) { //spawn 20 guardians
 	var mob = em.getMonster(9400594);
 	eim.registerMonster(mob);
-	map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(1000, 336));
+	map.spawnMonsterOnGroundBelow(mob, Vector.of(1000, 336));
     }
 }
 

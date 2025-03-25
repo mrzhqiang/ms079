@@ -39,6 +39,8 @@ public final class CharLoginHandler {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CharLoginHandler.class);
+
+    private static final Logger ACPW_LOGGER = LoggerFactory.getLogger("ACPW");
     private final AutoRegister autoRegister;
     public final LoginServer loginServer;
 
@@ -123,8 +125,8 @@ public final class CharLoginHandler {
                 client.getSession().write(LoginPacket.getTempBan(KoreanDateUtil.getTempBanTimestamp(epochMilli), client.getBanReason()));
             }
         } else {
-            FileoutputUtil.logToFile("日志/logs/ACPW.txt", "ACC: " + login + " PW: " + pwd
-                    + " MAC : " + mac + " IP: " + client.getSession().getRemoteAddress().toString() + "\r\n");
+            ACPW_LOGGER.info("ACC: " + login + " PW: " + pwd
+                    + " MAC : " + mac + " IP: " + client.getSession().getRemoteAddress().toString());
             client.updateMacs();
             client.loginAttempt = 0;
             LoginWorker.registerClient(client, loginServer);

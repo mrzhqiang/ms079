@@ -3,6 +3,7 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -20,6 +21,7 @@ public class DReactorDrop extends Model {
     @NotNull
     Integer chance;
     @NotNull
+    @Column(name = "questid")
     Integer questId;
 
     public Integer getId() {

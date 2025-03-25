@@ -1,3 +1,4 @@
+var Vector = Java.type("com.github.mrzhqiang.maplestory.wz.element.data.Vector");
 var fullhp = 6000000;
 
 function init() {
@@ -40,9 +41,9 @@ function spawn(eim) {
     eim.registerMonster(mob1);
     eim.registerMonster(mob2);
     eim.registerMonster(mob3);
-    map.spawnMonsterOnGroundBelow(mob1, new java.awt.Point(412, 258));
-    map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(412, 258));
-    map.spawnMonsterOnGroundBelow(mob3, new java.awt.Point(412, 258));
+    map.spawnMonsterOnGroundBelow(mob1, Vector.of(412, 258));
+    map.spawnMonsterOnGroundBelow(mob2, Vector.of(412, 258));
+    map.spawnMonsterOnGroundBelow(mob3, Vector.of(412, 258));
     eim.startEventTimer(1200000);
 }
 
@@ -165,7 +166,7 @@ function checkHP(eim) {
     if (hpDone > 120000) { //advance
         var mob = em.getMonster(8830013);
         eim.registerMonster(mob);
-        map.spawnMonsterOnGroundBelow(mob, new java.awt.Point(416, 258));
+        map.spawnMonsterOnGroundBelow(mob, Vector.of(416, 258));
         map.killMonster(8830001);
         map.killMonster(8830013);
         var mob1 = em.getMonster(8830007); //purple state not used
@@ -176,9 +177,9 @@ function checkHP(eim) {
         eim.registerMonster(mob3);
         map.killMonster(8830007);
         map.killMonster(8830009);
-        map.spawnMonsterOnGroundBelow(mob1, new java.awt.Point(416, 258));
-        map.spawnMonsterOnGroundBelow(mob2, new java.awt.Point(416, 258));
-        map.spawnMonsterOnGroundBelow(mob3, new java.awt.Point(416, 258));
+        map.spawnMonsterOnGroundBelow(mob1, Vector.of(416, 258));
+        map.spawnMonsterOnGroundBelow(mob2, Vector.of(416, 258));
+        map.spawnMonsterOnGroundBelow(mob3, Vector.of(416, 258));
         em.setProperty("balrogState", "1");
     } else {
         eim.broadcastPlayerMsg(6, "扎昆太强，消灭了你.");

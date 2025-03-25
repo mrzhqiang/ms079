@@ -197,7 +197,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder {
      */
     CLOSE_RANGE_ATTACK,
     /**
-     * 0xBD
+     * 遠距离攻击 0xBD
      */
     RANGED_ATTACK,
     /**
@@ -222,6 +222,21 @@ public enum SendPacketOpcode implements WritableIntValueHolder {
     OPEN_STORAGE,
     /**
      * 道具栏信息 0x20
+     * 操作码（2） → 固定头（3字节） → 背包类型（1） → 位置（2） → 附加条件数据（可选）
+     * ByteBuffer packet = new ByteBuffer();
+     * packet.writeShort(MODIFY_INVENTORY_ITEM); // 操作码（2字节）
+     * packet.writeByte(optMode);               // 操作模式（1字节）
+     * packet.writeByte(optType);               // 操作类型（1字节）
+     * packet.writeByte(optAddVer);               // 保留字段或版本标记（1字节）
+     * packet.writeByte(inventoryType);         // 背包类型（1字节，如装备栏/消耗栏等）
+     * packet.writeShort(position);             // 物品位置（2字节，背包内索引）
+     * packet.writeBytes(additionalData);       // 附加数据（长度可变，取决于操作类型）
+     * 固定头（示例）	对应操作	附加数据
+     * 01 01 03	删除单个物品	无
+     * 01 02 03	移动物品	目标位置（2字节）
+     * 01 03 03	更新物品数量	新数量（2字节）
+     * 01 04 03	装备强化	强化等级+星力（2字节）
+     * 固定头组成：操作模式、操作类型、保留字段或版本标记。
      */
     MODIFY_INVENTORY_ITEM,
     /**
@@ -442,6 +457,8 @@ public enum SendPacketOpcode implements WritableIntValueHolder {
     NPC_ACTION,
     /**
      * 召唤宠物 0xAD
+     * 操作码(2) → 角色ID(4) → 宠物栏位置(1) ‌→显隐标记‌(1)→ 宠物唯一ID(4) →‌宠物名称‌(动态长度、UTF-16LE编码 + 双字节终止符‌) → ‌坐标X(2) → ‌坐标Y(2) → 状态标记(1)
+     *
      */
     SPAWN_PET,
     /**

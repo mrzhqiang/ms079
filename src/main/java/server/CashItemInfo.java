@@ -139,10 +139,10 @@ public class CashItemInfo {
             }
             final int item, c, price, expire, gen;
             final boolean onSale;
-            if (this.item.getId() <= 0) {
+            if (this.item.getItemId() <= 0) {
                 item = (backup == null ? 0 : backup.getId());
             } else {
-                item = this.item.getId();
+                item = this.item.getItemId();
             }
             if (this.item.getCount() <= 0) {
                 c = (backup == null ? 0 : backup.getCount());
@@ -176,6 +176,11 @@ public class CashItemInfo {
 
             cii = new CashItemInfo(item, c, price, sn, expire, gen, onSale);
             return cii;
+        }
+
+        public void setItemId(int itemId) {
+            this.item.setItemId(itemId);
+
         }
     }
 }

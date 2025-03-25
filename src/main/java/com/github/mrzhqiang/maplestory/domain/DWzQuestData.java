@@ -3,10 +3,7 @@ package com.github.mrzhqiang.maplestory.domain;
 import io.ebean.Model;
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
@@ -32,11 +29,11 @@ public class DWzQuestData extends Model {
     @NotNull
     Boolean autoComplete;
 
-    @OneToMany(mappedBy = "questData")
+    @OneToMany(mappedBy = "questData", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<DWzQuestReqData> reqDataList;
-    @OneToMany(mappedBy = "questData")
+    @OneToMany(mappedBy = "questData", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<DWzQuestActData> actDataList;
-    @OneToMany(mappedBy = "questData")
+    @OneToMany(mappedBy = "questData", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<DWzQuestPartyData> partyDataList;
 
     public Integer getId() {

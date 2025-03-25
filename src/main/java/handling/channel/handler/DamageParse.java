@@ -14,6 +14,7 @@ import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import com.github.mrzhqiang.maplestory.wz.element.data.Vector;
 import constants.GameConstants;
+import constants.ServerConstants;
 import handling.world.World;
 import server.MapleStatEffect;
 import server.Randomizer;
@@ -46,6 +47,7 @@ public class DamageParse {
         if (attack.real) {
             // player.getCheatTracker().checkAttack(attack.skill, attack.lastAttackTickCount);
         }
+
         if (attack.skill != 0) {
             boolean ban = false;
             String lastReason = "";
@@ -78,7 +80,7 @@ public class DamageParse {
 
             // 检测外挂区结束-------------
             // 封锁区
-            if (ban && !player.isAdmin()) {
+            if (ServerConstants.properties.isBanSwitch() && ban && !player.isAdmin()) {
                 //player.ban(lastReason, true, true, false);//封号
                 String msg = "[检测系统] 玩家:" + player.getName() + " 疑似开挂。地图ID [" + player.getMapId() + "]" + "" + (param == null ? "" : (" - " + param));
                 World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, msg).getBytes());
